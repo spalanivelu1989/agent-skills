@@ -59,12 +59,69 @@ No architecture doc yet? See [Don't have an architecture doc yet?](#dont-have-an
 
 ## Prerequisites
 
-| Requirement                                            | Needed for                   | Notes                                                                                                                                     |
-| ------------------------------------------------------ | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| Claude Code                                            | Running the skill            | This is a Claude Code skill, invoked via chat                                                                                             |
-| A `system-architecture.md` or `system-diagram.md` file | Everything                   | See below if you don't have one                                                                                                           |
-| PlantUML + a JRE                                       | Step 2 (PNG rendering)       | `brew install plantuml` on macOS. Optional — the skill still produces the `.puml` source and continues without the PNG if this is missing |
-| Node.js                                                | Optional verification checks | Only used if `@babel/core` or `puppeteer` are already resolvable in your project; not a hard requirement                                  |
+| Requirement                                            | Needed for                      | Notes                                                                                                               |
+| ------------------------------------------------------ | ------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Claude Code                                            | Running the skill               | This is a Claude Code skill, invoked via chat                                                                       |
+| A `system-architecture.md` or `system-diagram.md` file | Everything                      | See below if you don't have one                                                                                     |
+| PlantUML + a JRE                                       | Step 3 (PNG rendering)          | Optional — the skill still produces the `.puml` source and continues without the PNG if this is missing             |
+| Node.js + npm                                          | Step 8 (verification checks)    | Optional — used for a syntax check, a data-integrity check, and (if `puppeteer` is available) a visual render check |
+| `curl`                                                 | Step 7 (vendoring JS libraries) | Ships with macOS, Linux, and Windows 10+ by default                                                                 |
+
+**You don't need to install any of these yourself first.** The skill checks what's already on your machine and, if something's missing, detects your OS (macOS / Linux / WSL / native Windows) and proposes the exact install command for it — `brew`, `apt`/`dnf`/`pacman`, or `choco`/`winget` — before asking you to confirm. Decline any of it and the skill just degrades gracefully (skips the PNG, or skips that one verification check) rather than failing.
+
+<details>
+<summary>Manual install commands, if you'd rather do it yourself first</summary>
+
+**macOS:**
+
+```bash
+brew install plantuml node
+```
+
+**Linux (Debian/Ubuntu):**
+
+```bash
+sudo apt update && sudo apt install -y default-jre graphviz plantuml nodejs npm
+```
+
+**Linux (Fedora/RHEL):**
+
+```bash
+sudo dnf install -y java-17-openjdk plantuml nodejs npm
+```
+
+**Linux (Arch):**
+
+```bash
+sudo pacman -S --noconfirm jre-openjdk plantuml nodejs npm
+```
+
+**Windows (Chocolatey):**
+
+```powershell
+choco install -y plantuml nodejs-lts
+```
+
+**Windows (winget — no reliable PlantUML package; install Java + Node, then grab plantuml.jar manually):**
+
+```powershell
+winget install -e --id OpenJS.NodeJS.LTS
+winget install -e --id EclipseAdoptium.Temurin.17.JRE
+```
+
+Then download `plantuml.jar` from https://plantuml.com/download and put a small `plantuml.bat` shim (`java -jar C:\tools\plantuml.jar %*`) on your PATH.
+
+**Windows Subsystem for Linux (WSL):** use the Debian/Ubuntu (apt) commands above — WSL behaves like Linux, not native Windows.
+
+Optional npm packages for the Step 8 checks, any platform:
+
+```bash
+npm install -g @babel/core @babel/preset-react puppeteer
+```
+
+Puppeteer bundles its own Chromium (~200MB); on minimal Linux (containers, headless servers) it may also need `sudo apt install -y libnss3 libatk-bridge2.0-0 libgtk-3-0 libgbm1`.
+
+</details>
 
 ---
 
@@ -90,12 +147,13 @@ Using ArchFlow, generate a live demo workflow from docs/architecture/system-arch
 
 Claude Code will:
 
-1. Read and understand your architecture doc
-2. Generate/refresh the Mermaid diagram
-3. Translate it into a PlantUML diagram and render the PNG
-4. Design a realistic end-to-end request scenario
-5. Build the animated demo (TSX component + standalone HTML)
-6. Run verification checks before reporting done
+1. Check for prerequisites (PlantUML, Node.js, curl) and offer to install anything missing for your OS — you'll be asked to confirm before anything gets installed
+2. Read and understand your architecture doc
+3. Generate/refresh the Mermaid diagram
+4. Translate it into a PlantUML diagram and render the PNG
+5. Design a realistic end-to-end request scenario
+6. Build the animated demo (TSX component + standalone HTML)
+7. Run verification checks before reporting done
 
 Review the generated files (see [What gets generated](#what-gets-generated)), then **open `demo/index.html` in your browser** — this is the file you actually want to look at.
 
@@ -158,7 +216,7 @@ The three artifacts are generated **in sequence, each derived from the previous 
 system-architecture.md  →  system-diagram.md (Mermaid)  →  system-diagram.puml (PlantUML)  →  demo/ (animated HTML)
 ```
 
-For the full step-by-step process (layout rules, verification checks, and the hard-won lessons behind two previously-fixed bugs), see [`SKILL.md`](./SKILL.md).
+For the full step-by-step process (prerequisite checks, layout rules, verification checks, and the hard-won lessons behind two previously-fixed bugs), see [`SKILL.md`](./SKILL.md).
 
 ---
 
@@ -166,10 +224,11 @@ For the full step-by-step process (layout rules, verification checks, and the ha
 
 | Symptom                                                | Cause                                                                | Fix                                                                                                              |
 | ------------------------------------------------------ | -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| No `system-diagram.png` was produced                   | PlantUML isn't installed                                             | `brew install plantuml` (macOS), then re-run — or proceed without the PNG                                        |
+| No `system-diagram.png` was produced                   | PlantUML isn't installed                                             | Let the skill offer to install it for your OS (see [Prerequisites](#prerequisites)), or proceed without the PNG  |
 | `demo/index.html` shows a blank page                   | Missing/broken `vendor/` files, or opened over a restrictive network | Confirm the three files exist in `demo/vendor/`; the demo is designed to work fully offline once they're present |
 | Diagram looks crowded or components overlap in the PNG | PlantUML's auto-layout struggled with too many packages              | Simplify grouping in `system-diagram.puml` and re-render                                                         |
 | Demo is missing a component you expected               | The input doc didn't mention it                                      | ArchFlow only uses what's in your architecture doc — update the doc and re-run                                   |
+| Prerequisite install command fails (permissions, sudo) | Package manager needs elevated rights, or isn't installed itself     | Run the proposed command yourself in a terminal with the right privileges, then re-run the skill                 |
 
 ---
 

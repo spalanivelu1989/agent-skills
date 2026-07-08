@@ -42,6 +42,91 @@ Naming edge case: if the input file is _already_ named `system-diagram.md`, don'
 - If it already contains a Mermaid diagram, treat it as done — skip Step 2 entirely and move to Step 3.
 - If it's prose only (no diagram yet), add a `## Diagram` section with the Mermaid block directly into that same file, in place, rather than creating a duplicate.
 
+## Step 0 — Check & offer to install prerequisites
+
+Run this once per machine (skip if you already confirmed these are present earlier in the session). **Never silently install anything** — installing packages touches the user's system (often needs sudo/admin) and is exactly the kind of action that needs a confirmation first, per usual practice. Detect, report, propose the exact command, then wait for a yes.
+
+**Required** (the skill degrades gracefully without these, per Steps 3 and 8, but functionality is reduced):
+
+- `plantuml` + a JRE — renders the `.png` in Step 3
+- `node` + `npm` — runs the verification checks in Step 8
+
+**Optional** (nice-to-have, skip gracefully if declined or unavailable):
+
+- `@babel/core` + `@babel/preset-react` — fast syntax check in Step 8
+- `puppeteer` — visual render check in Step 8
+
+**Usually already present, check anyway:** `curl` (vendors the JS libs in Step 7).
+
+### 1. Detect the platform
+
+```bash
+if [ -f /proc/version ] && grep -qi microsoft /proc/version 2>/dev/null; then
+  PLATFORM="wsl"      # Windows Subsystem for Linux — behaves like Linux/apt
+elif [ "$(uname -s 2>/dev/null)" = "Darwin" ]; then
+  PLATFORM="macos"
+elif [ "$(uname -s 2>/dev/null)" = "Linux" ]; then
+  PLATFORM="linux"
+else
+  PLATFORM="windows"  # no uname resolvable — native PowerShell/cmd, not WSL
+fi
+echo "$PLATFORM"
+```
+
+### 2. Check what's already there
+
+```bash
+for cmd in plantuml java node npm curl; do
+  command -v "$cmd" >/dev/null 2>&1 && echo "$cmd: found" || echo "$cmd: MISSING"
+done
+```
+
+### 3. If anything required is missing, propose the matching install command and ask before running it
+
+**macOS** (Homebrew):
+
+```bash
+brew install plantuml   # pulls in a JRE automatically
+brew install node       # if missing
+```
+
+**Linux / WSL — Debian/Ubuntu (apt):**
+
+```bash
+sudo apt update && sudo apt install -y default-jre graphviz plantuml nodejs npm
+```
+
+**Linux — Fedora/RHEL (dnf):**
+
+```bash
+sudo dnf install -y java-17-openjdk plantuml nodejs npm
+```
+
+**Linux — Arch (pacman):**
+
+```bash
+sudo pacman -S --noconfirm jre-openjdk plantuml nodejs npm
+```
+
+**Windows (native, not WSL):**
+
+- With Chocolatey: `choco install -y plantuml nodejs-lts`
+- With winget (Chocolatey's `plantuml` package is more reliable than hunting for a winget equivalent): `winget install -e --id OpenJS.NodeJS.LTS` and `winget install -e --id EclipseAdoptium.Temurin.17.JRE`, then download `plantuml.jar` from https://plantuml.com/download and put a small shim on PATH (e.g. `plantuml.bat` containing `java -jar C:\tools\plantuml.jar %*`) so `plantuml -tpng ...` works the same as elsewhere.
+- If neither package manager is available: install a JRE manually (adoptium.net), install Node.js manually (nodejs.org), download `plantuml.jar`, and create the same shim as above.
+- If the user is actually inside WSL, use the Linux/apt instructions instead — check for that first (`$PLATFORM = wsl` above).
+
+**Optional npm packages** (any platform, once Node/npm exist):
+
+```bash
+npm install -g @babel/core @babel/preset-react puppeteer
+```
+
+Puppeteer bundles its own Chromium (~200MB) and, on minimal Linux (containers, headless servers, WSL without a desktop), may also need extra shared libraries: `sudo apt install -y libnss3 libatk-bridge2.0-0 libgtk-3-0 libgbm1`. If any of this fails, skip it — the render check in Step 8 is explicitly best-effort and the skill works fine without it.
+
+### 4. Proceed regardless of what the user chooses
+
+If they decline an install, or a tool can't be installed in their environment, don't block the rest of the skill — degrade exactly as Steps 3 and 8 already describe (skip the PNG render / skip that specific verification check) and say so plainly in the final report (Step 9).
+
 ## Step 1 — Read and understand the architecture
 
 Read the input file fully. Extract:
