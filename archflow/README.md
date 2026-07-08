@@ -119,6 +119,8 @@ Optional npm packages for the Step 8 checks, any platform:
 npm install -g @babel/core @babel/preset-react puppeteer
 ```
 
+Note: globally installed npm packages aren't on Node's default `require()` path — the skill's verification commands account for this by running with `NODE_PATH="$(npm root -g)"`.
+
 Puppeteer bundles its own Chromium (~200MB); on minimal Linux (containers, headless servers) it may also need `sudo apt install -y libnss3 libatk-bridge2.0-0 libgtk-3-0 libgbm1`.
 
 </details>
@@ -212,14 +214,16 @@ docs/
 
 Live demo workflow
 
-1. Read & understand the architecture doc
-2. Generate Mermaid diagram
-3. Generate PlantUML from the Mermaid diagram
-4. Design the demo scenario — drawn from the PlantUML's component/edge list
-5. Compute layout
-6. Generate TSX
-7. Generate standalone HTML
-8. Open index.html
+1. Check prerequisites (offer to install anything missing)
+2. Read & understand the architecture doc
+3. Generate Mermaid diagram
+4. Generate PlantUML from the Mermaid diagram + render the PNG
+5. Design the demo scenario — drawn from the PlantUML's component/edge list
+6. Compute layout
+7. Generate TSX
+8. Generate standalone HTML (vendored React/Babel, works offline)
+9. Verify — syntax check, data-integrity check, optional headless render check
+10. Report — then open `demo/index.html`
 
 The three artifacts are generated **in sequence, each derived from the previous one** — not independently re-derived from your original doc. This keeps them describing the exact same architecture: same components, same edges, same external-system markings.
 

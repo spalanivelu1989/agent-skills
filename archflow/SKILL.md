@@ -121,6 +121,8 @@ sudo pacman -S --noconfirm jre-openjdk plantuml nodejs npm
 npm install -g @babel/core @babel/preset-react puppeteer
 ```
 
+Heads-up: globally installed npm packages are **not** on Node's default `require()` resolution path — a plain `node -e "require('@babel/core')"` won't find them. The Step 8 check commands handle this by running with `NODE_PATH="$(npm root -g)"`; keep that prefix if you adapt them.
+
 Puppeteer bundles its own Chromium (~200MB) and, on minimal Linux (containers, headless servers, WSL without a desktop), may also need extra shared libraries: `sudo apt install -y libnss3 libatk-bridge2.0-0 libgtk-3-0 libgbm1`. If any of this fails, skip it — the render check in Step 8 is explicitly best-effort and the skill works fine without it.
 
 ### 4. Proceed regardless of what the user chooses
@@ -320,7 +322,7 @@ mkdir -p <input-dir>/demo/vendor
 cd <input-dir>/demo/vendor
 curl -sL -o react.production.min.js "https://unpkg.com/react@18/umd/react.production.min.js"
 curl -sL -o react-dom.production.min.js "https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"
-curl -sL -o babel.min.js "https://unpkg.com/@babel/standalone/babel.min.js"
+curl -sL -o babel.min.js "https://unpkg.com/@babel/standalone@8/babel.min.js"
 ```
 
 If a `vendor/` folder with these three files already exists elsewhere in the project (from a previous ArchFlow run), just copy it instead of re-downloading (~2.5MB, mostly Babel).
@@ -329,40 +331,53 @@ If a `vendor/` folder with these three files already exists elsewhere in the pro
 
 Don't skip this — both fixed-once bugs below were caught by exactly this kind of check, not by eyeballing the code.
 
-**Syntax check** (fast, catches JSX/data errors immediately). If `@babel/core` is resolvable (project `node_modules`, or `npm i -g @babel/core @babel/preset-react` for a quick one-off):
+**Syntax check** (fast, catches JSX/data errors immediately). Needs `@babel/core` + `@babel/preset-react`, either in the project's `node_modules` or installed globally (`npm i -g @babel/core @babel/preset-react`). Globally installed npm packages are **not** on Node's default `require()` resolution path, so every `node -e` check below is prefixed with `NODE_PATH="$(npm root -g)"` — harmless when the packages are local, required when they're global. Check **both** files: the HTML embeds a hand-copied twin of the `.tsx` data (Step 7), so either copy can carry a typo the other doesn't. Use `transformSync`, not `transform` — Babel 8 made `transform` callback-only, and `transformSync` works on Babel 7 too.
 
 ```bash
-node -e "
+NODE_PATH="$(npm root -g)" node -e "
 const fs = require('fs');
-const html = fs.readFileSync('<input-dir>/demo/index.html', 'utf8');
-const code = html.match(/<script type=\"text\/plain\" id=\"app-source\">([\s\S]*?)<\/script>/)[1];
 const babel = require('@babel/core');
-babel.transform(code, { presets: [require.resolve('@babel/preset-react')], filename: 'demo.jsx' });
-console.log('BABEL TRANSFORM OK');
+const presets = [require.resolve('@babel/preset-react')];
+const html = fs.readFileSync('<input-dir>/demo/index.html', 'utf8');
+const embedded = html.match(/<script type=\"text\/plain\" id=\"app-source\">([\s\S]*?)<\/script>/)[1];
+babel.transformSync(embedded, { presets, filename: 'demo.jsx' });
+console.log('HTML EMBEDDED SOURCE OK');
+const tsx = fs.readFileSync('<input-dir>/demo/<Name>DemoFlow.tsx', 'utf8');
+babel.transformSync(tsx, { presets, filename: 'demo.jsx' });
+console.log('TSX TRANSFORM OK');
 "
 ```
 
-**Data-integrity check** — every STEPS `f`/`t` must exist in NODES, and every `roundTrip` pair must be in BIDIRECTIONAL:
+**Data-integrity check** — validates the invariants the engine silently depends on: every STEPS `f`/`t` and every `chat` speaker exists in NODES, every `ph` indexes into PHASES, every `roundTrip` pair is in BIDIRECTIONAL (a missing entry means the return arrowhead silently never renders — the exact bug this set exists to prevent), and the DB-ingest flourish, if enabled, points at real nodes and matches exactly one non-roundTrip step. Note the slice deliberately ends at `const TITLE` so it includes the BIDIRECTIONAL and DB_INGEST declarations:
 
 ```bash
-node -e "
+NODE_PATH="$(npm root -g)" node -e "
 const fs = require('fs');
 const html = fs.readFileSync('<input-dir>/demo/index.html', 'utf8');
 const code = html.match(/<script type=\"text\/plain\" id=\"app-source\">([\s\S]*?)<\/script>/)[1];
 const start = code.indexOf('const NODES = {');
-const end = code.indexOf('function buildPath');
+const end = code.indexOf('const TITLE');
 const vm = require('vm');
 const sandbox = {};
 vm.createContext(sandbox);
-vm.runInContext(code.slice(start, end) + '\nglobalThis.__NODES=NODES; globalThis.__STEPS=STEPS;', sandbox);
-const { __NODES: NODES, __STEPS: STEPS } = sandbox;
+vm.runInContext(code.slice(start, end) + '\nglobalThis.__NODES=NODES; globalThis.__STEPS=STEPS; globalThis.__PHASES=PHASES; globalThis.__BI=BIDIRECTIONAL; globalThis.__DBF=DB_INGEST_FROM; globalThis.__DBT=DB_INGEST_TO;', sandbox);
+const { __NODES: NODES, __STEPS: STEPS, __PHASES: PHASES, __BI: BI, __DBF: DBF, __DBT: DBT } = sandbox;
 const ids = Object.keys(NODES);
 const pairKey = (a,b) => [a,b].sort().join('|');
 let errors = [];
 STEPS.forEach((s,i) => {
   if (!ids.includes(s.f)) errors.push('step '+i+' bad f: '+s.f);
   if (!ids.includes(s.t)) errors.push('step '+i+' bad t: '+s.t);
+  if (!(s.ph >= 0 && s.ph < PHASES.length)) errors.push('step '+i+' bad ph: '+s.ph);
+  if (s.roundTrip && !BI.has(pairKey(s.f, s.t))) errors.push('step '+i+' roundTrip pair missing from BIDIRECTIONAL: '+pairKey(s.f, s.t));
+  (s.chat || []).forEach((c,j) => { if (!ids.includes(c[0])) errors.push('step '+i+' chat['+j+'] bad node: '+c[0]); });
 });
+if (DBT) {
+  if (!ids.includes(DBT)) errors.push('DB_INGEST_TO bad node: '+DBT);
+  if (!ids.includes(DBF)) errors.push('DB_INGEST_FROM bad node: '+DBF);
+  const m = STEPS.filter(s => !s.roundTrip && s.f === DBF && s.t === DBT).length;
+  if (m !== 1) errors.push('DB_INGEST must match exactly one non-roundTrip step, found '+m);
+}
 console.log(errors.length ? 'ERRORS:\n'+errors.join('\n') : 'DATA OK — '+ids.length+' nodes, '+STEPS.length+' steps');
 "
 ```
@@ -370,7 +385,7 @@ console.log(errors.length ? 'ERRORS:\n'+errors.join('\n') : 'DATA OK — '+ids.l
 **Render check** (best-effort — only if `puppeteer` is resolvable, e.g. this project already depends on it for something else). Skip gracefully if not available; don't install a new heavy dependency just for this check unless the user asks.
 
 ```bash
-node -e "
+NODE_PATH="$(npm root -g)" node -e "
 const puppeteer = require('puppeteer');
 const path = require('path');
 (async () => {
