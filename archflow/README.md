@@ -210,6 +210,17 @@ docs/
 
 ## How it works
 
+Live demo workflow
+
+1. Read & understand the architecture doc
+2. Generate Mermaid diagram
+3. Generate PlantUML from the Mermaid diagram
+4. Design the demo scenario — drawn from the PlantUML's component/edge list
+5. Compute layout
+6. Generate TSX
+7. Generate standalone HTML
+8. Open index.html
+
 The three artifacts are generated **in sequence, each derived from the previous one** — not independently re-derived from your original doc. This keeps them describing the exact same architecture: same components, same edges, same external-system markings.
 
 ```
