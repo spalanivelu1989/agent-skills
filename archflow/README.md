@@ -1,8 +1,4 @@
-# ArchFlow – Claude Code Skill for Architecture Visualization & Live Workflow Demos
-
-Hey team,
-
-I built a Claude Code skill called **ArchFlow** that's been really handy, so I wanted to share it in case it's useful for you too.
+## ArchFlow – Claude Code Skill for Architecture Visualization & Live Workflow Demos
 
 ## What it does
 
@@ -42,8 +38,6 @@ Copy the skill into:
 ~/.claude/skills/archflow/
 ```
 
-Ask me and I'll send you the folder, or grab it from wherever it's hosted.
-
 ### 2. Run it in Claude Code
 
 Point the skill at your architecture document:
@@ -69,10 +63,3 @@ docs/
 
 Simply open `demo/index.html` in your browser to explore the animated workflow.
 
-## Time required
-
-Typically takes **5–10 minutes**, depending on the complexity of the architecture.
-
----
-
-If you give it a try and run into anything unexpected, let me know!
