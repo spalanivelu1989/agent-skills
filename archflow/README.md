@@ -43,7 +43,7 @@ Copy the skill into:
 Point the skill at your architecture document:
 
 ```text
-Using ArchFlow, generate a live demo workflow from docs/architecture/system-diagram.md
+Using ArchFlow, generate a live demo workflow from docs/architecture/system-architecture.md
 ```
 
 ### 3. Review the generated output
