@@ -1,30 +1,28 @@
 ---
 name: archflow
-description: Turns a system-architecture.md or system-diagram.md file into (1) a PlantUML diagram + rendered PNG and (2) an animated, interactive "ArchFlow" live demo (a React/TSX component plus a self-contained HTML file) that visualizes one realistic request flowing through every component. Use when the user provides an architecture/diagram markdown file and asks to generate a live demo workflow, animate a system diagram, visualize a request flow, or "archflow" a file.
+description: Turns a system-architecture.md or system-diagram.md file into (1) a Mermaid diagram, (2) a PlantUML diagram + rendered PNG, and (3) an animated, interactive "ArchFlow" live demo (a React/TSX component plus a self-contained HTML file) that visualizes one realistic request flowing through every component. Use when the user provides an architecture/diagram markdown file and asks to generate a live demo workflow, animate a system diagram, visualize a request flow, or "archflow" a file.
 ---
 
 # ArchFlow
 
-Turns a written architecture description into two things:
+Turns a written architecture description into three things, each built from the one before it (so all three stay consistent with each other — same components, same edges, same external-system markings):
 
-1. A **PlantUML diagram** (`.puml` + rendered `.png`) of the components and data flow.
-2. An **ArchFlow demo** — an animated, playable visualization of one concrete request traveling through every component, built as a React component (`*.tsx` + `*.css`) and a zero-dependency `index.html` that opens directly in a browser.
+1. A **Mermaid diagram** (`system-diagram.md`) — quick, readable, renders inline in GitHub/most markdown viewers.
+2. A **PlantUML diagram** (`.puml` + rendered `.png`) — translated from the Mermaid diagram.
+3. An **ArchFlow demo** — an animated, playable visualization of one concrete request traveling through every component, built from the PlantUML's component/edge list, as a React component (`*.tsx` + `*.css`) and a zero-dependency `index.html` that opens directly in a browser.
 
 This skill codifies a working, previously-debugged implementation. Two non-obvious bugs are already fixed in the templates below — do not "improve" past them without re-testing (see the FAQ at the bottom for what they were and why).
 
 ## Inputs
 
-The user provides a path to a `system-architecture.md` or `system-diagram.md` file (or similarly named — anything describing components, layers, and how they connect, possibly already containing Mermaid/PlantUML). If no path is given, ask for one; don't guess at a file.
+The user provides a path to a `system-architecture.md` or `system-diagram.md` file (or similarly named — anything describing components, layers, and how they connect, possibly already containing a Mermaid or PlantUML diagram). If no path is given, ask for one; don't guess at a file. If the user has no such file yet, tell them to first ask Claude to explore the codebase and write one (a prose architecture doc), then come back and run this skill on it.
 
 ## Output location
 
-Place `system-diagram.puml` / `system-diagram.png` in the **same directory** as the input file (or overwrite it in place if the input file already has that exact name).
-
-Place the demo in a sibling `demo/` folder next to the input file:
-
 ```
 <input-dir>/
-  system-architecture.md      (or system-diagram.md — the input)
+  system-architecture.md      (the input — prose, may already have a diagram)
+  system-diagram.md           (Mermaid diagram — this skill creates/refreshes it)
   system-diagram.puml
   system-diagram.png
   demo/
@@ -39,6 +37,11 @@ Place the demo in a sibling `demo/` folder next to the input file:
 
 `<Name>` is a short PascalCase identifier derived from the project/system name in the input doc (e.g. "Cpi" for an SAP CPI tool, "Order" for an order-processing system).
 
+Naming edge case: if the input file is _already_ named `system-diagram.md`, don't create a second file with that name.
+
+- If it already contains a Mermaid diagram, treat it as done — skip Step 2 entirely and move to Step 3.
+- If it's prose only (no diagram yet), add a `## Diagram` section with the Mermaid block directly into that same file, in place, rather than creating a duplicate.
+
 ## Step 1 — Read and understand the architecture
 
 Read the input file fully. Extract:
@@ -49,7 +52,71 @@ Read the input file fully. Extract:
 
 If the doc already contains a Mermaid diagram or prose description, that's your source of truth — don't invent components it doesn't mention. If it's ambiguous or thin on detail (e.g. missing how a specific integration authenticates), it's fine to note "inferred" in your own summary, but don't block on it — a reasonable, clearly-labeled assumption beats stalling.
 
-## Step 2 — Generate the PlantUML diagram
+## Step 2 — Generate the Mermaid diagram
+
+Write (or update, per the naming edge case above) `system-diagram.md`, containing:
+
+1. A short intro (1-2 sentences) naming what the diagram shows.
+2. A prose section explaining the single most important / most easily misunderstood connection in the architecture — almost always "how does this system reach its key external dependency" (REST? a direct DB connection? a message queue? one connection or two different mechanisms for different purposes?). This is the paragraph a reader should remember.
+3. A ` ```mermaid ` `flowchart TD` block:
+   - Group related internal components with `subgraph "Label" ... end`.
+   - One node per component: databases as `[("Name")]`, plain components as `["Name<br/>subtitle"]`.
+   - External systems as `[["External System<br/>subtitle"]]` (double-bracket shape), with `classDef external fill:#333,stroke:#999,color:#fff;` applied to all of them via `class EXT1,EXT2 external;`. Keep this dark-box convention identical across the Mermaid, PlantUML, and demo outputs.
+   - Label every arrow with protocol/auth, e.g. `-->|"REST, OAuth2"|`.
+   - Use a dashed arrow (`-.->`) for async/polled/reverse-direction responses (e.g. "poll for result"), solid (`-->`) for request/command direction.
+4. A short "Reading the diagram" bullet list explaining the arrow and dark-box conventions.
+
+Skeleton:
+
+```markdown
+# System Architecture Diagram
+
+This diagram shows <System Name>'s internal components, the direction data flows
+between them, and how it reaches its most important external dependency: **<Name>**.
+
+## How it connects to <Key External System>
+
+<2-4 sentences — the one thing worth remembering about this architecture.>
+
+## Diagram
+
+\`\`\`mermaid
+flowchart TD
+User(["User / Browser"])
+
+    subgraph Frontend
+        FE["..."]
+    end
+
+    subgraph Backend
+        API["..."]
+    end
+
+    DB[("...")]
+    EXT[["External System<br/>subtitle"]]
+
+    User -->|HTTPS| FE
+    FE -->|"REST/JSON"| API
+    API -->|SQL| DB
+    API -->|"REST, OAuth2"| EXT
+    EXT -.->|"polled response"| API
+
+    classDef external fill:#333,stroke:#999,color:#fff;
+    class EXT external;
+
+\`\`\`
+
+**Reading the diagram:**
+
+- Solid arrows = request/command direction; dashed = async/polled response.
+- Dark boxes = external systems this app depends on but doesn't control.
+```
+
+Save it to `<input-dir>/system-diagram.md`.
+
+## Step 3 — Generate the PlantUML diagram
+
+**Translate the Mermaid diagram from Step 2** into PlantUML — same components, same edges, same external-system markings. Don't re-derive independently from the original input doc; drifting the two diagrams apart defeats the point of generating them in sequence.
 
 Use this style (proven to render cleanly and read well — component boxes for internal systems, `cloud` shapes for external ones, a legend note):
 
@@ -111,9 +178,9 @@ which plantuml
 
 After rendering, view the PNG (Read tool) to sanity-check the layout before moving on — crowded/overlapping labels mean the auto-layout struggled; simplify the diagram (fewer, better-grouped packages) rather than leaving a bad render.
 
-## Step 3 — Design the demo scenario
+## Step 4 — Design the demo scenario
 
-Pick **one realistic, concrete end-to-end scenario** that a user of this system would actually trigger, and that touches most or all of the components from Step 1 — not an abstract tour of every possible edge. Past example: for an SAP CPI test tool, the scenario was "a user runs a regression test case against CPI, coverage gets computed, AI recommends new tests and drafts docs, a legacy system gets cross-checked, and the result is saved and shown back to the user."
+Using the component/edge list from Step 3's PlantUML as your working set (not a fresh read of the original input), pick **one realistic, concrete end-to-end scenario** that a user of this system would actually trigger, and that touches most or all of those components — not an abstract tour of every possible edge. Past example: for an SAP CPI test tool, the scenario was "a user runs a regression test case against CPI, coverage gets computed, AI recommends new tests and drafts docs, a legacy system gets cross-checked, and the result is saved and shown back to the user."
 
 Break it into **4-7 phases** (e.g. kick-off → trigger → process → enrich → persist/respond) and, within each phase, one or more **steps** — a step is one interaction between two components (or one component "thinking" internally).
 
@@ -126,7 +193,7 @@ For each step, decide:
 
 Write 15-25 steps total. Fewer feels thin for anything beyond a trivial 3-component system; many more gets tedious to watch. If the architecture has a clearly optional/parallel side-path (e.g. a legacy integration, an audit log), it's fine to include it as its own phase — it doesn't need to block the main path.
 
-## Step 4 — Compute the layout
+## Step 5 — Compute the layout
 
 Read `templates/DemoFlow.template.tsx` now (it has the exact layout rules and the full engine you'll be reusing) — its comments spell out the constraints. Summary:
 
@@ -141,25 +208,25 @@ Read `templates/DemoFlow.template.tsx` now (it has the exact layout rules and th
 
 Work out actual (x, y) coordinates for every node by hand before writing any code — draw the grid on paper/in your head first. This is where past mistakes happened (nodes placed without enough vertical room for bubbles, causing collisions two rows down). Double-check adjacent-row math: `rowN.y + NH + 140 <= rowN+1.y` at minimum.
 
-## Step 5 — Generate the TSX component
+## Step 6 — Generate the TSX component
 
 Copy `templates/DemoFlow.template.tsx` to `<input-dir>/demo/<Name>DemoFlow.tsx` and `templates/DemoFlow.template.css` to `<input-dir>/demo/<Name>DemoFlow.css` (the CSS file needs **no edits** — it's fully generic, uses the fixed `.archflow-container` class).
 
 In the `.tsx` copy, replace every placeholder:
 
 - `__COMPONENT_NAME__` (3 occurrences: CSS import, function name, default export) → e.g. `CpiDemoFlow`
-- `__STAGE_W__`, `__STAGE_H__` → computed bounding box from Step 4
+- `__STAGE_W__`, `__STAGE_H__` → computed bounding box from Step 5
 - `__NODES__` → the node object literal (id, x, y, icon (one emoji), title, sub, color (hex), optional `external: true`)
-- `__STEPS__` → the steps array from Step 3
+- `__STEPS__` → the steps array from Step 4
 - `__PHASES__` → the phase labels array
 - `__BIDIRECTIONAL_PAIRS__` → comma-separated quoted pairKey strings, or leave empty if no roundTrip steps
-- `__DB_INGEST_*__` placeholders → fill in, or `null`/empty per the "optional" note in Step 4
+- `__DB_INGEST_*__` placeholders → fill in, or `null`/empty per the "optional" note in Step 5
 - `__TITLE__`, `__SUBTITLE__` → demo title and one-line subtitle
-- `__FOOTER_JSX__` → 2-4 sentences of real JSX (can use `<b>...</b>` for emphasis) explaining the most important/non-obvious connection in the architecture (e.g. how the system reaches its key external dependency) — this is the one thing a viewer should remember after watching.
+- `__FOOTER_JSX__` → 2-4 sentences of real JSX (can use `<b>...</b>` for emphasis) explaining the most important/non-obvious connection in the architecture (the same one called out in the Mermaid diagram's Step 2 prose) — this is the one thing a viewer should remember after watching.
 
-## Step 6 — Generate the standalone HTML
+## Step 7 — Generate the standalone HTML
 
-Copy `templates/index.template.html` to `<input-dir>/demo/index.html`. It needs the **same placeholder values** as the `.tsx` file (it embeds a plain-JS twin of the same component plus the CSS inlined, so it works with zero build step) — do **not** re-derive the data, reuse exactly what you wrote in Step 5.
+Copy `templates/index.template.html` to `<input-dir>/demo/index.html`. It needs the **same placeholder values** as the `.tsx` file (it embeds a plain-JS twin of the same component plus the CSS inlined, so it works with zero build step) — do **not** re-derive the data, reuse exactly what you wrote in Step 6.
 
 Vendor the JS libraries so the HTML works fully offline (this is required — see FAQ for why a CDN-based version silently shows a blank page for some users):
 
@@ -173,7 +240,7 @@ curl -sL -o babel.min.js "https://unpkg.com/@babel/standalone/babel.min.js"
 
 If a `vendor/` folder with these three files already exists elsewhere in the project (from a previous ArchFlow run), just copy it instead of re-downloading (~2.5MB, mostly Babel).
 
-## Step 7 — Verify before reporting done
+## Step 8 — Verify before reporting done
 
 Don't skip this — both fixed-once bugs below were caught by exactly this kind of check, not by eyeballing the code.
 
@@ -239,13 +306,16 @@ const path = require('path');
 
 Then Read `/tmp/archflow-check.png` to eyeball the layout. If `puppeteer` isn't available, tell the user the syntax/data checks passed but visual verification is manual — ask them to open `demo/index.html` and confirm.
 
-## Step 8 — Report
+## Step 9 — Report
 
-Tell the user what was created (file paths), show the diagram/screenshot if you rendered one, and name the two files they can open right away: the `.puml`/`.png` and `demo/index.html`. Mention that `demo/index.html` needs no build step or server — just open it.
+Tell the user what was created (file paths), show the diagram/screenshot if you rendered one, and name the files they can open right away: `system-diagram.md` (renders inline on GitHub), `system-diagram.png`, and `demo/index.html`. Mention that `demo/index.html` needs no build step or server — just open it.
 
 ---
 
 ## FAQ / hard-won lessons (read before changing the engine)
+
+**Q: Why generate Mermaid, then PlantUML, then the demo — in that order?**
+Each stage is derived from the one before it (Mermaid → PlantUML → demo component list) rather than each being re-derived independently from the original input doc. That's what keeps all three artifacts describing the _same_ architecture — same component names, same edges, same external-system markings. Re-deriving each one from scratch invites silent drift (e.g. the demo showing a component the diagrams don't, or vice versa).
 
 **Q: Why vendor React/ReactDOM/Babel locally instead of loading from a CDN?**
 An earlier version loaded them from `unpkg.com` directly. It worked in this environment but showed a **blank page for the user** — the most likely cause is a network/browser policy blocking the CDN. Vendoring removes the dependency on internet access entirely; the file just works everywhere.
@@ -256,5 +326,5 @@ Babel Standalone's default `"react"` preset uses the **automatic JSX runtime**, 
 **Q: Why does the CSS have special `:fullscreen` rules for `.wrap` and `svg.stage`?**
 Outside fullscreen, the page can grow/scroll, so `height: auto` on the SVG (sized from its own aspect ratio) is enough — it's always fully visible. In fullscreen, `.archflow-container` gets pinned to a fixed `height: 100vh` with `overflow: hidden`. Without the fullscreen-only overrides, the SVG keeps sizing itself off its aspect ratio at the now-wider viewport, grows taller than the space actually available, and the fixed-height container silently clips the bottom row of nodes — no error, just missing content. The fix makes `.wrap` flex-grow to fill the fixed space and switches the SVG to `height: 100%` (letterboxed by `preserveAspectRatio="xMidYMid meet"`) only inside `:fullscreen`, leaving normal mode untouched.
 
-**Q: Can I skip the verification step (Step 7) if the code looks right?**
+**Q: Can I skip the verification step (Step 8) if the code looks right?**
 No — both bugs above looked completely fine on read-through; they only surfaced when actually rendered in a browser (or, for the JSX-runtime bug, when a syntax/transform check was run). "It compiles" and "it renders" are different claims for this kind of file.
