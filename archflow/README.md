@@ -1,42 +1,105 @@
-## ArchFlow – Claude Code Skill for Architecture Visualization & Live Workflow Demos
+# ArchFlow
 
-## What it does
+**A Claude Code skill that turns a written architecture doc into a diagram set and an animated, playable request-flow demo.**
 
-Give ArchFlow any `system-architecture.md` or `system-diagram.md` file describing your application's components, and it automatically generates three things — each built from the one before it, so they all describe the same architecture:
+Give it a `system-architecture.md` (or `system-diagram.md`) file and it generates three consistent artifacts, each derived from the one before it:
 
-1. **A Mermaid diagram** (`system-diagram.md`)
+1. A **Mermaid diagram** — renders inline on GitHub
+2. A **PlantUML diagram** — `.puml` source + rendered `.png`
+3. An **animated live demo** — a self-contained `index.html` that plays one realistic request flowing through every component (▶️ play, ⏸ pause, ⏭ step, plus a live activity log)
 
-   - Quick and readable
-   - Renders inline on GitHub and most markdown viewers
+No build step, no server — the demo opens directly in a browser and works offline.
 
-2. **A clean PlantUML architecture diagram** — translated from the Mermaid diagram
+---
 
-   - `.puml` source
-   - Rendered `.png` image
+## Table of contents
 
-3. **An animated, playable workflow demo** — built from the PlantUML's component list
-   - Simulates a real request flowing through your system
-   - Shows interactions across components (Frontend → Backend → External APIs → Database, etc.)
-   - Includes:
-     - ▶️ Play
-     - ⏸ Pause
-     - ⏭ Step controls
-     - 📋 Live activity log
+- [Quick start](#quick-start)
+- [Why it's useful](#why-its-useful)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Don't have an architecture doc yet?](#dont-have-an-architecture-doc-yet)
+- [What gets generated](#what-gets-generated)
+- [How it works](#how-it-works)
+- [Troubleshooting](#troubleshooting)
+- [Repository layout](#repository-layout)
 
-The demo is a self-contained `index.html` that opens directly in a browser—**no build step or server required**.
+---
+
+## Quick start
+
+```text
+# 1. Install (one-time)
+cp -r archflow ~/.claude/skills/archflow
+
+# 2. Run it against your architecture doc
+Using ArchFlow, generate a live demo workflow from docs/architecture/system-architecture.md
+
+# 3. Open the result
+open docs/architecture/demo/index.html
+```
+
+No architecture doc yet? See [Don't have an architecture doc yet?](#dont-have-an-architecture-doc-yet).
+
+---
 
 ## Why it's useful
 
-Great for:
+- **Onboarding** new team members without a whiteboard session
+- **Explaining** system architecture in a way that's actually watchable, not just read
+- **Walking stakeholders** through a request end-to-end, component by component
+- **Understanding** how an unfamiliar application really works, straight from its own docs
 
-- Onboarding new team members
-- Explaining system architecture
-- Walking stakeholders through request flows
-- Understanding how the application actually works without drawing diagrams on a whiteboard
+---
+
+## Prerequisites
+
+| Requirement                                            | Needed for                   | Notes                                                                                                                                     |
+| ------------------------------------------------------ | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Claude Code                                            | Running the skill            | This is a Claude Code skill, invoked via chat                                                                                             |
+| A `system-architecture.md` or `system-diagram.md` file | Everything                   | See below if you don't have one                                                                                                           |
+| PlantUML + a JRE                                       | Step 2 (PNG rendering)       | `brew install plantuml` on macOS. Optional — the skill still produces the `.puml` source and continues without the PNG if this is missing |
+| Node.js                                                | Optional verification checks | Only used if `@babel/core` or `puppeteer` are already resolvable in your project; not a hard requirement                                  |
+
+---
+
+## Installation
+
+Copy the skill folder into your Claude Code skills directory:
+
+```bash
+cp -r archflow ~/.claude/skills/archflow
+```
+
+That's it — no dependencies to install, no build step.
+
+---
+
+## Usage
+
+Point the skill at your architecture document from within Claude Code:
+
+```text
+Using ArchFlow, generate a live demo workflow from docs/architecture/system-architecture.md
+```
+
+Claude Code will:
+
+1. Read and understand your architecture doc
+2. Generate/refresh the Mermaid diagram
+3. Translate it into a PlantUML diagram and render the PNG
+4. Design a realistic end-to-end request scenario
+5. Build the animated demo (TSX component + standalone HTML)
+6. Run verification checks before reporting done
+
+Review the generated files (see [What gets generated](#what-gets-generated)) and open `demo/index.html` in a browser.
+
+---
 
 ## Don't have an architecture doc yet?
 
-ArchFlow needs a `system-architecture.md` (or `system-diagram.md`) to work from — it doesn't explore your codebase itself. If you don't have one, ask Claude Code to write it first:
+ArchFlow works from a doc you already have — it doesn't explore your codebase itself. If you don't have one, ask Claude Code to write it first:
 
 ```text
 Explore this entire repository (frontend, backend, database/migrations, config, docs, README) and write a system-architecture.md file summarizing:
@@ -56,38 +119,64 @@ Keep it concise and factual — this file will be used to auto-generate an archi
 
 Then come back and run ArchFlow on the file it produces.
 
-## How to use
+---
 
-### 1. Get the skill
+## What gets generated
 
-Copy the skill into:
-
-```text
-~/.claude/skills/archflow/
-```
-
-### 2. Run it in Claude Code
-
-Point the skill at your architecture document:
-
-```text
-Using ArchFlow, generate a live demo workflow from docs/architecture/system-architecture.md
-```
-
-### 3. Review the generated output
-
-ArchFlow writes everything next to your input file:
+Everything is written next to your input file:
 
 ```text
 docs/
 └── architecture/
     ├── system-architecture.md   (your input)
     ├── system-diagram.md        (Mermaid diagram)
-    ├── system-diagram.puml
-    ├── system-diagram.png
+    ├── system-diagram.puml      (PlantUML source)
+    ├── system-diagram.png       (rendered diagram)
     └── demo/
-        ├── index.html
-        └── ...
+        ├── <Name>DemoFlow.tsx   (React component)
+        ├── <Name>DemoFlow.css
+        ├── index.html           (open this — works standalone, offline)
+        └── vendor/
+            ├── react.production.min.js
+            ├── react-dom.production.min.js
+            └── babel.min.js
 ```
 
-Simply open `demo/index.html` in your browser to explore the animated workflow — no build step, no server, works offline.
+`<Name>` is a short identifier derived from your project name (e.g. `Cpi`, `Order`).
+
+---
+
+## How it works
+
+The three artifacts are generated **in sequence, each derived from the previous one** — not independently re-derived from your original doc. This keeps them describing the exact same architecture: same components, same edges, same external-system markings.
+
+```
+system-architecture.md  →  system-diagram.md (Mermaid)  →  system-diagram.puml (PlantUML)  →  demo/ (animated HTML)
+```
+
+For the full step-by-step process (layout rules, verification checks, and the hard-won lessons behind two previously-fixed bugs), see [`SKILL.md`](./SKILL.md).
+
+---
+
+## Troubleshooting
+
+| Symptom                                                | Cause                                                                | Fix                                                                                                              |
+| ------------------------------------------------------ | -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| No `system-diagram.png` was produced                   | PlantUML isn't installed                                             | `brew install plantuml` (macOS), then re-run — or proceed without the PNG                                        |
+| `demo/index.html` shows a blank page                   | Missing/broken `vendor/` files, or opened over a restrictive network | Confirm the three files exist in `demo/vendor/`; the demo is designed to work fully offline once they're present |
+| Diagram looks crowded or components overlap in the PNG | PlantUML's auto-layout struggled with too many packages              | Simplify grouping in `system-diagram.puml` and re-render                                                         |
+| Demo is missing a component you expected               | The input doc didn't mention it                                      | ArchFlow only uses what's in your architecture doc — update the doc and re-run                                   |
+
+---
+
+## Repository layout
+
+```text
+archflow/
+├── README.md                       (this file)
+├── SKILL.md                        (full skill definition — read this to understand or modify the generation logic)
+└── templates/
+    ├── DemoFlow.template.tsx       (React demo engine + layout rules)
+    ├── DemoFlow.template.css
+    └── index.template.html         (standalone HTML shell)
+```
