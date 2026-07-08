@@ -10,6 +10,8 @@ Give it a `system-architecture.md` (or `system-diagram.md`) file and it generate
 
 No build step, no server — the demo opens directly in a browser and works offline.
 
+> **➡️ Once ArchFlow finishes, open `demo/index.html` in your browser to see the live demo.** That's the main deliverable — everything else (Mermaid, PlantUML, PNG) is supporting material.
+
 ---
 
 ## Table of contents
@@ -36,9 +38,11 @@ cp -r archflow ~/.claude/skills/archflow
 # 2. Run it against your architecture doc
 Using ArchFlow, generate a live demo workflow from docs/architecture/system-architecture.md
 
-# 3. Open the result
+# 3. Open the result — open this file in your browser
 open docs/architecture/demo/index.html
 ```
+
+**Open `demo/index.html` in your browser** to see the animated request flow — that's the file that matters.
 
 No architecture doc yet? See [Don't have an architecture doc yet?](#dont-have-an-architecture-doc-yet).
 
@@ -93,7 +97,7 @@ Claude Code will:
 5. Build the animated demo (TSX component + standalone HTML)
 6. Run verification checks before reporting done
 
-Review the generated files (see [What gets generated](#what-gets-generated)) and open `demo/index.html` in a browser.
+Review the generated files (see [What gets generated](#what-gets-generated)), then **open `demo/index.html` in your browser** — this is the file you actually want to look at.
 
 ---
 
@@ -135,7 +139,7 @@ docs/
     └── demo/
         ├── <Name>DemoFlow.tsx   (React component)
         ├── <Name>DemoFlow.css
-        ├── index.html           (open this — works standalone, offline)
+        ├── index.html           ⭐ OPEN THIS — the live demo, works standalone, offline
         └── vendor/
             ├── react.production.min.js
             ├── react-dom.production.min.js
