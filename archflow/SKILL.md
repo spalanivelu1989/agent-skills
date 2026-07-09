@@ -11,7 +11,7 @@ Turns a written architecture description into three things, each built from the 
 2. Two **PlantUML diagrams** (`.puml` + rendered `.png` each), translated from the Mermaid diagram:
    - an **architecture diagram** (`system-diagram.puml`) — the static component/connection view, and
    - a **UML workflow diagram** (`system-workflow.puml`) — a sequence diagram walking one realistic end-to-end request through those components, phase by phase.
-3. An **ArchFlow demo** — an animated, playable visualization of the same request traveling through every component, built from the workflow diagram's phases and messages, as a React component (`*.tsx` + `*.css`) and a zero-dependency `index.html` that opens directly in a browser.
+3. An **ArchFlow demo** — an animated, playable visualization of the same request traveling through every component, built from the workflow diagram's phases and messages, as a React component (`*.tsx` + `*.css`) and a zero-dependency `index.html` that opens directly in a browser. The engine ships with play/pause, ⏮ back, phase fast-forward, a draggable timeline scrubber, a clickable activity log (every entry jumps to that step), and a click-to-open node inspector showing each component's description, connections, and step appearances.
 
 This skill codifies a working, previously-debugged implementation. Two non-obvious bugs are already fixed in the templates below — do not "improve" past them without re-testing (see the FAQ at the bottom for what they were and why).
 
@@ -358,6 +358,7 @@ Read `templates/DemoFlow.template.tsx` now (it has the exact layout rules and th
 - Leave ≥ 100-120px of margin above the topmost row (a bubble above a node renders at `node.y - 101`; anything higher than `y≈110` puts the bubble off-canvas).
 - `STAGE_W` / `STAGE_H` = the bounding box over all nodes (`max(x + NW)`, `max(y + NH)`) plus ~20-40px margin.
 - Mark external systems with `external: true` (renders as a dashed card).
+- Write a 1-2 sentence `desc` for **every** node — the click-to-open node inspector (side panel) shows it as the "what is this component" line. The inspector derives the node's connections and step appearances from STEPS automatically, so `desc` is the only per-node authoring this feature needs.
 - Build the `BIDIRECTIONAL` set: every pair used with `roundTrip: true` must appear here as `[a,b].sort().join('|')`, or the return arrowhead won't render.
 - Decide if one step deserves the optional "persistence save" flourish (file-transfer console + flying particles) — only if there's one obvious "everything lands here" moment (e.g. a DB write). If not, set `DB_INGEST_TO` to `null` and skip the rest of those placeholders (leave them as harmless-but-unused nulls/empty values).
 
@@ -371,7 +372,7 @@ In the `.tsx` copy, replace every placeholder:
 
 - `__COMPONENT_NAME__` (3 occurrences: CSS import, function name, default export) → e.g. `CpiDemoFlow`
 - `__STAGE_W__`, `__STAGE_H__` → computed bounding box from Step 5
-- `__NODES__` → the node object literal (id, x, y, icon (one emoji), title, sub, color (hex), optional `external: true`)
+- `__NODES__` → the node object literal (id, x, y, icon (one emoji), title, sub, color (hex), optional `external: true`, `desc` — 1-2 sentences shown in the node inspector)
 - `__STEPS__` → the steps array from Step 4
 - `__PHASES__` → the phase labels array
 - `__BIDIRECTIONAL_PAIRS__` → comma-separated quoted pairKey strings, or leave empty if no roundTrip steps
