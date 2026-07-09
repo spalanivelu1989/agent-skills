@@ -75,8 +75,7 @@ const center = (n) => ({ x: NODES[n].x + NW / 2, y: NODES[n].y + NH / 2 });
 // or the return-arrow won't render.
 const STEPS = [__STEPS__];
 
-// One label per phase index used in STEPS. Shown in the toolbar's phase tag
-// and used to group "Step" fast-forwards.
+// One label per phase index used in STEPS. Shown in the toolbar's phase tag.
 const PHASES = [__PHASES__];
 
 function buildPath(f, t) {
@@ -173,8 +172,8 @@ export function __COMPONENT_NAME__() {
   const idxRef = useRef(-1);
   const speedRef = useRef(0.5);
   const animRef = useRef(null);
-  // True while the ⏭ Step phase fast-forward runs — jumpTo must not fire then
-  // (DOM log-item listeners bypass the disabled-button guards).
+  // True while a ⏭ Step single-step animation runs — jumpTo must not fire
+  // then (DOM log-item listeners bypass the disabled-button guards).
   const ffRef = useRef(false);
 
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -1013,35 +1012,15 @@ export function __COMPONENT_NAME__() {
     if (i !== idxRef.current) jumpTo(i);
   }
 
+  // Advance exactly ONE step, animated at the current speed. The step's final
+  // state (active edge, chat bubbles) stays on screen afterwards so the user
+  // can read what just happened before stepping again.
   async function handleStep() {
-    if (playingRef.current) return;
-    const nextStep = STEPS[idxRef.current + 1];
-    if (!nextStep) return;
-    const targetPh = nextStep.ph;
-
+    if (playingRef.current || ffRef.current) return;
+    if (idxRef.current >= STEPS.length - 1) return;
     setIsDoneDisabled(true);
     ffRef.current = true;
-    const savedSpeed = speedRef.current;
-    speedRef.current = 250;
-
-    while (idxRef.current < STEPS.length - 1) {
-      const stepToRun = STEPS[idxRef.current + 1];
-      if (!stepToRun || stepToRun.ph !== targetPh) break;
-      idxRef.current++;
-      await runStep(idxRef.current);
-    }
-
-    speedRef.current = savedSpeed;
-
-    if (idxRef.current >= STEPS.length - 1) {
-      stopPlay();
-      resetAnimation(true, true);
-      setPhaseText("Run completed");
-      markRunCompleteInLog();
-    } else {
-      clearActive();
-      setPhaseText(PHASES[STEPS[idxRef.current].ph]);
-    }
+    await advance();
     ffRef.current = false;
     setIsDoneDisabled(false);
   }
