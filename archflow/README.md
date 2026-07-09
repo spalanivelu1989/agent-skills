@@ -5,8 +5,8 @@
 Give it a `system-architecture.md` (or `system-diagram.md`) file and it generates three consistent artifacts, each derived from the one before it:
 
 1. A **Mermaid diagram** — renders inline on GitHub
-2. A **PlantUML diagram** — `.puml` source + rendered `.png`
-3. An **animated live demo** — a self-contained `index.html` that plays one realistic request flowing through every component (▶️ play, ⏸ pause, ⏭ step, plus a live activity log)
+2. Two **PlantUML diagrams** — `.puml` source + rendered `.png` each: an **architecture diagram** (the static component view) and a **UML workflow diagram** (a sequence diagram walking one realistic request through the system, phase by phase)
+3. An **animated live demo** — a self-contained `index.html` that plays that same request flowing through every component (▶️ play, ⏸ pause, ⏭ step, plus a live activity log)
 
 No build step, no server — the demo opens directly in a browser and works offline.
 
@@ -152,8 +152,8 @@ Claude Code will:
 1. Check for prerequisites (PlantUML, Node.js, curl) and offer to install anything missing for your OS — you'll be asked to confirm before anything gets installed
 2. Read and understand your architecture doc
 3. Generate/refresh the Mermaid diagram
-4. Translate it into a PlantUML diagram and render the PNG
-5. Design a realistic end-to-end request scenario
+4. Translate it into two PlantUML diagrams — architecture + workflow sequence — and render the PNGs
+5. Turn the workflow scenario into the animated demo's phases and steps
 6. Build the animated demo (TSX component + standalone HTML)
 7. Run verification checks before reporting done
 
@@ -194,8 +194,10 @@ docs/
 └── architecture/
     ├── system-architecture.md   (your input)
     ├── system-diagram.md        (Mermaid diagram)
-    ├── system-diagram.puml      (PlantUML source)
-    ├── system-diagram.png       (rendered diagram)
+    ├── system-diagram.puml      (PlantUML architecture diagram — source)
+    ├── system-diagram.png       (rendered architecture diagram)
+    ├── system-workflow.puml     (PlantUML workflow sequence diagram — source)
+    ├── system-workflow.png      (rendered workflow diagram)
     └── demo/
         ├── <Name>DemoFlow.tsx   (React component)
         ├── <Name>DemoFlow.css
@@ -217,18 +219,18 @@ Live demo workflow
 1. Check prerequisites (offer to install anything missing)
 2. Read & understand the architecture doc
 3. Generate Mermaid diagram
-4. Generate PlantUML from the Mermaid diagram + render the PNG
-5. Design the demo scenario — drawn from the PlantUML's component/edge list
+4. Generate two PlantUML diagrams from the Mermaid diagram — architecture (components/connections) + workflow (a sequence diagram of one end-to-end request) — and render both PNGs
+5. Design the demo scenario — the workflow diagram's phases and messages become the demo's phases and steps
 6. Compute layout
 7. Generate TSX
 8. Generate standalone HTML (vendored React/Babel, works offline)
 9. Verify — syntax check, data-integrity check, optional headless render check
 10. Report — then open `demo/index.html`
 
-The three artifacts are generated **in sequence, each derived from the previous one** — not independently re-derived from your original doc. This keeps them describing the exact same architecture: same components, same edges, same external-system markings.
+The artifacts are generated **in sequence, each derived from the previous one** — not independently re-derived from your original doc. This keeps them describing the exact same architecture and the exact same request scenario: same components, same edges, same external-system markings.
 
 ```
-system-architecture.md  →  system-diagram.md (Mermaid)  →  system-diagram.puml (PlantUML)  →  demo/ (animated HTML)
+system-architecture.md  →  system-diagram.md (Mermaid)  →  system-diagram.puml (architecture)  →  system-workflow.puml (workflow sequence)  →  demo/ (animated HTML)
 ```
 
 For the full step-by-step process (prerequisite checks, layout rules, verification checks, and the hard-won lessons behind two previously-fixed bugs), see [`SKILL.md`](./SKILL.md).
@@ -237,13 +239,13 @@ For the full step-by-step process (prerequisite checks, layout rules, verificati
 
 ## Troubleshooting
 
-| Symptom                                                | Cause                                                                | Fix                                                                                                              |
-| ------------------------------------------------------ | -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| No `system-diagram.png` was produced                   | PlantUML isn't installed                                             | Let the skill offer to install it for your OS (see [Prerequisites](#prerequisites)), or proceed without the PNG  |
-| `demo/index.html` shows a blank page                   | Missing/broken `vendor/` files, or opened over a restrictive network | Confirm the three files exist in `demo/vendor/`; the demo is designed to work fully offline once they're present |
-| Diagram looks crowded or components overlap in the PNG | PlantUML's auto-layout struggled with too many packages              | Simplify grouping in `system-diagram.puml` and re-render                                                         |
-| Demo is missing a component you expected               | The input doc didn't mention it                                      | ArchFlow only uses what's in your architecture doc — update the doc and re-run                                   |
-| Prerequisite install command fails (permissions, sudo) | Package manager needs elevated rights, or isn't installed itself     | Run the proposed command yourself in a terminal with the right privileges, then re-run the skill                 |
+| Symptom                                                      | Cause                                                                | Fix                                                                                                                         |
+| ------------------------------------------------------------ | -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| No `system-diagram.png` / `system-workflow.png` was produced | PlantUML isn't installed                                             | Let the skill offer to install it for your OS (see [Prerequisites](#prerequisites)), or proceed without the PNGs            |
+| `demo/index.html` shows a blank page                         | Missing/broken `vendor/` files, or opened over a restrictive network | Confirm the three files exist in `demo/vendor/`; the demo is designed to work fully offline once they're present            |
+| Diagram looks crowded or components overlap in the PNG       | PlantUML's auto-layout struggled with too many packages/participants | Simplify grouping in `system-diagram.puml` (or drop lightly-touched participants from `system-workflow.puml`) and re-render |
+| Demo is missing a component you expected                     | The input doc didn't mention it                                      | ArchFlow only uses what's in your architecture doc — update the doc and re-run                                              |
+| Prerequisite install command fails (permissions, sudo)       | Package manager needs elevated rights, or isn't installed itself     | Run the proposed command yourself in a terminal with the right privileges, then re-run the skill                            |
 
 ---
 

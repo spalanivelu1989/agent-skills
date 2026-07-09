@@ -1,6 +1,6 @@
 ---
 name: archflow
-description: Turns a system-architecture.md or system-diagram.md file into (1) a Mermaid diagram, (2) a PlantUML diagram + rendered PNG, and (3) an animated, interactive "ArchFlow" live demo (a React/TSX component plus a self-contained HTML file) that visualizes one realistic request flowing through every component. Use when the user provides an architecture/diagram markdown file and asks to generate a live demo workflow, animate a system diagram, visualize a request flow, or "archflow" a file.
+description: Turns a system-architecture.md or system-diagram.md file into (1) a Mermaid diagram, (2) two PlantUML diagrams + rendered PNGs (an architecture/component diagram and a UML workflow sequence diagram of one end-to-end request), and (3) an animated, interactive "ArchFlow" live demo (a React/TSX component plus a self-contained HTML file) that visualizes one realistic request flowing through every component. Use when the user provides an architecture/diagram markdown file and asks to generate a live demo workflow, animate a system diagram, visualize a request flow, or "archflow" a file.
 ---
 
 # ArchFlow
@@ -8,8 +8,10 @@ description: Turns a system-architecture.md or system-diagram.md file into (1) a
 Turns a written architecture description into three things, each built from the one before it (so all three stay consistent with each other — same components, same edges, same external-system markings):
 
 1. A **Mermaid diagram** (`system-diagram.md`) — quick, readable, renders inline in GitHub/most markdown viewers.
-2. A **PlantUML diagram** (`.puml` + rendered `.png`) — translated from the Mermaid diagram.
-3. An **ArchFlow demo** — an animated, playable visualization of one concrete request traveling through every component, built from the PlantUML's component/edge list, as a React component (`*.tsx` + `*.css`) and a zero-dependency `index.html` that opens directly in a browser.
+2. Two **PlantUML diagrams** (`.puml` + rendered `.png` each), translated from the Mermaid diagram:
+   - an **architecture diagram** (`system-diagram.puml`) — the static component/connection view, and
+   - a **UML workflow diagram** (`system-workflow.puml`) — a sequence diagram walking one realistic end-to-end request through those components, phase by phase.
+3. An **ArchFlow demo** — an animated, playable visualization of the same request traveling through every component, built from the workflow diagram's phases and messages, as a React component (`*.tsx` + `*.css`) and a zero-dependency `index.html` that opens directly in a browser.
 
 This skill codifies a working, previously-debugged implementation. Two non-obvious bugs are already fixed in the templates below — do not "improve" past them without re-testing (see the FAQ at the bottom for what they were and why).
 
@@ -23,8 +25,10 @@ The user provides a path to a `system-architecture.md` or `system-diagram.md` fi
 <input-dir>/
   system-architecture.md      (the input — prose, may already have a diagram)
   system-diagram.md           (Mermaid diagram — this skill creates/refreshes it)
-  system-diagram.puml
+  system-diagram.puml         (PlantUML architecture diagram)
   system-diagram.png
+  system-workflow.puml        (PlantUML workflow sequence diagram)
+  system-workflow.png
   demo/
     <Name>DemoFlow.tsx
     <Name>DemoFlow.css
@@ -201,11 +205,13 @@ User(["User / Browser"])
 
 Save it to `<input-dir>/system-diagram.md`.
 
-## Step 3 — Generate the PlantUML diagram
+## Step 3 — Generate the PlantUML diagrams (architecture + workflow)
 
-**Translate the Mermaid diagram from Step 2** into PlantUML — same components, same edges, same external-system markings. Don't re-derive independently from the original input doc; drifting the two diagrams apart defeats the point of generating them in sequence.
+This step produces **two** `.puml` files, both translated from the Mermaid diagram in Step 2 — same components, same edges, same external-system markings. Don't re-derive either one independently from the original input doc; drifting the diagrams apart defeats the point of generating them in sequence.
 
-Use this style (proven to render cleanly and read well — component boxes for internal systems, `cloud` shapes for external ones, a legend note):
+### 3a — Architecture diagram (`system-diagram.puml`)
+
+The static component/connection view. Use this style (proven to render cleanly and read well — component boxes for internal systems, `cloud` shapes for external ones, a legend note):
 
 ```plantuml
 @startuml system-diagram
@@ -254,20 +260,82 @@ end note
 
 Write it to `<input-dir>/system-diagram.puml`.
 
-Render it:
+### 3b — UML workflow diagram (`system-workflow.puml`)
+
+A **sequence diagram** that walks **one realistic, concrete end-to-end scenario** through the components — the story of a single request, not the static wiring. This scenario is a real decision, not boilerplate: pick something a user of this system would actually trigger, and that touches most or all of the components from 3a (the same scenario later becomes the animated demo in Steps 4-7, so choose it here with that in mind). Past example: for an AI test-suite tool, the scenario was "a user says 'test this website', a Discoverer explores the site and writes a plan, a Designer reuses/writes test scripts, a Tester runs and self-heals them, and a Reporter explains the results and saves the run."
+
+Structure and style (proven board-friendly — readable by non-engineers at a glance):
+
+- One `participant` per internal component the scenario touches, using the **same names as 3a**, each with a soft pastel fill (rotate through `#E8F5E9`, `#E3F2FD`, `#FFF3E0`, `#F3E5F5`). Use `actor` for the user, `database` for datastores, `boundary` for external systems — those three in neutral `#ECEFF1`.
+- Split the scenario into **3-6 numbered phases** using divider syntax: `== Step N — <plain-English title> ==`. These phase titles should read as a story ("Explore the live site, THEN write a plan"), not as component names.
+- Solid arrows (`->`) for requests/hand-offs, dashed (`-->`) for responses. Self-messages (`A -> A : ...`) for internal work, with the produced artifact in `**bold**`. Wrap `activate`/`deactivate` around a participant doing real work during a call so the activation bar shows it.
+- Keep every message label short (one line, two max via `\n`); bold the nouns that matter (**Test Plan**, **Report**).
+- End with the deliverable going back to the user (e.g. `A4 --> User : 📄 Report`) and a `note across` block: 2-4 sentences stating the one thing a viewer should remember — the same key connection called out in the Mermaid diagram's prose in Step 2.
+
+Skeleton:
+
+```plantuml
+@startuml system-workflow
+title <System Name> — Workflow (<one-line scenario name>)
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam sequenceMessageAlign center
+skinparam roundcorner 8
+skinparam ArrowColor #444444
+skinparam ArrowFontColor #333333
+skinparam NoteBackgroundColor #FFF7E0
+skinparam NoteBorderColor #E0C46C
+
+actor "User" as User
+
+participant "<Component A>" as A1 #E8F5E9
+participant "<Component B>" as A2 #E3F2FD
+
+database "<Datastore>\n(<what it holds>)" as DB #ECEFF1
+boundary  "<External System>\n(<subtitle>)"  as EXT #ECEFF1
+
+User -> A1 : 1. "<the user's triggering action>"
+
+== Step 1 — <plain-English phase title> ==
+A1 -> DB : <ask for something>
+DB --> A1 : <what comes back>
+A1 -> EXT : <call out to the external system>
+activate EXT
+EXT --> A1 : <result>
+deactivate EXT
+A1 -> A1 : <internal work producing a **named artifact**>
+
+== Step 2 — <next phase> ==
+A1 -> A2 : hand over the **<artifact>**
+' ... more phases ...
+
+A2 --> User : 📄 <final deliverable>
+
+note across
+  <2-4 sentences — the one thing worth remembering about
+  how this system works, matching the Mermaid prose callout.>
+end note
+
+@enduml
+```
+
+Write it to `<input-dir>/system-workflow.puml`.
+
+### Render both
 
 ```bash
 which plantuml
 ```
 
-- If found: `cd <input-dir> && plantuml -tpng system-diagram.puml` — this produces `system-diagram.png` in the same directory (PlantUML names the output from the `@startuml <name>` identifier, which is why the diagram is named `system-diagram` above — keep that identifier as literally `system-diagram`, not the page title, or the PNG filename won't match).
-- If not found: tell the user PlantUML (+ a JRE) isn't installed (`brew install plantuml` on macOS) and offer to proceed without the PNG, or wait for them to install it. Don't silently skip this step without saying so.
+- If found: `cd <input-dir> && plantuml -tpng system-diagram.puml system-workflow.puml` — this produces `system-diagram.png` and `system-workflow.png` in the same directory. PlantUML names each output from its `@startuml <name>` identifier, **not** the source filename — keep the identifiers as literally `system-diagram` and `system-workflow` (not the page titles), or the PNG filenames won't match.
+- If not found: tell the user PlantUML (+ a JRE) isn't installed (`brew install plantuml` on macOS) and offer to proceed without the PNGs, or wait for them to install it. Don't silently skip this step without saying so.
 
-After rendering, view the PNG (Read tool) to sanity-check the layout before moving on — crowded/overlapping labels mean the auto-layout struggled; simplify the diagram (fewer, better-grouped packages) rather than leaving a bad render.
+After rendering, view both PNGs (Read tool) to sanity-check layout before moving on — crowded/overlapping labels in the architecture diagram mean the auto-layout struggled (simplify grouping); an overly wide workflow diagram means too many participants (drop components the scenario only brushes past, or shorten message labels) — rather than leaving a bad render.
 
 ## Step 4 — Design the demo scenario
 
-Using the component/edge list from Step 3's PlantUML as your working set (not a fresh read of the original input), pick **one realistic, concrete end-to-end scenario** that a user of this system would actually trigger, and that touches most or all of those components — not an abstract tour of every possible edge. Past example: for an SAP CPI test tool, the scenario was "a user runs a regression test case against CPI, coverage gets computed, AI recommends new tests and drafts docs, a legacy system gets cross-checked, and the result is saved and shown back to the user."
+**The workflow sequence diagram from Step 3b is your script** — don't invent a second scenario. Its `==` phase dividers become the demo's phases, and each sequence message (or small group of messages) becomes a step. Where the sequence diagram had to stay terse, the demo can add detail: extra intermediate steps, and per-step dialogue.
 
 Break it into **4-7 phases** (e.g. kick-off → trigger → process → enrich → persist/respond) and, within each phase, one or more **steps** — a step is one interaction between two components (or one component "thinking" internally).
 
@@ -275,7 +343,7 @@ For each step, decide:
 
 - **f, t**: source and destination node IDs. `f === t` means a self-working step (no network hop, node just pulses).
 - **k**: `'call'` (control/hand-off), `'data'` (a response), or `'work'` (self-working) — cosmetic only, colors the log entry and pulse.
-- **roundTrip**: true when it's a request-then-immediate-response pair that should animate as one back-and-forth over a single step (e.g. "ask the database for X, get X back"). When true, remember the engine's convention: `f` = the **responder** (has the data), `t` = the **asker** (initiates) — backwards-looking but required; see the template comments.
+- **roundTrip**: true when it's a request-then-immediate-response pair that should animate as one back-and-forth over a single step (e.g. "ask the database for X, get X back" — the adjacent `->` / `-->` pairs in the workflow diagram). When true, remember the engine's convention: `f` = the **responder** (has the data), `t` = the **asker** (initiates) — backwards-looking but required; see the template comments.
 - **chat**: 1-2 short lines of dialogue per step, revealed as it plays. Keep each line under ~70 characters. This is what makes the demo readable at a glance — don't skip it.
 
 Write 15-25 steps total. Fewer feels thin for anything beyond a trivial 3-component system; many more gets tedious to watch. If the architecture has a clearly optional/parallel side-path (e.g. a legacy integration, an audit log), it's fine to include it as its own phase — it doesn't need to block the main path.
@@ -408,14 +476,14 @@ Then Read `/tmp/archflow-check.png` to eyeball the layout. If `puppeteer` isn't 
 
 ## Step 9 — Report
 
-Tell the user what was created (file paths), show the diagram/screenshot if you rendered one, and name the files they can open right away: `system-diagram.md` (renders inline on GitHub), `system-diagram.png`, and `demo/index.html`. Mention that `demo/index.html` needs no build step or server — just open it.
+Tell the user what was created (file paths), show the diagrams/screenshot if you rendered them, and name the files they can open right away: `system-diagram.md` (renders inline on GitHub), `system-diagram.png` (architecture), `system-workflow.png` (workflow), and `demo/index.html`. Mention that `demo/index.html` needs no build step or server — just open it.
 
 ---
 
 ## FAQ / hard-won lessons (read before changing the engine)
 
 **Q: Why generate Mermaid, then PlantUML, then the demo — in that order?**
-Each stage is derived from the one before it (Mermaid → PlantUML → demo component list) rather than each being re-derived independently from the original input doc. That's what keeps all three artifacts describing the _same_ architecture — same component names, same edges, same external-system markings. Re-deriving each one from scratch invites silent drift (e.g. the demo showing a component the diagrams don't, or vice versa).
+Each stage is derived from the one before it (Mermaid → PlantUML architecture → PlantUML workflow sequence → demo phases/steps) rather than each being re-derived independently from the original input doc. That's what keeps all the artifacts describing the _same_ architecture and the _same_ scenario — same component names, same edges, same external-system markings, same request story. Re-deriving each one from scratch invites silent drift (e.g. the demo showing a component the diagrams don't, or animating a different scenario than the workflow diagram tells).
 
 **Q: Why vendor React/ReactDOM/Babel locally instead of loading from a CDN?**
 An earlier version loaded them from `unpkg.com` directly. It worked in this environment but showed a **blank page for the user** — the most likely cause is a network/browser policy blocking the CDN. Vendoring removes the dependency on internet access entirely; the file just works everywhere.
