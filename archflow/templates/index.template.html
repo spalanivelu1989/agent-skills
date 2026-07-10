@@ -17,6 +17,12 @@
       html,
       body {
         margin: 0;
+      }
+      /* Flex-centering must live on body ONLY. If html is also display:flex,
+         body becomes a shrink-to-fit flex item and #root's width:100% resolves
+         against that collapsed width — the demo renders at content width
+         instead of filling max-width:1500px. */
+      body {
         padding: 24px;
         min-height: 100vh;
         background: #05070c;
@@ -471,11 +477,20 @@
       }
 
       .archflow-container .node {
-        cursor: pointer;
+        cursor: grab;
+        touch-action: none;
+        transform: translate(var(--drag-x, 0px), var(--drag-y, 0px));
         transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
       }
       .archflow-container .node:hover {
-        transform: scale(1.02) translateY(-2px);
+        transform: translate(var(--drag-x, 0px), var(--drag-y, 0px)) scale(1.02)
+          translateY(-2px);
+      }
+      .archflow-container .node.dragging,
+      .archflow-container .node.dragging:hover {
+        cursor: grabbing;
+        transition: none;
+        transform: translate(var(--drag-x, 0px), var(--drag-y, 0px));
       }
       .archflow-container .node-card {
         fill: var(--node-fill);
@@ -1164,7 +1179,7 @@
           const norm = (x, y) => { const d = Math.hypot(x, y) || 1; return { x: x / d, y: y / d }; };
           const insideCard = (p, n, pad) => p.x >= n.x - pad && p.x <= n.x + NW + pad && p.y >= n.y - pad && p.y <= n.y + NH + pad;
 
-          const makeArrow = (path, len, n, side) => {
+          const arrowPoints = (path, len, n, side) => {
             const STEP = 1;
             const OVERLAP = 2.5;
             let edgeL = 0;
@@ -1197,8 +1212,11 @@
             const ny = dir.x;
             const bx = tip.x - dir.x * size;
             const by = tip.y - dir.y * size;
-            const pts = `${tip.x.toFixed(1)},${tip.y.toFixed(1)} ${(bx + nx * half).toFixed(1)},${(by + ny * half).toFixed(1)} ${(bx - nx * half).toFixed(1)},${(by - ny * half).toFixed(1)}`;
-            const poly = el('polygon', { points: pts, class: 'arrow' });
+            return `${tip.x.toFixed(1)},${tip.y.toFixed(1)} ${(bx + nx * half).toFixed(1)},${(by + ny * half).toFixed(1)} ${(bx - nx * half).toFixed(1)},${(by - ny * half).toFixed(1)}`;
+          };
+
+          const makeArrow = (path, len, n, side) => {
+            const poly = el('polygon', { points: arrowPoints(path, len, n, side), class: 'arrow' });
             arrowLayer.appendChild(poly);
             allArrows.push(poly);
             return poly;
@@ -1218,6 +1236,31 @@
           const pulse = el('circle', { r: 5.5, class: 'pulse', cx: -100, cy: -100, opacity: 0 });
           pulseRef.current = pulse;
 
+          // Node dragging: NODES coords update live and every edge touching
+          // the node (path + both arrowheads) is rebuilt each move, so links
+          // stay attached while the user pulls cards apart to declutter
+          // overlapping edges. A small movement threshold keeps a plain click
+          // still opening the inspector.
+          const svg = stageRef.current;
+          const toSvgPoint = (evt) => {
+            const pt = svg.createSVGPoint();
+            pt.x = evt.clientX;
+            pt.y = evt.clientY;
+            return pt.matrixTransform(svg.getScreenCTM().inverse());
+          };
+          const refreshEdgesFor = (nodeId) => {
+            Object.values(edgesRef.current).forEach((e) => {
+              if (e.from !== nodeId && e.to !== nodeId) return;
+              e.el.setAttribute('d', buildPath(e.from, e.to));
+              e.len = e.el.getTotalLength();
+              Object.keys(e.arrows).forEach((endId) => {
+                e.arrows[endId].setAttribute('points', arrowPoints(e.el, e.len, NODES[endId], endId === e.to ? 'to' : 'from'));
+              });
+            });
+          };
+          const basePos = {};
+          const dragState = { id: null, suppressClick: false };
+
           const nodeEls = {};
           Object.keys(NODES).forEach((id) => {
             const n = NODES[id];
@@ -1227,7 +1270,43 @@
             g.appendChild(el('text', { class: 'node-icon', x: n.x + 30, y: n.y + NH / 2 + 1 }, n.icon));
             g.appendChild(el('text', { class: 'node-title', x: n.x + 58, y: n.y + 31 }, n.title));
             g.appendChild(el('text', { class: 'node-sub', x: n.x + 58, y: n.y + 50 }, n.sub));
-            g.addEventListener('click', () => setInspected((prev) => (prev === id ? null : id)));
+            g.addEventListener('click', () => {
+              if (dragState.suppressClick) return;
+              setInspected((prev) => (prev === id ? null : id));
+            });
+            basePos[id] = { x: n.x, y: n.y };
+            g.addEventListener('pointerdown', (e) => {
+              if (e.button !== 0) return;
+              const p = toSvgPoint(e);
+              dragState.id = id;
+              dragState.suppressClick = false;
+              dragState.px = p.x;
+              dragState.py = p.y;
+              dragState.nx = n.x;
+              dragState.ny = n.y;
+              g.setPointerCapture(e.pointerId);
+            });
+            g.addEventListener('pointermove', (e) => {
+              if (dragState.id !== id) return;
+              const p = toSvgPoint(e);
+              const dx = p.x - dragState.px;
+              const dy = p.y - dragState.py;
+              if (!dragState.suppressClick && Math.hypot(dx, dy) < 3) return;
+              dragState.suppressClick = true;
+              g.classList.add('dragging');
+              n.x = Math.max(4, Math.min(STAGE_W - NW - 4, dragState.nx + dx));
+              n.y = Math.max(4, Math.min(STAGE_H - NH - 4, dragState.ny + dy));
+              g.style.setProperty('--drag-x', (n.x - basePos[id].x) + 'px');
+              g.style.setProperty('--drag-y', (n.y - basePos[id].y) + 'px');
+              refreshEdgesFor(id);
+            });
+            const endDrag = () => {
+              if (dragState.id !== id) return;
+              dragState.id = null;
+              g.classList.remove('dragging');
+            };
+            g.addEventListener('pointerup', endDrag);
+            g.addEventListener('pointercancel', endDrag);
             stageRef.current.appendChild(g);
             nodeEls[id] = g;
           });

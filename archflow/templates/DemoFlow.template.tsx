@@ -286,7 +286,7 @@ export function __COMPONENT_NAME__() {
       p.y >= n.y - pad &&
       p.y <= n.y + NH + pad;
 
-    const makeArrow = (path, len, n, side) => {
+    const arrowPoints = (path, len, n, side) => {
       const STEP = 1;
       const OVERLAP = 2.5;
       let edgeL = 0;
@@ -325,13 +325,19 @@ export function __COMPONENT_NAME__() {
       const ny = dir.x;
       const bx = tip.x - dir.x * size;
       const by = tip.y - dir.y * size;
-      const pts = `${tip.x.toFixed(1)},${tip.y.toFixed(1)} ${(
+      return `${tip.x.toFixed(1)},${tip.y.toFixed(1)} ${(
         bx +
         nx * half
       ).toFixed(1)},${(by + ny * half).toFixed(1)} ${(bx - nx * half).toFixed(
         1,
       )},${(by - ny * half).toFixed(1)}`;
-      const poly = el("polygon", { points: pts, class: "arrow" });
+    };
+
+    const makeArrow = (path, len, n, side) => {
+      const poly = el("polygon", {
+        points: arrowPoints(path, len, n, side),
+        class: "arrow",
+      });
       arrowLayer.appendChild(poly);
       allArrows.push(poly);
       return poly;
@@ -359,6 +365,39 @@ export function __COMPONENT_NAME__() {
       opacity: 0,
     });
     pulseRef.current = pulse;
+
+    // Node dragging: NODES coords update live and every edge touching the
+    // node (path + both arrowheads) is rebuilt each move, so links stay
+    // attached while the user pulls cards apart to declutter overlapping
+    // edges. A small movement threshold keeps a plain click still opening
+    // the inspector.
+    const svg = stageRef.current;
+    const toSvgPoint = (evt) => {
+      const pt = svg.createSVGPoint();
+      pt.x = evt.clientX;
+      pt.y = evt.clientY;
+      return pt.matrixTransform(svg.getScreenCTM().inverse());
+    };
+    const refreshEdgesFor = (nodeId) => {
+      Object.values(edgesRef.current).forEach((e) => {
+        if (e.from !== nodeId && e.to !== nodeId) return;
+        e.el.setAttribute("d", buildPath(e.from, e.to));
+        e.len = e.el.getTotalLength();
+        Object.keys(e.arrows).forEach((endId) => {
+          e.arrows[endId].setAttribute(
+            "points",
+            arrowPoints(
+              e.el,
+              e.len,
+              NODES[endId],
+              endId === e.to ? "to" : "from",
+            ),
+          );
+        });
+      });
+    };
+    const basePos = {};
+    const dragState = { id: null, suppressClick: false };
 
     const nodeEls = {};
     Object.keys(NODES).forEach((id) => {
@@ -393,9 +432,43 @@ export function __COMPONENT_NAME__() {
       g.appendChild(
         el("text", { class: "node-sub", x: n.x + 58, y: n.y + 50 }, n.sub),
       );
-      g.addEventListener("click", () =>
-        setInspected((prev) => (prev === id ? null : id)),
-      );
+      g.addEventListener("click", () => {
+        if (dragState.suppressClick) return;
+        setInspected((prev) => (prev === id ? null : id));
+      });
+      basePos[id] = { x: n.x, y: n.y };
+      g.addEventListener("pointerdown", (e) => {
+        if (e.button !== 0) return;
+        const p = toSvgPoint(e);
+        dragState.id = id;
+        dragState.suppressClick = false;
+        dragState.px = p.x;
+        dragState.py = p.y;
+        dragState.nx = n.x;
+        dragState.ny = n.y;
+        g.setPointerCapture(e.pointerId);
+      });
+      g.addEventListener("pointermove", (e) => {
+        if (dragState.id !== id) return;
+        const p = toSvgPoint(e);
+        const dx = p.x - dragState.px;
+        const dy = p.y - dragState.py;
+        if (!dragState.suppressClick && Math.hypot(dx, dy) < 3) return;
+        dragState.suppressClick = true;
+        g.classList.add("dragging");
+        n.x = Math.max(4, Math.min(STAGE_W - NW - 4, dragState.nx + dx));
+        n.y = Math.max(4, Math.min(STAGE_H - NH - 4, dragState.ny + dy));
+        g.style.setProperty("--drag-x", n.x - basePos[id].x + "px");
+        g.style.setProperty("--drag-y", n.y - basePos[id].y + "px");
+        refreshEdgesFor(id);
+      });
+      const endDrag = () => {
+        if (dragState.id !== id) return;
+        dragState.id = null;
+        g.classList.remove("dragging");
+      };
+      g.addEventListener("pointerup", endDrag);
+      g.addEventListener("pointercancel", endDrag);
       stageRef.current.appendChild(g);
       nodeEls[id] = g;
     });

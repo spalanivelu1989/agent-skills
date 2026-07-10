@@ -459,13 +459,26 @@
   }
 }
 
+/* Nodes are draggable (links stay attached and re-route live) — the drag
+   offset lives in --drag-x/--drag-y so the hover scale can compose with it
+   instead of resetting a dragged node back to its original spot. */
 .archflow-container .node {
-  cursor: pointer;
+  cursor: grab;
+  touch-action: none;
+  transform: translate(var(--drag-x, 0px), var(--drag-y, 0px));
   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .archflow-container .node:hover {
-  transform: scale(1.02) translateY(-2px);
+  transform: translate(var(--drag-x, 0px), var(--drag-y, 0px)) scale(1.02)
+    translateY(-2px);
+}
+
+.archflow-container .node.dragging,
+.archflow-container .node.dragging:hover {
+  cursor: grabbing;
+  transition: none;
+  transform: translate(var(--drag-x, 0px), var(--drag-y, 0px));
 }
 
 .archflow-container .node-card {
