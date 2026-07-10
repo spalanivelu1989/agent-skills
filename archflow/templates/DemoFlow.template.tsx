@@ -152,6 +152,44 @@ const SUBTITLE = "__SUBTITLE__";
 // ArchFlow ENGINE — do not modify below this line.
 // ============================================================================
 
+// Dragged node positions persist per demo (keyed by TITLE) so a decluttered
+// layout survives reloads. Storage can be unavailable or stale (private mode,
+// cleared NODES entries), so everything is best-effort: failures fall back to
+// the authored layout.
+const LAYOUT_KEY = "archflow-layout:" + TITLE;
+const DEFAULT_POS = {};
+Object.keys(NODES).forEach((id) => {
+  DEFAULT_POS[id] = { x: NODES[id].x, y: NODES[id].y };
+});
+(function loadLayout() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(LAYOUT_KEY)) || {};
+    Object.keys(saved).forEach((id) => {
+      if (
+        NODES[id] &&
+        typeof saved[id].x === "number" &&
+        typeof saved[id].y === "number"
+      ) {
+        NODES[id].x = Math.max(4, Math.min(STAGE_W - NW - 4, saved[id].x));
+        NODES[id].y = Math.max(4, Math.min(STAGE_H - NH - 4, saved[id].y));
+      }
+    });
+  } catch (e) {
+    /* keep authored layout */
+  }
+})();
+function saveLayout() {
+  try {
+    const pos = {};
+    Object.keys(NODES).forEach((id) => {
+      pos[id] = { x: NODES[id].x, y: NODES[id].y };
+    });
+    localStorage.setItem(LAYOUT_KEY, JSON.stringify(pos));
+  } catch (e) {
+    /* storage unavailable — layout just won't persist */
+  }
+}
+
 export function __COMPONENT_NAME__() {
   const [theme, setTheme] = useState("dark");
   const [speed, setSpeed] = useState(0.5);
@@ -175,6 +213,8 @@ export function __COMPONENT_NAME__() {
   // True while a ⏭ Step single-step animation runs — jumpTo must not fire
   // then (DOM log-item listeners bypass the disabled-button guards).
   const ffRef = useRef(false);
+  // Set by the mount effect; restores the authored node layout.
+  const resetLayoutRef = useRef(null);
 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const containerRef = useRef(null);
@@ -466,6 +506,7 @@ export function __COMPONENT_NAME__() {
         if (dragState.id !== id) return;
         dragState.id = null;
         g.classList.remove("dragging");
+        if (dragState.suppressClick) saveLayout();
       };
       g.addEventListener("pointerup", endDrag);
       g.addEventListener("pointercancel", endDrag);
@@ -473,6 +514,27 @@ export function __COMPONENT_NAME__() {
       nodeEls[id] = g;
     });
     nodeElsRef.current = nodeEls;
+
+    // ⇱ Layout button: forget the saved layout and glide every node back to
+    // its authored position (links re-route along the way).
+    resetLayoutRef.current = () => {
+      try {
+        localStorage.removeItem(LAYOUT_KEY);
+      } catch (e) {}
+      Object.keys(NODES).forEach((id) => {
+        NODES[id].x = DEFAULT_POS[id].x;
+        NODES[id].y = DEFAULT_POS[id].y;
+        nodeEls[id].style.setProperty(
+          "--drag-x",
+          NODES[id].x - basePos[id].x + "px",
+        );
+        nodeEls[id].style.setProperty(
+          "--drag-y",
+          NODES[id].y - basePos[id].y + "px",
+        );
+        refreshEdgesFor(id);
+      });
+    };
 
     stageRef.current.appendChild(pulse);
 
@@ -1154,6 +1216,12 @@ export function __COMPONENT_NAME__() {
         </button>
         <button onClick={() => resetAnimation(true)} disabled={isDoneDisabled}>
           ↻ Restart
+        </button>
+        <button
+          onClick={() => resetLayoutRef.current && resetLayoutRef.current()}
+          title="Move all nodes back to their original positions"
+        >
+          ⇱ Layout
         </button>
         <span className="speed">
           Speed

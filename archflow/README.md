@@ -6,7 +6,7 @@ Give it a `system-architecture.md` (or `system-diagram.md`) file and it generate
 
 1. A **Mermaid diagram** — renders inline on GitHub
 2. Two **PlantUML diagrams** — `.puml` source + rendered `.png` each: an **architecture diagram** (the static component view) and a **UML workflow diagram** (a sequence diagram walking one realistic request through the system, phase by phase)
-3. An **animated live demo** — a self-contained `index.html` that plays that same request flowing through every component (▶️ play, ⏸ pause, ⏮ back, ⏭ step, a draggable timeline scrubber, a clickable activity log that jumps to any step, a click-to-open node inspector, and draggable node cards — links stay attached and re-route live, so you can pull cards apart when edges overlap)
+3. An **animated live demo** — a self-contained `index.html` that plays that same request flowing through every component (▶️ play, ⏸ pause, ⏮ back, ⏭ step, a draggable timeline scrubber, a clickable activity log that jumps to any step, a click-to-open node inspector, and draggable node cards — links stay attached and re-route live, so you can pull cards apart when edges overlap; rearranged positions are remembered across reloads, with a ⇱ Layout button to restore the original layout)
 
 No build step, no server — the demo opens directly in a browser and works offline.
 
