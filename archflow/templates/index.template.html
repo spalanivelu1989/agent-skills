@@ -1135,19 +1135,13 @@
       const NW = 180;
       const NH = 76;
 
-      const NODES = {
-      __NODES__
-      };
+      const NODES = __NODES__;
 
       const center = (n) => ({ x: NODES[n].x + NW / 2, y: NODES[n].y + NH / 2 });
 
-      const STEPS = [
-      __STEPS__
-      ];
+      const STEPS = __STEPS__;
 
-      const PHASES = [
-      __PHASES__
-      ];
+      const PHASES = __PHASES__;
 
       function buildPath(f, t) {
         const a = center(f);

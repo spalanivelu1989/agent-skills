@@ -278,7 +278,14 @@ end note
 @enduml
 ```
 
-Author the spine first: the chain user → entry point → core service(s) → key external dependency should read in one consistent direction. Give those edges explicit direction hints (`-down->` or `-right->`) so the auto-layout can't fold the spine back on itself, and let secondary components (caches, loggers, sidecars) hang off it with plain `-->`. PlantUML is good at decorating a straight spine and bad at inventing one. If two components talk over two different channels, prefer one edge with a two-line label (`REST (JWT)\nWebSocket`) over two parallel edges — parallel edges are the most common source of tangles.
+Author the spine first: the chain user → entry point → core service(s) → key external dependency should read in a clear top-to-bottom 4-tier layout (User → Presentation & Capture → Core API & Broker → Worker, Storage, Toolchains & External AI).
+
+**Essential Layout Rules for PlantUML Architecture Diagrams:**
+1. **Never use `skinparam linetype ortho` on diagrams with edge text**: Orthogonal lines cause PlantUML to render label text directly over node borders and shape outlines. Use standard curved arrows or `skinparam linetype polyline` instead.
+2. **Consolidate Local Toolchains**: Group related local CLI utilities, binary tools, and ML engines into a single consolidated node (e.g., `rectangle "Local toolchain\nFFmpeg · Whisper · Kokoro TTS · OpenCV"`) rather than creating separate boxes for each individual command or script.
+3. **Include Specific Tech & Port Annotations**: Give components explicit framework and port subtitles (e.g., `Web App\nNext.js · :3000`, `API\nFastAPI · :8000`, `Redis 7\nCelery broker`).
+4. **Terse Edge Labels**: Keep edge labels to 1–4 concise words describing either an action (`records / edits`, `browses target sites`) or payload (`REST/JSON + media`, `rows + files`, `send_task (name only)`).
+5. **Direction Hints**: Give edges explicit direction hints (`-down->` or `-up->`) to prevent auto-layout from folding tiers on top of each other.
 
 Write it to `<input-dir>/system-diagram.puml`.
 
@@ -406,7 +413,7 @@ After rendering, view all four PNGs (Read tool) and check each against this list
 
 If the **architecture diagram** fails, repair it with these knobs, in this order — one change at a time, re-rendering between attempts so you know what helped:
 
-1. `skinparam linetype ortho` — right-angle edges; usually the single biggest cleanup for a box-and-line diagram. If edge labels drift away from their lines under ortho, fall back to `skinparam linetype polyline`.
+1. Avoid `skinparam linetype ortho` when edge text labels are present — orthogonal lines render label text directly over node borders and cylinder outlines. Fall back to standard curved arrows or `skinparam linetype polyline`.
 2. Direction hints on the misbehaving edges (`-down->`, `-right->`) — straighten the spine before touching anything else.
 3. `skinparam nodesep 50` and `skinparam ranksep 60` — breathing room when boxes crowd or labels collide.
 4. `left to right direction` at the top of the file — when the system is a pipeline and top-down layout produces a tall, thin ribbon.
@@ -464,10 +471,10 @@ In the `.tsx` copy, replace every placeholder:
 
 - `__COMPONENT_NAME__` (3 occurrences: CSS import, function name, default export) → e.g. `CpiDemoFlow`
 - `__STAGE_W__`, `__STAGE_H__` → computed bounding box from Step 5
-- `__NODES__` → the node object literal (id, x, y, icon (one emoji), title, sub, color (hex), optional `external: true`, `desc` — 1-2 sentences shown in the node inspector)
-- `__STEPS__` → the steps array from Step 4
-- `__PHASES__` → the phase labels array
-- `__BIDIRECTIONAL_PAIRS__` → comma-separated quoted pairKey strings, or leave empty if no roundTrip steps
+- `__NODES__` → complete JS object literal, e.g. `{ Node1: { x: 40, y: 120, icon: "👤", title: "...", sub: "...", color: "...", desc: "..." } }`
+- `__STEPS__` → complete JS array literal of step objects, e.g. `[ { f: "Node1", t: "Node2", ph: 0, k: "call", route: "...", m: "...", chat: [...] } ]`
+- `__PHASES__` → complete JS array literal of phase strings, e.g. `[ "Phase 1", "Phase 2", "Phase 3" ]`
+- `__BIDIRECTIONAL_PAIRS__` → comma-separated quoted pairKey strings (e.g. `"Node1|Node2"`), or leave empty if no roundTrip steps
 - `__DB_INGEST_*__` placeholders → fill in, or `null`/empty per the "optional" note in Step 5
 - `__TITLE__`, `__SUBTITLE__` → demo title and one-line subtitle
 - `__FOOTER_JSX__` → 2-4 sentences of real JSX (can use `<b>...</b>` for emphasis) explaining the most important/non-obvious connection in the architecture (the same one called out in the Mermaid diagram's Step 2 prose) — this is the one thing a viewer should remember after watching.

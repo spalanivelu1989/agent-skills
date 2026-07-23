@@ -2,7 +2,7 @@ Analyze this codebase thoroughly and write a `system-architecture.md` file at th
 
 Structure the document exactly as follows:
 
-## # <System Name> — System Architecture
+# <System Name> — System Architecture
 Provide a 2-3 sentence description of what the system does and who uses it. Use a short product-style name (e.g., "OrderHub").
 
 ## Components
@@ -11,7 +11,8 @@ List each internal deployable component (aim for 6-14). For each, provide:
 * **Type**: Frontend, backend API, worker, database, cache, queue, gateway, or CLI.
 * **Layer**: Grouping layer (e.g., Data, Core Services, Integration).
 * **Responsibility**: 1-2 standalone sentences describing its purpose.
-* **Tech**: Framework/language/runtime (one line).
+* **Tech**: Framework/language/runtime and port when applicable (e.g., `Next.js 15 · :3000`, `FastAPI · :8000`).
+*(Note: Group local CLI toolchains, media binaries, and ML helper libraries into a single consolidated component like "Local Toolchain — FFmpeg · Whisper · Kokoro TTS" to prevent visual clutter).*
 *(Note: Mark as **Optional** if it only runs under specific configurations).*
 
 ## External dependencies

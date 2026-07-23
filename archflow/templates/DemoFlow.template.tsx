@@ -39,9 +39,7 @@ const NH = 76;
 //    if the node is any higher than y=110).
 //  - STAGE_W / STAGE_H = bounding box of (x + NW) / (y + NH) across all
 //    nodes, plus ~20-40px margin.
-const NODES = {
-  __NODES__,
-};
+const NODES = __NODES__;
 
 const center = (n) => ({ x: NODES[n].x + NW / 2, y: NODES[n].y + NH / 2 });
 
@@ -73,10 +71,10 @@ const center = (n) => ({ x: NODES[n].x + NW / 2, y: NODES[n].y + NH / 2 });
 // IMPORTANT: every pair used with roundTrip: true MUST also be added to the
 // BIDIRECTIONAL set below (pairKey-sorted, e.g. ['A','B'].sort().join('|')),
 // or the return-arrow won't render.
-const STEPS = [__STEPS__];
+const STEPS = __STEPS__;
 
 // One label per phase index used in STEPS. Shown in the toolbar's phase tag.
-const PHASES = [__PHASES__];
+const PHASES = __PHASES__;
 
 function buildPath(f, t) {
   const a = center(f);
