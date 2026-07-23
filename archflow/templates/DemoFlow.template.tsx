@@ -262,22 +262,32 @@ const ORIGINS = new Set();
 // were also cut / put back?" for the connection inspector's impact line.
 function computeStatuses(addKey, dropKey) {
   const reached = new Set(ORIGINS);
+  // Nodes an earlier step failed to deliver to. A poller reading from a
+  // starved node gets nothing, so it can't restart the flow — without this,
+  // cutting "user uploads to OneDrive" left the scheduled Power Automate
+  // poll (an ORIGIN, since it first appears as a round-trip asker) happily
+  // picking up a file that never arrived, and the whole pipeline ran on.
+  const starved = new Set();
   return STEPS.map((s) => {
     const key = s.f !== s.t ? pairKey(s.f, s.t) : null;
     const removed =
       !!key && key !== dropKey && (REMOVED_LINKS.has(key) || key === addKey);
-    if (removed) {
+    const initiator = stepInitiator(s);
+    // For a round-trip, f is the responder being read from. A node that has
+    // simply never been touched yet is fine (the first query to a database);
+    // only one that was *supposed* to have been fed counts as starved.
+    const readsStarved = s.roundTrip && starved.has(s.f);
+    if (removed || readsStarved || !reached.has(initiator)) {
       // The request dies here. The initiator is no longer carrying a live
-      // flow, so every later step it would have started is stranded too —
-      // without this, a cut payment link would still be followed by a
-      // cheerful "order persisted". A later step that re-delivers to this
-      // node revives it, and ORIGINS-seeded triggers are unaffected.
-      reached.delete(stepInitiator(s));
-      return "blocked";
+      // flow, so every later step it would have started is stranded too, and
+      // whatever this step was meant to deliver never arrives.
+      reached.delete(initiator);
+      starved.add(s.t);
+      return removed ? "blocked" : "unreachable";
     }
-    if (!reached.has(stepInitiator(s))) return "unreachable";
     reached.add(s.f);
     reached.add(s.t);
+    starved.delete(s.t);
     return "ok";
   });
 }
