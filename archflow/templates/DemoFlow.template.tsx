@@ -116,6 +116,21 @@ function nodeInfo(id) {
   return { routes, stepIdxs };
 }
 
+// Same idea for the connection inspector (click a link on the stage): every
+// route label and step index that travels this one edge. Drives the "what
+// would break" list shown before a connection is removed.
+function linkInfo(key) {
+  const routes = [];
+  const stepIdxs = [];
+  STEPS.forEach((s, i) => {
+    if (s.f !== s.t && pairKey(s.f, s.t) === key) {
+      stepIdxs.push(i);
+      if (routes.indexOf(s.route) === -1) routes.push(s.route);
+    }
+  });
+  return { routes, stepIdxs };
+}
+
 // Pairs that need arrowheads on BOTH ends because the flow is a
 // request/response round-trip along one edge, not two distinct steps.
 // Must exactly match every pairKey(f, t) used with roundTrip: true above.
@@ -190,6 +205,33 @@ function saveLayout() {
   }
 }
 
+// Removed connections ("what breaks if this link goes away?"). The set holds
+// pairKeys; it is the single source of truth for both the severed styling on
+// the stage and the blocked-step behaviour during a run. Persisted per demo
+// like the layout, and best-effort for the same reasons.
+const LINKS_KEY = "archflow-removed-links:" + TITLE;
+const REMOVED_LINKS = new Set();
+(function loadRemovedLinks() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(LINKS_KEY)) || [];
+    saved.forEach((k) => {
+      const ends = String(k).split("|");
+      if (NODES[ends[0]] && NODES[ends[1]]) REMOVED_LINKS.add(k);
+    });
+  } catch (e) {
+    /* every link stays connected */
+  }
+})();
+function saveRemovedLinks() {
+  try {
+    localStorage.setItem(LINKS_KEY, JSON.stringify(Array.from(REMOVED_LINKS)));
+  } catch (e) {
+    /* storage unavailable — removals just won't persist */
+  }
+}
+// Self-working steps (f === t) never travel a link, so they can't be blocked.
+const isLinkRemoved = (f, t) => f !== t && REMOVED_LINKS.has(pairKey(f, t));
+
 export function __COMPONENT_NAME__() {
   const [theme, setTheme] = useState("dark");
   const [speed, setSpeed] = useState(0.5);
@@ -201,6 +243,11 @@ export function __COMPONENT_NAME__() {
   const [progress, setProgress] = useState(-1);
   // Node inspector: id of the clicked node, or null when closed.
   const [inspected, setInspected] = useState(null);
+  // Connection inspector: pairKey of the clicked link, or null when closed.
+  const [selectedLink, setSelectedLink] = useState(null);
+  // Bumped on every remove/restore so the JSX (which reads REMOVED_LINKS
+  // directly) re-renders and the link-visual effect re-runs.
+  const [linkVersion, setLinkVersion] = useState(0);
 
   const stageRef = useRef(null);
   const logRef = useRef(null);
@@ -296,14 +343,47 @@ export function __COMPONENT_NAME__() {
 
     const edgeLayer = el("g", {});
     stageRef.current.appendChild(edgeLayer);
+    // Transparent wide twins of every edge, so a link can actually be
+    // clicked; and the ✕ markers drawn over removed links. Both layers sit
+    // BELOW the node groups (appended later), so a node card always wins a
+    // click where the two overlap.
+    const hitLayer = el("g", {});
+    stageRef.current.appendChild(hitLayer);
+    const cutLayer = el("g", {});
+    stageRef.current.appendChild(cutLayer);
 
     const edgesCached = {};
     Object.keys(edges).forEach((key) => {
       const e = edges[key];
       const p = el("path", { d: e.d, class: "edge dashed" });
       edgeLayer.appendChild(p);
+
+      const hit = el("path", { d: e.d, class: "edge-hit" });
+      hit.appendChild(
+        el(
+          "title",
+          {},
+          NODES[e.from].title +
+            " ⇄ " +
+            NODES[e.to].title +
+            " — click to inspect or remove this connection",
+        ),
+      );
+      hit.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        setInspected(null);
+        setSelectedLink((prev) => (prev === key ? null : key));
+      });
+      hitLayer.appendChild(hit);
+
+      const cut = el("text", { class: "edge-cut", x: 0, y: 0 }, "✕");
+      cut.style.display = "none";
+      cutLayer.appendChild(cut);
+
       edgesCached[key] = {
         el: p,
+        hit,
+        cut,
         from: e.from,
         to: e.to,
         len: p.getTotalLength(),
@@ -423,6 +503,12 @@ export function __COMPONENT_NAME__() {
         if (e.from !== nodeId && e.to !== nodeId) return;
         e.el.setAttribute("d", buildPath(e.from, e.to));
         e.len = e.el.getTotalLength();
+        if (e.hit) e.hit.setAttribute("d", e.el.getAttribute("d"));
+        if (e.cut) {
+          const mid = e.el.getPointAtLength(e.len / 2);
+          e.cut.setAttribute("x", String(mid.x));
+          e.cut.setAttribute("y", String(mid.y));
+        }
         Object.keys(e.arrows).forEach((endId) => {
           e.arrows[endId].setAttribute(
             "points",
@@ -474,6 +560,7 @@ export function __COMPONENT_NAME__() {
       );
       g.addEventListener("click", () => {
         if (dragState.suppressClick) return;
+        setSelectedLink(null);
         setInspected((prev) => (prev === id ? null : id));
       });
       basePos[id] = { x: n.x, y: n.y };
@@ -586,12 +673,61 @@ export function __COMPONENT_NAME__() {
     resetAnimation(false);
   }, []);
 
+  // Paint selection + severed styling from the current REMOVED_LINKS set.
+  // Declared AFTER the build effect on purpose: effects run in declaration
+  // order, and this one needs the edges to exist (a demo reloaded with
+  // removals already in storage must show them severed on first paint).
+  useEffect(() => {
+    Object.keys(edgesRef.current).forEach((key) => {
+      const e = edgesRef.current[key];
+      const off = REMOVED_LINKS.has(key);
+      e.el.classList.toggle("removed", off);
+      e.el.classList.toggle("selected", key === selectedLink);
+      Object.values(e.arrows).forEach((a) =>
+        a.classList.toggle("removed", off),
+      );
+      if (e.cut) {
+        const mid = e.el.getPointAtLength(e.len / 2);
+        e.cut.setAttribute("x", String(mid.x));
+        e.cut.setAttribute("y", String(mid.y));
+        e.cut.style.display = off ? "" : "none";
+      }
+    });
+  }, [selectedLink, linkVersion]);
+
+  // Remove / restore one connection. The demo is re-rendered at the current
+  // step so the consequence is immediately visible: steps that need the link
+  // turn into blocked entries in the activity log (and vice versa).
+  function toggleLink(key) {
+    if (!key) return;
+    if (REMOVED_LINKS.has(key)) REMOVED_LINKS.delete(key);
+    else REMOVED_LINKS.add(key);
+    saveRemovedLinks();
+    setLinkVersion((v) => v + 1);
+    jumpTo(idxRef.current);
+  }
+
+  function restoreAllLinks() {
+    if (REMOVED_LINKS.size === 0) return;
+    REMOVED_LINKS.clear();
+    saveRemovedLinks();
+    setLinkVersion((v) => v + 1);
+    jumpTo(idxRef.current);
+  }
+
   function clearActive() {
     Object.values(edgesRef.current).forEach((e) =>
-      e.el.classList.remove("active", "flow", "call", "data", "flow-reverse"),
+      e.el.classList.remove(
+        "active",
+        "flow",
+        "call",
+        "data",
+        "flow-reverse",
+        "blocked-flash",
+      ),
     );
     Object.values(nodeElsRef.current).forEach((g) =>
-      g.classList.remove("active", "working", "db-ingesting"),
+      g.classList.remove("active", "working", "db-ingesting", "blocked"),
     );
     if (pulseRef.current) pulseRef.current.setAttribute("opacity", "0");
     allArrowsRef.current.forEach((a) => a.classList.remove("blink"));
@@ -705,11 +841,13 @@ export function __COMPONENT_NAME__() {
       .querySelectorAll(".log-item.cur")
       .forEach((n) => n.classList.remove("cur"));
     const item = document.createElement("div");
-    item.className = "log-item cur " + s.k;
+    const blocked = isLinkRemoved(s.f, s.t);
+    item.className = "log-item cur " + s.k + (blocked ? " blocked" : "");
     item.innerHTML = `
-      <div class="log-num">${i + 1}</div>
+      <div class="log-num">${blocked ? "✕" : i + 1}</div>
       <div class="log-body">
         <span class="log-route">${s.route}</span>
+        ${blocked ? '<span class="log-blocked">blocked — connection removed</span>' : ""}
         ${s.m}
       </div>
     `;
@@ -910,6 +1048,25 @@ export function __COMPONENT_NAME__() {
       const currentSpeed = speedRef.current;
       let dur = BASE / currentSpeed;
       const V = 0.125 * currentSpeed;
+
+      // The link this step needs was removed by the user: nothing travels.
+      // The source flashes red, says why, and the run carries on to the next
+      // step — that "what still works without this link?" read is the whole
+      // point of being able to cut a connection.
+      if (isLinkRemoved(s.f, s.t)) {
+        const srcNode = nodeElsRef.current[s.f];
+        if (srcNode) srcNode.classList.add("active", "blocked");
+        const deadEdge = edgesRef.current[pairKey(s.f, s.t)];
+        if (deadEdge) deadEdge.el.classList.add("blocked-flash");
+        addBubble(s.f, "✕ No connection to " + NODES[s.t].title);
+        const tBlocked = performance.now();
+        const blockedTick = (now) => {
+          if (now - tBlocked >= 1300 / currentSpeed) resolve();
+          else animRef.current = requestAnimationFrame(blockedTick);
+        };
+        animRef.current = requestAnimationFrame(blockedTick);
+        return;
+      }
 
       const chat = s.chat || [];
       const shownChat = new Array(chat.length).fill(false);
@@ -1115,8 +1272,11 @@ export function __COMPONENT_NAME__() {
     );
     if (logRef.current) logRef.current.innerHTML = "";
     for (let i = 0; i <= target; i++) {
-      markDone(STEPS[i].f);
-      markDone(STEPS[i].t);
+      // A blocked step never ran, so neither end gets a done-mark.
+      if (!isLinkRemoved(STEPS[i].f, STEPS[i].t)) {
+        markDone(STEPS[i].f);
+        markDone(STEPS[i].t);
+      }
       addLog(i);
     }
     if (target < 0) {
@@ -1125,6 +1285,12 @@ export function __COMPONENT_NAME__() {
     }
     const s = STEPS[target];
     setPhaseText(PHASES[s.ph]);
+    if (isLinkRemoved(s.f, s.t)) {
+      const srcNode = nodeElsRef.current[s.f];
+      if (srcNode) srcNode.classList.add("active", "blocked");
+      addBubble(s.f, "✕ No connection to " + NODES[s.t].title);
+      return;
+    }
     const fromNode = nodeElsRef.current[s.f];
     const toNode = nodeElsRef.current[s.t];
     if (fromNode) fromNode.classList.add("active");
@@ -1223,6 +1389,14 @@ export function __COMPONENT_NAME__() {
         >
           ⇱ Layout
         </button>
+        <button
+          onClick={restoreAllLinks}
+          disabled={REMOVED_LINKS.size === 0}
+          title="Reconnect every link you removed (click a link on the diagram to remove one)"
+        >
+          ⛓ Links
+          {REMOVED_LINKS.size > 0 ? ` (${REMOVED_LINKS.size})` : ""}
+        </button>
         <span className="speed">
           Speed
           <button
@@ -1287,6 +1461,72 @@ export function __COMPONENT_NAME__() {
           ></svg>
         </div>
         <aside className="side">
+          {selectedLink &&
+            NODES[selectedLink.split("|")[0]] &&
+            NODES[selectedLink.split("|")[1]] && (
+              <div className="inspector">
+                <div className="inspector-head">
+                  <span className="inspector-icon link-icon">⇄</span>
+                  <div className="inspector-name">
+                    <div className="inspector-title">
+                      {NODES[selectedLink.split("|")[0]].title} ⇄{" "}
+                      {NODES[selectedLink.split("|")[1]].title}
+                    </div>
+                    <div className="inspector-sub">Connection</div>
+                  </div>
+                  <button
+                    className="inspector-close"
+                    onClick={() => setSelectedLink(null)}
+                    title="Close inspector"
+                  >
+                    ✕
+                  </button>
+                </div>
+                {REMOVED_LINKS.has(selectedLink) && (
+                  <span className="inspector-badge danger">
+                    Removed — every step over this link is blocked
+                  </span>
+                )}
+                <div className="inspector-section">Carries</div>
+                <ul className="inspector-routes">
+                  {linkInfo(selectedLink).routes.map((r) => (
+                    <li key={r}>{r}</li>
+                  ))}
+                </ul>
+                <div className="inspector-section">
+                  Used in steps
+                  {REMOVED_LINKS.has(selectedLink) ? " (blocked)" : ""}
+                </div>
+                <div className="inspector-steps">
+                  {linkInfo(selectedLink).stepIdxs.map((i) => (
+                    <button
+                      key={i}
+                      className="inspector-step-chip"
+                      onClick={() => jumpTo(i)}
+                      title={STEPS[i].m}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  className={
+                    "inspector-action" +
+                    (REMOVED_LINKS.has(selectedLink) ? "" : " danger")
+                  }
+                  onClick={() => toggleLink(selectedLink)}
+                  title={
+                    REMOVED_LINKS.has(selectedLink)
+                      ? "Put this connection back"
+                      : "Cut this connection and see which steps stop working"
+                  }
+                >
+                  {REMOVED_LINKS.has(selectedLink)
+                    ? "↺ Restore connection"
+                    : "✂ Remove connection"}
+                </button>
+              </div>
+            )}
           {inspected && NODES[inspected] && (
             <div className="inspector">
               <div className="inspector-head">
@@ -1363,6 +1603,10 @@ export function __COMPONENT_NAME__() {
               style={{ background: "#374151", border: "1px dashed #94a3b8" }}
             ></i>{" "}
             external system
+          </span>
+          <span>
+            <i className="dot" style={{ background: "#ef4444" }}></i> click a
+            link to remove it
           </span>
         </div>
         __FOOTER_JSX__
