@@ -1287,7 +1287,16 @@
         return STEPS.map((s) => {
           const key = s.f !== s.t ? pairKey(s.f, s.t) : null;
           const removed = !!key && key !== dropKey && (REMOVED_LINKS.has(key) || key === addKey);
-          if (removed) return 'blocked';
+          if (removed) {
+            // The request dies here. The initiator is no longer carrying a
+            // live flow, so every later step it would have started is
+            // stranded too — without this, a cut payment link would still be
+            // followed by a cheerful "order persisted". A later step that
+            // re-delivers to this node revives it, and ORIGINS-seeded
+            // triggers are unaffected.
+            reached.delete(stepInitiator(s));
+            return 'blocked';
+          }
           if (!reached.has(stepInitiator(s))) return 'unreachable';
           reached.add(s.f);
           reached.add(s.t);
