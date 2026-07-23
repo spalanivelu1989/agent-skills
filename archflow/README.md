@@ -153,7 +153,7 @@ Claude Code will:
 1. Check for prerequisites (PlantUML, Node.js, curl) and offer to install anything missing for your OS — you'll be asked to confirm before anything gets installed
 2. Read and understand your architecture doc
 3. Generate/refresh the Mermaid diagram
-4. Translate it into two PlantUML diagrams — architecture + workflow sequence — and render the PNGs
+4. Translate it into three PlantUML diagrams — architecture, a simplified version of it, and workflow sequence — and render the PNGs
 5. Turn the workflow scenario into the animated demo's phases and steps
 6. Build the animated demo (TSX component + standalone HTML)
 7. Run verification checks before reporting done
@@ -196,7 +196,9 @@ docs/
     ├── system-architecture.md   (your input)
     ├── system-diagram.md        (Mermaid diagram)
     ├── system-diagram.puml      (PlantUML architecture diagram — source)
-    ├── system-diagram.png       (rendered architecture diagram)
+    ├── system-diagram.png       (rendered architecture diagram — full detail)
+    ├── system-diagram-simple.puml  (simplified architecture diagram — source)
+    ├── system-diagram-simple.png   ⭐ the one for a README/slide (8-10 boxes)
     ├── system-workflow.puml     (PlantUML workflow sequence diagram — source)
     ├── system-workflow.png      (rendered workflow diagram)
     └── demo/
@@ -220,7 +222,7 @@ Live demo workflow
 1. Check prerequisites (offer to install anything missing)
 2. Read & understand the architecture doc
 3. Generate Mermaid diagram
-4. Generate two PlantUML diagrams from the Mermaid diagram — architecture (components/connections) + workflow (a sequence diagram of one end-to-end request) — and render both PNGs
+4. Generate three PlantUML diagrams from the Mermaid diagram — architecture (components/connections), a simplified 8-10 box version of it, and workflow (a sequence diagram of one end-to-end request) — and render all three PNGs
 5. Design the demo scenario — the workflow diagram's phases and messages become the demo's phases and steps
 6. Compute layout
 7. Generate TSX
@@ -231,7 +233,7 @@ Live demo workflow
 The artifacts are generated **in sequence, each derived from the previous one** — not independently re-derived from your original doc. This keeps them describing the exact same architecture and the exact same request scenario: same components, same edges, same external-system markings.
 
 ```
-system-architecture.md  →  system-diagram.md (Mermaid)  →  system-diagram.puml (architecture)  →  system-workflow.puml (workflow sequence)  →  demo/ (animated HTML)
+system-architecture.md  →  system-diagram.md (Mermaid)  →  system-diagram.puml (architecture)  →  system-diagram-simple.puml (simplified)  →  system-workflow.puml (workflow sequence)  →  demo/ (animated HTML)
 ```
 
 For the full step-by-step process (prerequisite checks, layout rules, verification checks, and the hard-won lessons behind two previously-fixed bugs), see [`SKILL.md`](./SKILL.md).

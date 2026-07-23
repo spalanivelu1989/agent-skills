@@ -1,6 +1,6 @@
 ---
 name: archflow
-description: Turns a system-architecture.md or system-diagram.md file into (1) a Mermaid diagram, (2) two PlantUML diagrams + rendered PNGs (an architecture/component diagram and a UML workflow sequence diagram of one end-to-end request), and (3) an animated, interactive "ArchFlow" live demo (a React/TSX component plus a self-contained HTML file) that visualizes one realistic request flowing through every component. Use when the user provides an architecture/diagram markdown file and asks to generate a live demo workflow, animate a system diagram, visualize a request flow, or "archflow" a file.
+description: Turns a system-architecture.md or system-diagram.md file into (1) a Mermaid diagram, (2) three PlantUML diagrams + rendered PNGs (a full architecture/component diagram, a simplified 8-10 box version of it for READMEs and slides, and a UML workflow sequence diagram of one end-to-end request), and (3) an animated, interactive "ArchFlow" live demo (a React/TSX component plus a self-contained HTML file) that visualizes one realistic request flowing through every component. Use when the user provides an architecture/diagram markdown file and asks to generate a live demo workflow, animate a system diagram, visualize a request flow, or "archflow" a file.
 ---
 
 # ArchFlow
@@ -8,8 +8,9 @@ description: Turns a system-architecture.md or system-diagram.md file into (1) a
 Turns a written architecture description into three things, each built from the one before it (so all three stay consistent with each other — same components, same edges, same external-system markings):
 
 1. A **Mermaid diagram** (`system-diagram.md`) — quick, readable, renders inline in GitHub/most markdown viewers.
-2. Two **PlantUML diagrams** (`.puml` + rendered `.png` each), translated from the Mermaid diagram:
-   - an **architecture diagram** (`system-diagram.puml`) — the static component/connection view, and
+2. Three **PlantUML diagrams** (`.puml` + rendered `.png` each), translated from the Mermaid diagram:
+   - an **architecture diagram** (`system-diagram.puml`) — the static component/connection view, complete and dense,
+   - a **simplified architecture diagram** (`system-diagram-simple.puml`) — the same architecture collapsed to 8-10 boxes, for READMEs and slides, and
    - a **UML workflow diagram** (`system-workflow.puml`) — a sequence diagram walking one realistic end-to-end request through those components, phase by phase.
 3. An **ArchFlow demo** — an animated, playable visualization of the same request traveling through every component, built from the workflow diagram's phases and messages, as a React component (`*.tsx` + `*.css`) and a zero-dependency `index.html` that opens directly in a browser. It opens in light mode (a 🌙/☀ header button switches theme). The engine ships with play/pause, ⏮ back / ⏭ step (one step at a time), a draggable timeline scrubber, a clickable activity log (every entry jumps to that step), a click-to-open node inspector showing each component's description, connections, and step appearances, draggable node cards (links stay attached and re-route live — lets the viewer pull cards apart when edges overlap; dragging is transient until committed with the 💾 Save layout button, which persists positions per demo via localStorage, so a reload always returns to the last saved or authored arrangement), and removable connections (click any link to open a connection inspector listing what it carries and how many later steps cutting it would strand, then ✂ Remove it — the link is drawn severed, the step over it is **blocked**, and the rest of that request is **skipped as never reached** — the run finishes with a "1 blocked, 2 never reached" summary instead of pretending the flow continued — and a ⛓ Links button reconnects everything; removals persist across reloads too).
 
@@ -25,8 +26,10 @@ The user provides a path to a `system-architecture.md` or `system-diagram.md` fi
 <input-dir>/
   system-architecture.md      (the input — prose, may already have a diagram)
   system-diagram.md           (Mermaid diagram — this skill creates/refreshes it)
-  system-diagram.puml         (PlantUML architecture diagram)
+  system-diagram.puml         (PlantUML architecture diagram — full detail)
   system-diagram.png
+  system-diagram-simple.puml  (PlantUML architecture diagram — simplified, 8-10 boxes)
+  system-diagram-simple.png
   system-workflow.puml        (PlantUML workflow sequence diagram)
   system-workflow.png
   demo/
@@ -205,9 +208,9 @@ User(["User / Browser"])
 
 Save it to `<input-dir>/system-diagram.md`.
 
-## Step 3 — Generate the PlantUML diagrams (architecture + workflow)
+## Step 3 — Generate the PlantUML diagrams (architecture + simplified + workflow)
 
-This step produces **two** `.puml` files, both translated from the Mermaid diagram in Step 2 — same components, same edges, same external-system markings. Don't re-derive either one independently from the original input doc; drifting the diagrams apart defeats the point of generating them in sequence.
+This step produces **three** `.puml` files, all translated from the Mermaid diagram in Step 2 — same components, same edges, same external-system markings. Don't re-derive any of them independently from the original input doc; drifting the diagrams apart defeats the point of generating them in sequence.
 
 ### 3a — Architecture diagram (`system-diagram.puml`)
 
@@ -322,16 +325,48 @@ end note
 
 Write it to `<input-dir>/system-workflow.puml`.
 
-### Render both
+### 3c — Simplified architecture diagram (`system-diagram-simple.puml`)
+
+3a is the reference view: every component, every edge, accurate but dense. It is the wrong thing to put at the top of a README or on a slide. So **always** also produce a simplified companion — same architecture, fewer boxes — that someone can grasp in about ten seconds.
+
+Derive it from 3a (not from the input doc), and target **8-10 boxes**. Collapse, in roughly this order:
+
+- **Internals of one subsystem → one box.** An extension's content script + service worker + offscreen doc + local buffer is "Capture Extension". A worker's task registry + pipeline + renderer is "Worker".
+- **Sibling leaf tools → one box.** Four local binaries/libraries become "Local toolchain — FFmpeg · Whisper · TTS".
+- **A component and its own helper → the component.** A producer module folded into the service that owns it.
+- **Optional externals → dropped.** Fallback providers, tracing sinks, anything that only fires when configured.
+
+What you must **not** collapse, because it turns "simpler" into "wrong":
+
+- Two edges to the same target **from different sources** when that's a real property (both the API and the worker calling the LLM, for different jobs). Merging them implies a single call site that doesn't exist.
+- Anything whose removal implies a connection that isn't there. If A and B communicate only through a broker and a shared volume, keep all three; collapse the middle and the diagram starts asserting A calls B.
+- Groupings that carry a deployment constraint (a "same host, one volume" package).
+
+Then, so the simplified view can't be mistaken for the whole truth:
+
+- Add a note naming what was omitted and pointing at `system-diagram.png` for the full view.
+- Keep the **same** external-system convention as 3a (dark `cloud` boxes) and the same component names, so the two diagrams read as one family.
+
+Use the same skinparams as 3a and write it to `<input-dir>/system-diagram-simple.puml`, with the identifier `@startuml system-diagram-simple`.
+
+### Render all three
 
 ```bash
 which plantuml
 ```
 
-- If found: `cd <input-dir> && plantuml -tpng system-diagram.puml system-workflow.puml` — this produces `system-diagram.png` and `system-workflow.png` in the same directory. PlantUML names each output from its `@startuml <name>` identifier, **not** the source filename — keep the identifiers as literally `system-diagram` and `system-workflow` (not the page titles), or the PNG filenames won't match.
+- If found: `cd <input-dir> && plantuml -tpng system-diagram.puml system-diagram-simple.puml system-workflow.puml` — this produces `system-diagram.png`, `system-diagram-simple.png` and `system-workflow.png` in the same directory. PlantUML names each output from its `@startuml <name>` identifier, **not** the source filename — keep the identifiers as literally `system-diagram`, `system-diagram-simple` and `system-workflow` (not the page titles), or the PNG filenames won't match.
 - If not found: tell the user PlantUML (+ a JRE) isn't installed (`brew install plantuml` on macOS) and offer to proceed without the PNGs, or wait for them to install it. Don't silently skip this step without saying so.
 
-After rendering, view both PNGs (Read tool) to sanity-check layout before moving on — crowded/overlapping labels in the architecture diagram mean the auto-layout struggled (simplify grouping); an overly wide workflow diagram means too many participants (drop components the scenario only brushes past, or shorten message labels) — rather than leaving a bad render.
+After rendering, view all three PNGs (Read tool) to sanity-check layout before moving on — crowded/overlapping labels in the architecture diagram mean the auto-layout struggled (simplify grouping); an overly wide workflow diagram means too many participants (drop components the scenario only brushes past, or shorten message labels) — rather than leaving a bad render. For the simplified diagram, the test is different and stricter: if you can't follow the main path at a glance, it isn't simple enough yet — collapse another subsystem.
+
+**Margins (only if asked).** PlantUML has no canvas-margin setting, so a rendered PNG sits flush against its content. If the user wants breathing room on the sides, pad it afterwards — and note that macOS `sips` silently ignores `--padToHeightWidth` here (it reports success and changes nothing), so use ffmpeg:
+
+```bash
+ffmpeg -y -i system-diagram-simple.png -vf "pad=iw+300:ih:150:0:white" out.png && mv out.png system-diagram-simple.png
+```
+
+Because this is post-processing, re-running `plantuml` silently drops it. Record the two-command sequence in a comment at the top of the `.puml` so the next person can reproduce it.
 
 ## Step 4 — Design the demo scenario
 
@@ -477,7 +512,7 @@ Then Read `/tmp/archflow-check.png` to eyeball the layout. If `puppeteer` isn't 
 
 ## Step 9 — Report
 
-Tell the user what was created (file paths), show the diagrams/screenshot if you rendered them, and name the files they can open right away: `system-diagram.md` (renders inline on GitHub), `system-diagram.png` (architecture), `system-workflow.png` (workflow), and `demo/index.html`. Mention that `demo/index.html` needs no build step or server — just open it.
+Tell the user what was created (file paths), show the diagrams/screenshot if you rendered them, and name the files they can open right away: `system-diagram.md` (renders inline on GitHub), `system-diagram-simple.png` (the one to put in a README), `system-diagram.png` (full detail), `system-workflow.png` (workflow), and `demo/index.html`. Mention that `demo/index.html` needs no build step or server — just open it. When you report the simplified diagram, say in one line what you collapsed into it, so the user can judge whether the abstraction is the one they wanted.
 
 ---
 
@@ -485,6 +520,11 @@ Tell the user what was created (file paths), show the diagrams/screenshot if you
 
 **Q: Why generate Mermaid, then PlantUML, then the demo — in that order?**
 Each stage is derived from the one before it (Mermaid → PlantUML architecture → PlantUML workflow sequence → demo phases/steps) rather than each being re-derived independently from the original input doc. That's what keeps all the artifacts describing the _same_ architecture and the _same_ scenario — same component names, same edges, same external-system markings, same request story. Re-deriving each one from scratch invites silent drift (e.g. the demo showing a component the diagrams don't, or animating a different scenario than the workflow diagram tells).
+
+**Q: Why ship both a full and a simplified architecture diagram instead of one balanced diagram?**
+Because they have different jobs and a single diagram can't hold both. The full one is the reference: it has to be complete, so someone can check whether a given edge exists. The simplified one is the explanation: it has to fit in a README header or a slide, so it has to lie by omission. Trying to split the difference produces a diagram that's too dense to skim and too lossy to trust. Generating both from the same Mermaid source is what keeps them honest — same names, same edges, same external-system markings, one of them just showing fewer of them.
+
+The failure mode to watch for is a "simplification" that changes what the architecture claims. Collapsing two services that only ever talk through a queue into one box doesn't remove detail, it removes a fact. The rule in Step 3c is the test: drop a box only when nothing about the remaining boxes becomes false. When in doubt, keep the box and drop a label instead.
 
 **Q: Why vendor React/ReactDOM/Babel locally instead of loading from a CDN?**
 An earlier version loaded them from `unpkg.com` directly. It worked in this environment but showed a **blank page for the user** — the most likely cause is a network/browser policy blocking the CDN. Vendoring removes the dependency on internet access entirely; the file just works everywhere.
