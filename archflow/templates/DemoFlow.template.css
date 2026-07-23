@@ -1107,6 +1107,35 @@
   margin-bottom: 2px;
 }
 
+/* Steps downstream of a cut: never ran, but not the cause either — grey,
+   not red. (Dimming via opacity would lose to the log-item pop animation's
+   fill-mode, so the colours are set directly.) */
+.archflow-container .log-item.unreachable .log-num {
+  background: var(--line);
+  color: var(--muted);
+}
+
+.archflow-container .log-item.unreachable .log-body {
+  color: var(--muted);
+}
+
+.archflow-container .log-skipped {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+
+.archflow-container .inspector-impact {
+  margin: 8px 0 0;
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
 .archflow-container .inspector-icon.link-icon {
   background: var(--line);
   color: var(--ink);

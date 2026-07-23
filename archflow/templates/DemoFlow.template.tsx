@@ -232,6 +232,59 @@ function saveRemovedLinks() {
 // Self-working steps (f === t) never travel a link, so they can't be blocked.
 const isLinkRemoved = (f, t) => f !== t && REMOVED_LINKS.has(pairKey(f, t));
 
+// Who *starts* a step. For roundTrip steps the engine's convention is
+// f = responder, t = asker, so the initiator is t — get this wrong and every
+// round-trip looks unreachable the moment anything upstream is cut.
+const stepInitiator = (s) => (s.roundTrip ? s.t : s.f);
+
+// Nodes that can start a flow on their own: the first time they appear in
+// STEPS, they appear as an initiator, so nothing upstream ever handed to
+// them. Usually just the entry point, but a demo may legitimately have a
+// later cold start (a scheduler firing in phase 4) — seeding those keeps
+// them running when an unrelated link is cut.
+const ORIGINS = new Set();
+(function computeOrigins() {
+  const seen = new Set();
+  STEPS.forEach((s) => {
+    if (!seen.has(stepInitiator(s))) ORIGINS.add(stepInitiator(s));
+    seen.add(s.f);
+    seen.add(s.t);
+  });
+})();
+
+// Every step's status for the CURRENT set of removed links:
+//   'ok'          — runs normally
+//   'blocked'     — its own link was cut
+//   'unreachable' — nothing ever reached its initiator, because an upstream
+//                   step was blocked (or itself unreachable)
+// Pure and order-independent, so an animated run and a scrubber jump always
+// agree. addKey / dropKey answer the hypothetical "what if this one link
+// were also cut / put back?" for the connection inspector's impact line.
+function computeStatuses(addKey, dropKey) {
+  const reached = new Set(ORIGINS);
+  return STEPS.map((s) => {
+    const key = s.f !== s.t ? pairKey(s.f, s.t) : null;
+    const removed =
+      !!key && key !== dropKey && (REMOVED_LINKS.has(key) || key === addKey);
+    if (removed) return "blocked";
+    if (!reached.has(stepInitiator(s))) return "unreachable";
+    reached.add(s.f);
+    reached.add(s.t);
+    return "ok";
+  });
+}
+
+// Cached because it is read once per log entry; invalidated on every
+// remove/restore.
+let STATUS_CACHE = null;
+function stepStatuses() {
+  if (!STATUS_CACHE) STATUS_CACHE = computeStatuses();
+  return STATUS_CACHE;
+}
+function invalidateStatuses() {
+  STATUS_CACHE = null;
+}
+
 export function __COMPONENT_NAME__() {
   const [theme, setTheme] = useState("dark");
   const [speed, setSpeed] = useState(0.5);
@@ -703,6 +756,7 @@ export function __COMPONENT_NAME__() {
     if (REMOVED_LINKS.has(key)) REMOVED_LINKS.delete(key);
     else REMOVED_LINKS.add(key);
     saveRemovedLinks();
+    invalidateStatuses();
     setLinkVersion((v) => v + 1);
     jumpTo(idxRef.current);
   }
@@ -711,6 +765,7 @@ export function __COMPONENT_NAME__() {
     if (REMOVED_LINKS.size === 0) return;
     REMOVED_LINKS.clear();
     saveRemovedLinks();
+    invalidateStatuses();
     setLinkVersion((v) => v + 1);
     jumpTo(idxRef.current);
   }
@@ -841,13 +896,20 @@ export function __COMPONENT_NAME__() {
       .querySelectorAll(".log-item.cur")
       .forEach((n) => n.classList.remove("cur"));
     const item = document.createElement("div");
-    const blocked = isLinkRemoved(s.f, s.t);
-    item.className = "log-item cur " + s.k + (blocked ? " blocked" : "");
+    const st = stepStatuses()[i];
+    const note =
+      st === "blocked"
+        ? '<span class="log-blocked">blocked — connection removed</span>'
+        : st === "unreachable"
+          ? '<span class="log-skipped">skipped — never reached</span>'
+          : "";
+    const num = st === "blocked" ? "✕" : st === "unreachable" ? "–" : i + 1;
+    item.className = "log-item cur " + s.k + (st === "ok" ? "" : " " + st);
     item.innerHTML = `
-      <div class="log-num">${blocked ? "✕" : i + 1}</div>
+      <div class="log-num">${num}</div>
       <div class="log-body">
         <span class="log-route">${s.route}</span>
-        ${blocked ? '<span class="log-blocked">blocked — connection removed</span>' : ""}
+        ${note}
         ${s.m}
       </div>
     `;
@@ -1049,22 +1111,39 @@ export function __COMPONENT_NAME__() {
       let dur = BASE / currentSpeed;
       const V = 0.125 * currentSpeed;
 
+      const status = stepStatuses()[i];
+
       // The link this step needs was removed by the user: nothing travels.
       // The source flashes red, says why, and the run carries on to the next
       // step — that "what still works without this link?" read is the whole
       // point of being able to cut a connection.
-      if (isLinkRemoved(s.f, s.t)) {
-        const srcNode = nodeElsRef.current[s.f];
+      if (status === "blocked") {
+        const srcNode = nodeElsRef.current[stepInitiator(s)];
         if (srcNode) srcNode.classList.add("active", "blocked");
         const deadEdge = edgesRef.current[pairKey(s.f, s.t)];
         if (deadEdge) deadEdge.el.classList.add("blocked-flash");
-        addBubble(s.f, "✕ No connection to " + NODES[s.t].title);
+        const other = stepInitiator(s) === s.f ? s.t : s.f;
+        addBubble(stepInitiator(s), "✕ No connection to " + NODES[other].title);
         const tBlocked = performance.now();
         const blockedTick = (now) => {
           if (now - tBlocked >= 1300 / currentSpeed) resolve();
           else animRef.current = requestAnimationFrame(blockedTick);
         };
         animRef.current = requestAnimationFrame(blockedTick);
+        return;
+      }
+
+      // Nothing ever reached this step's initiator, because an upstream step
+      // was blocked. It can't happen, so nothing is drawn — the log entry
+      // (already added above) carries the "skipped — never reached" note and
+      // the run moves on after a short beat.
+      if (status === "unreachable") {
+        const tSkipped = performance.now();
+        const skipTick = (now) => {
+          if (now - tSkipped >= 450 / currentSpeed) resolve();
+          else animRef.current = requestAnimationFrame(skipTick);
+        };
+        animRef.current = requestAnimationFrame(skipTick);
         return;
       }
 
@@ -1207,13 +1286,19 @@ export function __COMPONENT_NAME__() {
     logRef.current
       .querySelectorAll(".log-item.cur")
       .forEach((n) => n.classList.remove("cur"));
+    const statuses = stepStatuses();
+    const blocked = statuses.filter((s) => s === "blocked").length;
+    const skipped = statuses.filter((s) => s === "unreachable").length;
+    const parts = [];
+    if (blocked) parts.push(blocked + " blocked");
+    if (skipped) parts.push(skipped + " never reached");
     const item = document.createElement("div");
     item.className = "log-item cur";
     item.innerHTML = `
-      <div class="log-num" style="background: #22c55e;">✓</div>
+      <div class="log-num" style="background: ${parts.length ? "#ef4444" : "#22c55e"};">${parts.length ? "!" : "✓"}</div>
       <div class="log-body">
         <span class="log-route">System</span>
-        Run completed
+        Run completed${parts.length ? " — " + parts.join(", ") : ""}
       </div>
     `;
     logRef.current.appendChild(item);
@@ -1271,9 +1356,11 @@ export function __COMPONENT_NAME__() {
       g.classList.remove("done"),
     );
     if (logRef.current) logRef.current.innerHTML = "";
+    const statuses = stepStatuses();
     for (let i = 0; i <= target; i++) {
-      // A blocked step never ran, so neither end gets a done-mark.
-      if (!isLinkRemoved(STEPS[i].f, STEPS[i].t)) {
+      // A blocked or unreachable step never ran, so neither end gets a
+      // done-mark.
+      if (statuses[i] === "ok") {
         markDone(STEPS[i].f);
         markDone(STEPS[i].t);
       }
@@ -1285,12 +1372,15 @@ export function __COMPONENT_NAME__() {
     }
     const s = STEPS[target];
     setPhaseText(PHASES[s.ph]);
-    if (isLinkRemoved(s.f, s.t)) {
-      const srcNode = nodeElsRef.current[s.f];
+    if (statuses[target] === "blocked") {
+      const srcNode = nodeElsRef.current[stepInitiator(s)];
       if (srcNode) srcNode.classList.add("active", "blocked");
-      addBubble(s.f, "✕ No connection to " + NODES[s.t].title);
+      const other = stepInitiator(s) === s.f ? s.t : s.f;
+      addBubble(stepInitiator(s), "✕ No connection to " + NODES[other].title);
       return;
     }
+    // An unreachable step has nothing to show on the stage.
+    if (statuses[target] === "unreachable") return;
     const fromNode = nodeElsRef.current[s.f];
     const toNode = nodeElsRef.current[s.t];
     if (fromNode) fromNode.classList.add("active");
@@ -1330,6 +1420,23 @@ export function __COMPONENT_NAME__() {
     let nextSpeed = speed + amount;
     nextSpeed = parseFloat(nextSpeed.toFixed(1));
     if (nextSpeed >= 0.1 && nextSpeed <= 3.0) setSpeed(nextSpeed);
+  }
+
+  // How many LATER steps this link strands (or, once cut, would get back) —
+  // the answer to "is this connection load-bearing?", shown in the inspector
+  // before the user commits to cutting it. linkVersion keeps it fresh.
+  function strandedBy(key) {
+    if (!key) return 0;
+    const now = stepStatuses();
+    if (REMOVED_LINKS.has(key)) {
+      const restored = computeStatuses(null, key);
+      return now.filter(
+        (s, i) => s === "unreachable" && restored[i] !== "unreachable",
+      ).length;
+    }
+    const cut = computeStatuses(key, null);
+    return cut.filter((s, i) => s === "unreachable" && now[i] !== "unreachable")
+      .length;
   }
 
   return (
@@ -1486,6 +1593,13 @@ export function __COMPONENT_NAME__() {
                   <span className="inspector-badge danger">
                     Removed — every step over this link is blocked
                   </span>
+                )}
+                {strandedBy(selectedLink) > 0 && (
+                  <p className="inspector-impact">
+                    {REMOVED_LINKS.has(selectedLink)
+                      ? `Restoring it also brings back ${strandedBy(selectedLink)} later step${strandedBy(selectedLink) === 1 ? "" : "s"} that nothing currently reaches.`
+                      : `Cutting it also strands ${strandedBy(selectedLink)} later step${strandedBy(selectedLink) === 1 ? "" : "s"} — nothing downstream would reach them.`}
+                  </p>
                 )}
                 <div className="inspector-section">Carries</div>
                 <ul className="inspector-routes">
