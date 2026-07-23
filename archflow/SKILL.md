@@ -1,6 +1,6 @@
 ---
 name: archflow
-description: Turns a system-architecture.md or system-diagram.md file into (1) a Mermaid diagram, (2) four PlantUML diagrams + rendered PNGs (a full architecture/component diagram, a simplified 8-10 box version of it for READMEs and slides, a UML workflow sequence diagram of one end-to-end request, and a simplified version of that workflow for READMEs and slides), and (3) an animated, interactive "ArchFlow" live demo (a React/TSX component plus a self-contained HTML file) that visualizes one realistic request flowing through every component. Use when the user provides an architecture/diagram markdown file and asks to generate a live demo workflow, animate a system diagram, visualize a request flow, or "archflow" a file.
+description: Turns a system-architecture.md or system-diagram.md file into (1) a Mermaid diagram, (2) four PlantUML diagrams + rendered PNGs (a full architecture/component diagram, a simplified 8-10 box version of it for READMEs and slides, a UML workflow sequence diagram of one end-to-end request, and a simplified version of that workflow for READMEs and slides), and (3) an animated, interactive "ArchFlow" live demo (a React/TSX component plus a self-contained HTML file) that visualizes one realistic request flowing through every component. Use when the user provides an architecture/diagram markdown file and asks to generate a live demo workflow, animate a system diagram, visualize a request flow, or "archflow" a file — or wants any of that for a codebase that has no architecture doc yet (the skill then offers to explore the codebase and generate the system-architecture.md itself first).
 ---
 
 # ArchFlow
@@ -19,7 +19,18 @@ This skill codifies a working, previously-debugged implementation. Two non-obvio
 
 ## Inputs
 
-The user provides a path to a `system-architecture.md` or `system-diagram.md` file (or similarly named — anything describing components, layers, and how they connect, possibly already containing a Mermaid or PlantUML diagram). If no path is given, ask for one; don't guess at a file. If the user has no such file yet, tell them to first ask Claude to explore the codebase and write one (a prose architecture doc), then come back and run this skill on it.
+The user provides a path to a `system-architecture.md` or `system-diagram.md` file (or similarly named — anything describing components, layers, and how they connect, possibly already containing a Mermaid or PlantUML diagram). If no path is given, ask for one; don't guess at a file.
+
+### Step 0a — No architecture doc? Generate one first
+
+If the user has no such file (they say so, or the path they name doesn't exist and they confirm nothing like it exists), don't send them away — offer to write it in this session, then run the rest of the skill on the result:
+
+1. Confirm scope and destination: which codebase to describe (default: the current working directory's repo) and where to save the doc (default: `system-architecture.md` at the repo root; follow the repo's convention if it keeps docs somewhere like `docs/architecture/`).
+2. Read `architecture-doc-prompt.md` in this skill's folder and follow the instructions after its `---` divider exactly — explore the codebase, write the doc with every section that prompt requires, and run its closing checklist before considering the doc done. That prompt was written to produce exactly what Steps 1-5 consume; don't substitute a looser structure.
+3. Before continuing, show the user a short summary — the components found, the external dependencies, the key connection, and the end-to-end scenario you chose — and ask them to confirm or correct it. This is the one checkpoint worth pausing at: every downstream artifact is derived from this doc, so a wrong component or a badly chosen scenario here multiplies into five wrong artifacts. If they correct something, update the doc first.
+4. Once confirmed, treat the new file as the input and continue with Step 0 onward as normal.
+
+If the user would rather generate the doc in a separate session (e.g. the codebase is elsewhere), hand them the same `architecture-doc-prompt.md` to paste there and run this skill on the result later.
 
 ## Output location
 
@@ -155,11 +166,12 @@ Write (or update, per the naming edge case above) `system-diagram.md`, containin
 
 1. A short intro (1-2 sentences) naming what the diagram shows.
 2. A prose section explaining the single most important / most easily misunderstood connection in the architecture — almost always "how does this system reach its key external dependency" (REST? a direct DB connection? a message queue? one connection or two different mechanisms for different purposes?). This is the paragraph a reader should remember.
-3. A ` ```mermaid ` `flowchart TD` block:
+3. A ` ```mermaid ` flowchart block — `flowchart TD` when the architecture is layered (UI at the top, services in the middle, data and external systems at the bottom), `flowchart LR` when it reads as a pipeline of stages. Pick whichever direction lets the main path — user request in, key external dependency out — read in one straight sweep:
+   - Declare nodes and subgraphs in the order the request flows through them — Mermaid lays out in declaration order, and this alone prevents most edge crossings.
    - Group related internal components with `subgraph "Label" ... end`.
-   - One node per component: databases as `[("Name")]`, plain components as `["Name<br/>subtitle"]`.
+   - One node per component: databases as `[("Name")]`, plain components as `["Name<br/>subtitle"]`. Keep the title to ~3 words and push detail into the `<br/>` subtitle.
    - External systems as `[["External System<br/>subtitle"]]` (double-bracket shape), with `classDef external fill:#333,stroke:#999,color:#fff;` applied to all of them via `class EXT1,EXT2 external;`. Keep this dark-box convention identical across the Mermaid, PlantUML, and demo outputs.
-   - Label every arrow with protocol/auth, e.g. `-->|"REST, OAuth2"|`.
+   - Label every arrow with protocol/auth, e.g. `-->|"REST, OAuth2"|` — and keep it that short: 1-3 tokens, never a sentence.
    - Use a dashed arrow (`-.->`) for async/polled/reverse-direction responses (e.g. "poll for result"), solid (`-->`) for request/command direction.
 4. A short "Reading the diagram" bullet list explaining the arrow and dark-box conventions.
 
@@ -210,6 +222,8 @@ User(["User / Browser"])
 ```
 
 Save it to `<input-dir>/system-diagram.md`.
+
+Before moving on, re-check the block line by line: every node referenced in an edge is declared, every `subgraph` has its `end`, and the `class ... external;` line lists exactly the external nodes. Nothing downstream re-validates the Mermaid — GitHub renders a broken block as a red error box, and no later step of this skill would catch it. If `mmdc` (mermaid-cli) happens to be installed, a render catches syntax errors for free: extract the block to `/tmp/check.mmd` and run `mmdc -i /tmp/check.mmd -o /tmp/check.png`; don't install it just for this.
 
 ## Step 3 — Generate the PlantUML diagrams (architecture + workflow, each with a simplified companion)
 
@@ -264,6 +278,8 @@ end note
 @enduml
 ```
 
+Author the spine first: the chain user → entry point → core service(s) → key external dependency should read in one consistent direction. Give those edges explicit direction hints (`-down->` or `-right->`) so the auto-layout can't fold the spine back on itself, and let secondary components (caches, loggers, sidecars) hang off it with plain `-->`. PlantUML is good at decorating a straight spine and bad at inventing one. If two components talk over two different channels, prefer one edge with a two-line label (`REST (JWT)\nWebSocket`) over two parallel edges — parallel edges are the most common source of tangles.
+
 Write it to `<input-dir>/system-diagram.puml`.
 
 ### 3b — UML workflow diagram (`system-workflow.puml`)
@@ -272,9 +288,9 @@ A **sequence diagram** that walks **one realistic, concrete end-to-end scenario*
 
 Structure and style (proven board-friendly — readable by non-engineers at a glance):
 
-- One `participant` per internal component the scenario touches, using the **same names as 3a**, each with a soft pastel fill (rotate through `#E8F5E9`, `#E3F2FD`, `#FFF3E0`, `#F3E5F5`). Use `actor` for the user, `database` for datastores, `boundary` for external systems — those three in neutral `#ECEFF1`.
+- One `participant` per internal component the scenario touches, using the **same names as 3a**, each with a soft pastel fill (rotate through `#E8F5E9`, `#E3F2FD`, `#FFF3E0`, `#F3E5F5`). Use `actor` for the user, `database` for datastores, `boundary` for external systems — those three in neutral `#ECEFF1`. Declare participants in order of **first appearance in the scenario**, left to right — messages then flow mostly rightward and long backward-reaching arrows disappear.
 - Split the scenario into **3-6 numbered phases** using divider syntax: `== Step N — <plain-English title> ==`. These phase titles should read as a story ("Explore the live site, THEN write a plan"), not as component names.
-- Solid arrows (`->`) for requests/hand-offs, dashed (`-->`) for responses. Self-messages (`A -> A : ...`) for internal work, with the produced artifact in `**bold**`. Wrap `activate`/`deactivate` around a participant doing real work during a call so the activation bar shows it.
+- Solid arrows (`->`) for requests/hand-offs, dashed (`-->`) for responses — response labels render below their arrow (the `responseMessageBelowArrow` skinparam), so a request/response pair never has two labels fighting for the same line. Self-messages (`A -> A : ...`) for internal work, with the produced artifact in `**bold**`. Wrap `activate`/`deactivate` around a participant doing real work during a call so the activation bar shows it.
 - Keep every message label short (one line, two max via `\n`); bold the nouns that matter (**Test Plan**, **Report**).
 - End with the deliverable going back to the user (e.g. `A4 --> User : 📄 Report`) and a `note across` block: 2-4 sentences stating the one thing a viewer should remember — the same key connection called out in the Mermaid diagram's prose in Step 2.
 
@@ -290,6 +306,7 @@ skinparam sequenceMessageAlign center
 skinparam roundcorner 8
 skinparam ArrowColor #444444
 skinparam ArrowFontColor #333333
+skinparam responseMessageBelowArrow true
 skinparam NoteBackgroundColor #FFF7E0
 skinparam NoteBorderColor #E0C46C
 
@@ -380,7 +397,25 @@ which plantuml
 - If found: `cd <input-dir> && plantuml -tpng system-diagram.puml system-diagram-simple.puml system-workflow.puml system-workflow-simple.puml` — this produces `system-diagram.png`, `system-diagram-simple.png`, `system-workflow.png` and `system-workflow-simple.png` in the same directory. PlantUML names each output from its `@startuml <name>` identifier, **not** the source filename — keep the identifiers as literally `system-diagram`, `system-diagram-simple`, `system-workflow` and `system-workflow-simple` (not the page titles), or the PNG filenames won't match.
 - If not found: tell the user PlantUML (+ a JRE) isn't installed (`brew install plantuml` on macOS) and offer to proceed without the PNGs, or wait for them to install it. Don't silently skip this step without saying so.
 
-After rendering, view all four PNGs (Read tool) to sanity-check layout before moving on — crowded/overlapping labels in the architecture diagram mean the auto-layout struggled (simplify grouping); an overly wide workflow diagram means too many participants (drop components the scenario only brushes past, or shorten message labels) — rather than leaving a bad render. For the two simplified diagrams, the test is different and stricter: if you can't follow the main path (architecture) or the story (workflow) at a glance, it isn't simple enough yet — collapse another subsystem, or merge another phase.
+After rendering, view all four PNGs (Read tool) and check each against this list before moving on — never leave a bad render:
+
+- No overlapping or truncated labels, and no edge running through a box it doesn't connect to.
+- The main path (user → system → key external dependency) reads in one sweep, without backtracking.
+- External systems stand out as dark boxes at a glance.
+- The workflow diagram isn't so wide it would need horizontal scrolling at README width — too many participants means drop the ones the scenario only brushes past, or shorten message labels.
+
+If the **architecture diagram** fails, repair it with these knobs, in this order — one change at a time, re-rendering between attempts so you know what helped:
+
+1. `skinparam linetype ortho` — right-angle edges; usually the single biggest cleanup for a box-and-line diagram. If edge labels drift away from their lines under ortho, fall back to `skinparam linetype polyline`.
+2. Direction hints on the misbehaving edges (`-down->`, `-right->`) — straighten the spine before touching anything else.
+3. `skinparam nodesep 50` and `skinparam ranksep 60` — breathing room when boxes crowd or labels collide.
+4. `left to right direction` at the top of the file — when the system is a pipeline and top-down layout produces a tall, thin ribbon.
+5. `A -[hidden]-> B` — an invisible edge to align two siblings the auto-layout scattered.
+6. Last resort: regroup the packages — fewer, bigger packages give the layouter fewer constraints to fight.
+
+If the **workflow diagram** fails, it's almost always width: re-order participants by first appearance, shorten message labels to one line, or drop a participant the scenario only brushes past.
+
+For the two simplified diagrams, the test is different and stricter: if you can't follow the main path (architecture) or the story (workflow) at a glance, it isn't simple enough yet — collapse another subsystem, or merge another phase.
 
 **Margins (only if asked).** PlantUML has no canvas-margin setting, so a rendered PNG sits flush against its content. If the user wants breathing room on the sides, pad it afterwards — and note that macOS `sips` silently ignores `--padToHeightWidth` here (it reports success and changes nothing), so use ffmpeg:
 
