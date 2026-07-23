@@ -5,7 +5,7 @@
 Give it a `system-architecture.md` (or `system-diagram.md`) file and it generates three consistent artifacts, each derived from the one before it:
 
 1. A **Mermaid diagram** — renders inline on GitHub
-2. Two **PlantUML diagrams** — `.puml` source + rendered `.png` each: an **architecture diagram** (the static component view) and a **UML workflow diagram** (a sequence diagram walking one realistic request through the system, phase by phase)
+2. Four **PlantUML diagrams** — `.puml` source + rendered `.png` each: an **architecture diagram** (the static component view), a **simplified architecture diagram** (the same architecture collapsed to 8-10 boxes, for READMEs and slides), a **UML workflow diagram** (a sequence diagram walking one realistic request through the system, phase by phase), and a **simplified workflow diagram** (the same request retold with the cast collapsed to those 8-10 boxes)
 3. An **animated live demo** — a self-contained `index.html` that plays that same request flowing through every component (▶️ play, ⏸ pause, ⏮ back, ⏭ step, a draggable timeline scrubber, a clickable activity log that jumps to any step, a click-to-open node inspector, draggable node cards — links stay attached and re-route live, so you can pull cards apart when edges overlap, then hit 💾 Save layout to keep that arrangement across reloads (unsaved drags disappear on reload) — and **removable connections**: click any link to inspect it and ✂ remove it, then replay — the request stops at the cut: that step is blocked, the rest of the flow is skipped as never reached, and the run ends with a "1 blocked, 2 never reached" summary instead of pretending it carried on; a ⛓ Links button reconnects everything)
 
 No build step, no server — the demo opens directly in a browser and works offline.
@@ -153,7 +153,7 @@ Claude Code will:
 1. Check for prerequisites (PlantUML, Node.js, curl) and offer to install anything missing for your OS — you'll be asked to confirm before anything gets installed
 2. Read and understand your architecture doc
 3. Generate/refresh the Mermaid diagram
-4. Translate it into three PlantUML diagrams — architecture, a simplified version of it, and workflow sequence — and render the PNGs
+4. Translate it into four PlantUML diagrams — architecture and workflow sequence, each with a simplified companion — and render the PNGs
 5. Turn the workflow scenario into the animated demo's phases and steps
 6. Build the animated demo (TSX component + standalone HTML)
 7. Run verification checks before reporting done
@@ -200,7 +200,9 @@ docs/
     ├── system-diagram-simple.puml  (simplified architecture diagram — source)
     ├── system-diagram-simple.png   ⭐ the one for a README/slide (8-10 boxes)
     ├── system-workflow.puml     (PlantUML workflow sequence diagram — source)
-    ├── system-workflow.png      (rendered workflow diagram)
+    ├── system-workflow.png      (rendered workflow diagram — full detail)
+    ├── system-workflow-simple.puml (simplified workflow diagram — source)
+    ├── system-workflow-simple.png  ⭐ the workflow for a README/slide (same cast as the simplified architecture)
     └── demo/
         ├── <Name>DemoFlow.tsx   (React component)
         ├── <Name>DemoFlow.css
@@ -222,7 +224,7 @@ Live demo workflow
 1. Check prerequisites (offer to install anything missing)
 2. Read & understand the architecture doc
 3. Generate Mermaid diagram
-4. Generate three PlantUML diagrams from the Mermaid diagram — architecture (components/connections), a simplified 8-10 box version of it, and workflow (a sequence diagram of one end-to-end request) — and render all three PNGs
+4. Generate four PlantUML diagrams from the Mermaid diagram — architecture (components/connections), a simplified 8-10 box version of it, workflow (a sequence diagram of one end-to-end request), and a simplified version of the workflow using the same 8-10 box cast — and render all four PNGs
 5. Design the demo scenario — the workflow diagram's phases and messages become the demo's phases and steps
 6. Compute layout
 7. Generate TSX
@@ -233,7 +235,7 @@ Live demo workflow
 The artifacts are generated **in sequence, each derived from the previous one** — not independently re-derived from your original doc. This keeps them describing the exact same architecture and the exact same request scenario: same components, same edges, same external-system markings.
 
 ```
-system-architecture.md  →  system-diagram.md (Mermaid)  →  system-diagram.puml (architecture)  →  system-diagram-simple.puml (simplified)  →  system-workflow.puml (workflow sequence)  →  demo/ (animated HTML)
+system-architecture.md  →  system-diagram.md (Mermaid)  →  system-diagram.puml (architecture)  →  system-diagram-simple.puml (simplified)  →  system-workflow.puml (workflow sequence)  →  system-workflow-simple.puml (simplified workflow)  →  demo/ (animated HTML, built from the full workflow)
 ```
 
 For the full step-by-step process (prerequisite checks, layout rules, verification checks, and the hard-won lessons behind two previously-fixed bugs), see [`SKILL.md`](./SKILL.md).
