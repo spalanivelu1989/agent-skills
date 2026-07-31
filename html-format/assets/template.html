@@ -1,0 +1,1157 @@
+<!doctype html>
+<!--
+  data-nav on <html> picks the navigation behaviour:
+    "tabbed" — one section visible at a time, sidebar + prev/next pager
+    "scroll" — every section visible, sidebar is a table of contents
+  Change the attribute value on this line only. Do not find-and-replace the
+  value across the file; the CSS keys off the .js-tabbed class instead of the
+  attribute precisely so that this line stays the single source of truth.
+-->
+<html lang="en" data-nav="tabbed">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>DOCUMENT TITLE — SUBTITLE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Work+Sans:ital,wght@0,400;0,600;0,700;1,400&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      // Runs before first paint so a saved theme and the tabbed layout are
+      // applied without a flash of the wrong one.
+      (function () {
+        var r = document.documentElement;
+        try {
+          var t = localStorage.getItem("doc-theme");
+          if (t === "dark" || t === "light") r.setAttribute("data-theme", t);
+        } catch (e) {
+          /* private browsing — the toggle still works for this visit */
+        }
+        // Sections stay visible by default, so the document still reads fine
+        // with JavaScript disabled; tabbing is opt-in via this class.
+        if (r.getAttribute("data-nav") !== "scroll")
+          r.classList.add("js-tabbed");
+      })();
+    </script>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+      :root {
+        --bg: #f6f8f8;
+        --card: #ffffff;
+        --ink: #1c2529;
+        --muted: #56676d;
+        --accent: #0e6e68;
+        --accent-soft: #e2efed;
+        --win-bg: #e8f3ea;
+        --win-border: #2e7d4f;
+        --warn-bg: #faf3e0;
+        --warn-border: #9a6a00;
+        --why-bg: #edf2f4;
+        --border: #d8e0e0;
+        --code-bg: #eef2f2;
+        --code-ink: #17332f;
+      }
+      /* Dark mode: Catppuccin Frappé — https://catppuccin.com/palette/ */
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #303446; /* Base */
+          --card: #414559; /* Surface 0 */
+          --ink: #c6d0f5; /* Text */
+          --muted: #a5adce; /* Subtext 0 */
+          --accent: #81c8be; /* Teal */
+          --accent-soft: #51576d; /* Surface 1 */
+          --win-bg: #292c3c; /* Mantle */
+          --win-border: #a6d189; /* Green */
+          --warn-bg: #292c3c; /* Mantle */
+          --warn-border: #e5c890; /* Yellow */
+          --why-bg: #292c3c; /* Mantle */
+          --border: #51576d; /* Surface 1 */
+          --code-bg: #292c3c; /* Mantle */
+          --code-ink: #99d1db; /* Sky */
+        }
+      }
+      /* Manual toggle overrides — must win over the OS preference in both directions */
+      :root[data-theme="dark"] {
+        --bg: #303446; /* Base */
+        --card: #414559; /* Surface 0 */
+        --ink: #c6d0f5; /* Text */
+        --muted: #a5adce; /* Subtext 0 */
+        --accent: #81c8be; /* Teal */
+        --accent-soft: #51576d; /* Surface 1 */
+        --win-bg: #292c3c; /* Mantle */
+        --win-border: #a6d189; /* Green */
+        --warn-bg: #292c3c; /* Mantle */
+        --warn-border: #e5c890; /* Yellow */
+        --why-bg: #292c3c; /* Mantle */
+        --border: #51576d; /* Surface 1 */
+        --code-bg: #292c3c; /* Mantle */
+        --code-ink: #99d1db; /* Sky */
+      }
+      :root[data-theme="light"] {
+        --bg: #f6f8f8;
+        --card: #ffffff;
+        --ink: #1c2529;
+        --muted: #56676d;
+        --accent: #0e6e68;
+        --accent-soft: #e2efed;
+        --win-bg: #e8f3ea;
+        --win-border: #2e7d4f;
+        --warn-bg: #faf3e0;
+        --warn-border: #9a6a00;
+        --why-bg: #edf2f4;
+        --border: #d8e0e0;
+        --code-bg: #eef2f2;
+        --code-ink: #17332f;
+      }
+
+      .theme-toggle {
+        position: fixed;
+        top: 1rem;
+        right: 1rem;
+        z-index: 10;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        background: var(--card);
+        color: var(--muted);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 0.35rem 0.85rem;
+        font-family: "Nunito", "Segoe UI", system-ui, sans-serif;
+        font-size: 0.78rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        cursor: pointer;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+      }
+      .theme-toggle:hover {
+        color: var(--accent);
+        border-color: var(--accent);
+      }
+      .theme-toggle:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+      @media print {
+        .theme-toggle {
+          display: none;
+        }
+      }
+
+      figure.shot {
+        margin: 1.2rem 0;
+      }
+      figure.shot img {
+        display: block;
+        width: 100%;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+      }
+      figure.shot figcaption {
+        font-size: 0.85rem;
+        color: var(--muted);
+        margin-top: 0.45rem;
+      }
+
+      body {
+        background: var(--bg);
+        color: var(--ink);
+        font-family: "Work Sans", "Segoe UI", system-ui, sans-serif;
+        font-size: 17px;
+        line-height: 1.65;
+        margin: 0;
+      }
+      main {
+        margin: 0;
+        padding: 2.5rem clamp(1rem, 3vw, 3rem) 6rem;
+      }
+
+      h1,
+      h2,
+      h3,
+      h4,
+      .label,
+      nav,
+      .phase-tag {
+        font-family:
+          "Nunito",
+          "Segoe UI",
+          system-ui,
+          -apple-system,
+          sans-serif;
+      }
+      h1 {
+        font-size: 2.1rem;
+        line-height: 1.15;
+        letter-spacing: -0.015em;
+        text-wrap: balance;
+        margin: 0.5rem 0 0.75rem;
+      }
+      h2 {
+        font-size: 1.45rem;
+        margin: 0 0 1rem;
+        letter-spacing: -0.01em;
+        text-wrap: balance;
+      }
+      h3 {
+        font-size: 1.08rem;
+        margin: 2rem 0 0.5rem;
+      }
+      h4 {
+        font-size: 0.98rem;
+        margin: 1.5rem 0 0.4rem;
+      }
+      p {
+        margin: 0 0 1rem;
+      }
+      a {
+        color: var(--accent);
+        text-decoration-thickness: 1px;
+        text-underline-offset: 2px;
+      }
+      a:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+        border-radius: 2px;
+      }
+
+      .eyebrow {
+        font-family: "Nunito", "Segoe UI", system-ui, sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        font-size: 0.72rem;
+        color: var(--accent);
+        font-weight: 600;
+        margin: 0;
+      }
+      .lede {
+        font-size: 1.12rem;
+        color: var(--muted);
+        margin-bottom: 0;
+        text-wrap: balance;
+      }
+
+      .meta-strip {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem 1.75rem;
+        font-family: "Nunito", "Segoe UI", system-ui, sans-serif;
+        font-size: 0.85rem;
+        color: var(--muted);
+        border-top: 1px solid var(--border);
+        border-bottom: 1px solid var(--border);
+        padding: 0.65rem 0;
+        margin: 1.75rem 0 2.5rem;
+      }
+      .meta-strip strong {
+        color: var(--ink);
+        font-weight: 600;
+      }
+
+      .layout {
+        display: flex;
+        gap: 1.75rem;
+        align-items: flex-start;
+      }
+      nav.sidebar {
+        position: sticky;
+        top: 1.25rem;
+        flex: none;
+        width: 256px;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 0.9rem;
+        font-size: 0.87rem;
+      }
+      nav.sidebar .label {
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: var(--muted);
+        display: block;
+        margin: 0.2rem 0 0.6rem 0.4rem;
+      }
+      nav.sidebar a.tab {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0.5rem 0.65rem;
+        border-radius: 8px;
+        text-decoration: none;
+        color: var(--ink);
+        line-height: 1.3;
+        margin-bottom: 2px;
+      }
+      nav.sidebar a.tab .num {
+        flex: none;
+        width: 1.5rem;
+        height: 1.5rem;
+        border-radius: 50%;
+        border: 1px solid var(--border);
+        background: var(--code-bg);
+        color: var(--muted);
+        font-size: 0.72rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      nav.sidebar a.tab:hover {
+        background: var(--accent-soft);
+      }
+      nav.sidebar a.tab.active {
+        background: var(--accent);
+        color: #fff;
+      }
+      nav.sidebar a.tab.active .num {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: transparent;
+        color: #fff;
+      }
+      .sidebar-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+      }
+      .sidebar-toggle {
+        flex: none;
+        width: 1.7rem;
+        height: 1.7rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: var(--code-bg);
+        color: var(--muted);
+        font-size: 0.85rem;
+        line-height: 1;
+        cursor: pointer;
+        margin: 0 0 0.5rem;
+      }
+      .sidebar-toggle:hover {
+        color: var(--accent);
+        border-color: var(--accent);
+      }
+      .sidebar-toggle:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+      nav.sidebar.collapsed {
+        width: auto;
+        padding: 0.6rem;
+      }
+      nav.sidebar.collapsed .sidebar-head {
+        justify-content: center;
+      }
+      nav.sidebar.collapsed .label {
+        display: none;
+      }
+      nav.sidebar.collapsed a.tab {
+        font-size: 0;
+        gap: 0;
+        padding: 0.4rem;
+        justify-content: center;
+      }
+      .content {
+        flex: 1;
+        min-width: 0;
+      }
+      .pager {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-top: 1.5rem;
+      }
+      .pager button {
+        font-family: "Nunito", "Segoe UI", system-ui, sans-serif;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--accent);
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 0.55rem 1rem;
+        cursor: pointer;
+        max-width: 48%;
+        text-align: left;
+      }
+      .pager button:hover {
+        border-color: var(--accent);
+      }
+      .pager button:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+      .pager button:disabled {
+        visibility: hidden;
+      }
+      @media (max-width: 900px) {
+        /* align-items: stretch matters — with flex-start the stacked columns
+           size to their widest child (a long line in a <pre>), which pushes the
+           whole page sideways instead of letting the block scroll internally. */
+        .layout {
+          flex-direction: column;
+          align-items: stretch;
+        }
+        .content {
+          width: 100%;
+        }
+        nav.sidebar {
+          position: static;
+          width: 100%;
+          display: flex;
+          overflow-x: auto;
+          gap: 4px;
+          padding: 0.6rem;
+        }
+        nav.sidebar .label,
+        .sidebar-head {
+          display: none;
+        }
+        nav.sidebar a.tab {
+          flex: none;
+          white-space: nowrap;
+          margin-bottom: 0;
+        }
+        nav.sidebar.collapsed {
+          width: 100%;
+          padding: 0.6rem;
+        }
+        nav.sidebar.collapsed a.tab {
+          font-size: 0.87rem;
+          gap: 0.6rem;
+          padding: 0.5rem 0.65rem;
+          justify-content: flex-start;
+        }
+      }
+
+      section.phase {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 2rem 2.75rem 1.75rem;
+        margin-bottom: 2.25rem;
+        scroll-margin-top: 1.25rem;
+      }
+      @media (max-width: 640px) {
+        section.phase {
+          padding: 1.4rem 1.1rem;
+        }
+      }
+      /* The .js-tabbed class is set on <html> by the head script when
+         data-nav="tabbed". Sections are visible by default, so the document
+         degrades to a plain scrolling page without JavaScript. */
+      .js-tabbed section.phase {
+        display: none;
+      }
+      .js-tabbed section.phase.active {
+        display: block;
+      }
+      html:not(.js-tabbed) .pager {
+        display: none;
+      }
+      .phase-tag {
+        display: inline-block;
+        background: var(--accent-soft);
+        color: var(--accent);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        border-radius: 4px;
+        padding: 0.2rem 0.6rem;
+        margin-bottom: 0.8rem;
+      }
+
+      .win,
+      .why,
+      .warn {
+        border-radius: 8px;
+        padding: 0.85rem 1.1rem;
+        margin: 1.25rem 0;
+        font-size: 0.95rem;
+      }
+      .win {
+        background: var(--win-bg);
+        border-left: 4px solid var(--win-border);
+      }
+      .win .label,
+      .why .label,
+      .warn .label {
+        display: block;
+        font-weight: 700;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.11em;
+        margin-bottom: 0.25rem;
+      }
+      .win .label {
+        color: var(--win-border);
+      }
+      .why {
+        background: var(--why-bg);
+        border-left: 4px solid var(--accent);
+      }
+      .why .label {
+        color: var(--accent);
+      }
+      .warn {
+        background: var(--warn-bg);
+        border-left: 4px solid var(--warn-border);
+      }
+      .warn .label {
+        color: var(--warn-border);
+      }
+      .win p:last-child,
+      .why p:last-child,
+      .warn p:last-child {
+        margin-bottom: 0;
+      }
+      .win ol:last-child,
+      .why ol:last-child,
+      .warn ol:last-child,
+      .win ul:last-child,
+      .why ul:last-child,
+      .warn ul:last-child {
+        margin-bottom: 0;
+      }
+
+      pre {
+        background: var(--code-bg);
+        color: var(--code-ink);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 0.9rem 1.1rem;
+        overflow-x: auto;
+        font-size: 0.83rem;
+        line-height: 1.55;
+        margin: 0.75rem 0 1.25rem;
+      }
+      code,
+      pre {
+        font-family:
+          ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+      }
+      p code,
+      li code,
+      td code {
+        background: var(--code-bg);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        padding: 0.06em 0.35em;
+        font-size: 0.84em;
+        color: var(--code-ink);
+        overflow-wrap: anywhere;
+      }
+      .skill-invoke {
+        color: var(--accent);
+        background: var(--accent-soft);
+        border-color: var(--accent);
+        font-weight: 600;
+      }
+
+      .tablewrap {
+        overflow-x: auto;
+        margin: 0.75rem 0 1.5rem;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 0.9rem;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 0.55rem 0.8rem;
+        border-bottom: 1px solid var(--border);
+        vertical-align: top;
+      }
+      th {
+        font-family: "Nunito", "Segoe UI", system-ui, sans-serif;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--muted);
+      }
+      td:first-child {
+        font-weight: 600;
+        white-space: nowrap;
+      }
+      @media (max-width: 640px) {
+        td:first-child {
+          white-space: normal;
+        }
+      }
+
+      ol.steps {
+        padding-left: 1.4rem;
+      }
+      ol.steps > li {
+        margin-bottom: 0.85rem;
+      }
+      ul {
+        padding-left: 1.4rem;
+      }
+      li {
+        margin-bottom: 0.35rem;
+      }
+
+      .flow {
+        display: flex;
+        align-items: stretch;
+        gap: 0.6rem;
+        margin: 1.25rem 0 1.75rem;
+        font-family: "Nunito", "Segoe UI", system-ui, sans-serif;
+        font-size: 0.85rem;
+        line-height: 1.45;
+      }
+      .flow-col {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+        min-width: 0;
+      }
+      .flow-main {
+        flex: 1.35;
+      }
+      .flow-role {
+        text-transform: uppercase;
+        letter-spacing: 0.11em;
+        font-size: 0.68rem;
+        font-weight: 700;
+        color: var(--muted);
+        text-align: center;
+      }
+      .flow-box {
+        background: var(--why-bg);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 0.85rem 1rem;
+        flex: 1;
+      }
+      .flow-box strong {
+        display: block;
+        color: var(--accent);
+        margin-bottom: 0.3rem;
+      }
+      .flow-box span {
+        color: var(--muted);
+      }
+      .flow-box ol {
+        margin: 0;
+        padding-left: 1.15rem;
+        color: var(--muted);
+      }
+      .flow-box ol li {
+        margin-bottom: 0.25rem;
+      }
+      .flow-arrow {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.35rem;
+        min-width: 6rem;
+        max-width: 7rem;
+        text-align: center;
+      }
+      .flow-arrow .lbl {
+        font-size: 0.68rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--muted);
+        line-height: 1.35;
+      }
+      .flow-arrow::after {
+        color: var(--accent);
+        font-size: 1.5rem;
+        line-height: 1;
+      }
+      .a1::after {
+        content: "→";
+      }
+      .a2::after {
+        content: "⇄";
+      }
+      @media (max-width: 760px) {
+        .flow {
+          flex-direction: column;
+        }
+        .flow-arrow {
+          min-width: 0;
+          max-width: none;
+        }
+        .a1::after {
+          content: "↓";
+        }
+        .a2::after {
+          content: "⇅";
+        }
+      }
+
+      .phase-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        margin: -0.4rem 0 1.3rem;
+      }
+      .chip {
+        font-family: "Nunito", "Segoe UI", system-ui, sans-serif;
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        color: var(--muted);
+        background: var(--code-bg);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 0.2rem 0.75rem;
+      }
+      .chip strong {
+        color: var(--accent);
+      }
+
+      .step-h {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        font-family: "Nunito", "Segoe UI", system-ui, sans-serif;
+        font-size: 1rem;
+        font-weight: 700;
+        margin: 2.1rem 0 0.8rem;
+        padding-top: 1.4rem;
+        border-top: 1px dashed var(--border);
+      }
+      .step-h .n {
+        flex: none;
+        width: 1.75rem;
+        height: 1.75rem;
+        border-radius: 50%;
+        background: var(--accent);
+        color: var(--card);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+      }
+
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 0.8rem;
+        margin: 1rem 0 1.5rem;
+      }
+      .card {
+        background: var(--why-bg);
+        border: 1px solid var(--border);
+        border-left: 4px solid var(--accent);
+        border-radius: 8px;
+        padding: 0.9rem 1rem;
+        font-size: 0.92rem;
+      }
+      .card .card-title {
+        display: block;
+        font-family: "Nunito", "Segoe UI", system-ui, sans-serif;
+        font-size: 0.82rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--accent);
+        margin-bottom: 0.4rem;
+      }
+
+      .qa {
+        background: var(--code-bg);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 1.25rem 1.4rem 1.1rem;
+        margin: 2rem 0 1.5rem;
+      }
+      .qa .q {
+        font-family: "Nunito", "Segoe UI", system-ui, sans-serif;
+        font-size: 1.05rem;
+        font-weight: 700;
+        margin: 0 0 0.6rem;
+      }
+      .qa .q::before {
+        content: "Q — ";
+        color: var(--accent);
+      }
+      .qa > :last-child {
+        margin-bottom: 0;
+      }
+
+      .choice {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.8rem;
+        margin: 1rem 0 1.5rem;
+      }
+      @media (max-width: 720px) {
+        .choice {
+          grid-template-columns: 1fr;
+        }
+      }
+      .choice-box {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 0.9rem 1rem;
+        font-size: 0.92rem;
+      }
+      .choice-box.a {
+        border-top: 4px solid var(--accent);
+      }
+      .choice-box.b {
+        border-top: 4px solid var(--warn-border);
+      }
+      .choice-box .ct {
+        display: block;
+        font-family: "Nunito", "Segoe UI", system-ui, sans-serif;
+        font-size: 0.82rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 0.4rem;
+      }
+      .choice-box.a .ct {
+        color: var(--accent);
+      }
+      .choice-box.b .ct {
+        color: var(--warn-border);
+      }
+
+      footer {
+        color: var(--muted);
+        font-size: 0.85rem;
+        border-top: 1px solid var(--border);
+        padding-top: 1.5rem;
+        margin-top: 3rem;
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        html {
+          scroll-behavior: smooth;
+        }
+      }
+      @media print {
+        body {
+          background: #fff;
+        }
+        section.phase {
+          display: block !important;
+          border: none;
+          padding: 0;
+          margin-bottom: 1.5rem;
+          break-inside: avoid-page;
+        }
+        .layout {
+          display: block;
+        }
+        nav.sidebar,
+        .pager {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <button
+      class="theme-toggle"
+      id="themeToggle"
+      type="button"
+      aria-live="polite"
+    >
+      <span id="themeIcon" aria-hidden="true">◐</span>
+      <span id="themeLabel">Dark mode</span>
+    </button>
+    <main>
+      <!-- .eyebrow is optional — a short kicker above the title. -->
+      <p class="eyebrow">OPTIONAL KICKER</p>
+      <h1>DOCUMENT TITLE</h1>
+      <p class="lede">
+        One or two sentences stating what this document is and who it is for.
+      </p>
+
+      <!-- .meta-strip is optional — 2 to 5 facts that frame the document. -->
+      <div class="meta-strip">
+        <span><strong>Audience</strong> — who this is written for</span>
+        <span><strong>Time</strong> — how long it takes</span>
+        <span><strong>Owner</strong> — who maintains it</span>
+      </div>
+
+      <!-- Navigation mode lives on the <html> element at the top of this file. -->
+      <div class="layout">
+        <nav class="sidebar" aria-label="Sections">
+          <div class="sidebar-head">
+            <span class="label">Contents</span>
+            <button
+              class="sidebar-toggle"
+              id="sidebarToggle"
+              type="button"
+              aria-expanded="true"
+              aria-label="Minimize sidebar"
+              title="Minimize sidebar"
+            >
+              «
+            </button>
+          </div>
+          <a class="tab" href="#s1"><span class="num">1</span>First section</a>
+          <a class="tab" href="#s2"><span class="num">2</span>Second section</a>
+        </nav>
+        <div class="content">
+          <section class="phase" id="s1">
+            <span class="phase-tag">Part 1 · Label</span>
+            <h2>First section</h2>
+            <div class="phase-meta">
+              <span class="chip">Who — <strong>everyone</strong></span>
+              <span class="chip">Time — <strong>10 minutes</strong></span>
+            </div>
+            <p>Body copy goes here.</p>
+          </section>
+
+          <section class="phase" id="s2">
+            <span class="phase-tag">Part 2 · Label</span>
+            <h2>Second section</h2>
+            <p>Body copy goes here.</p>
+          </section>
+
+          <!-- Keep the pager in tabbed mode; it is hidden automatically in
+               scroll mode, and may be deleted outright in that case. -->
+          <div class="pager">
+            <button id="pagerPrev" type="button"></button>
+            <button id="pagerNext" type="button"></button>
+          </div>
+
+          <footer>
+            <p>Provenance, related links, or maintenance notes.</p>
+          </footer>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      (function () {
+        var STORE_THEME = "doc-theme";
+        var STORE_SIDEBAR = "doc-sidebar";
+
+        var root = document.documentElement;
+        var button = document.getElementById("themeToggle");
+        var icon = document.getElementById("themeIcon");
+        var label = document.getElementById("themeLabel");
+        var media = window.matchMedia("(prefers-color-scheme: dark)");
+
+        function currentTheme() {
+          var forced = root.getAttribute("data-theme");
+          if (forced === "dark" || forced === "light") return forced;
+          return media.matches ? "dark" : "light";
+        }
+
+        // The button describes the mode you'll switch TO.
+        function render() {
+          var theme = currentTheme();
+          if (theme === "dark") {
+            icon.textContent = "☀";
+            label.textContent = "Light mode";
+          } else {
+            icon.textContent = "◐";
+            label.textContent = "Dark mode";
+          }
+        }
+
+        function apply(theme) {
+          root.setAttribute("data-theme", theme);
+          try {
+            localStorage.setItem(STORE_THEME, theme);
+          } catch (e) {
+            /* private browsing — toggle still works for this visit */
+          }
+          render();
+        }
+
+        button.addEventListener("click", function () {
+          apply(currentTheme() === "dark" ? "light" : "dark");
+        });
+
+        // A saved choice was already applied by the head script; with none, the
+        // OS preference rules and we track it live.
+        media.addEventListener("change", render);
+        render();
+
+        // --- Sidebar navigation ---
+        var sidebar = document.querySelector("nav.sidebar");
+        if (!sidebar) return;
+        var mode = root.classList.contains("js-tabbed") ? "tabbed" : "scroll";
+
+        var tabs = Array.prototype.slice.call(
+          sidebar.querySelectorAll("a.tab"),
+        );
+        var sections = tabs.map(function (t) {
+          return document.querySelector(t.getAttribute("href"));
+        });
+
+        function titleOf(i) {
+          return tabs[i].textContent.replace(/^\s*\d+\s*/, "").trim();
+        }
+        tabs.forEach(function (t, i) {
+          t.title = titleOf(i);
+        });
+
+        function markActive(idx) {
+          tabs.forEach(function (t, i) {
+            t.classList.toggle("active", i === idx);
+            if (i === idx) t.setAttribute("aria-current", "page");
+            else t.removeAttribute("aria-current");
+          });
+        }
+
+        if (mode === "tabbed") {
+          var prevBtn = document.getElementById("pagerPrev");
+          var nextBtn = document.getElementById("pagerNext");
+
+          // Resolve the hash to a tab index; a hash may also point at an
+          // anchor INSIDE a section, in which case we activate that
+          // section's tab and remember the element to scroll to.
+          function resolveHash() {
+            var h = location.hash;
+            for (var i = 0; i < tabs.length; i++) {
+              if (tabs[i].getAttribute("href") === h)
+                return { idx: i, el: null };
+            }
+            if (h.length > 1) {
+              var el = null;
+              try {
+                el = document.getElementById(h.slice(1));
+              } catch (e) {}
+              if (el) {
+                for (var j = 0; j < sections.length; j++) {
+                  if (sections[j] && sections[j].contains(el))
+                    return { idx: j, el: el };
+                }
+              }
+            }
+            return { idx: 0, el: null };
+          }
+
+          function currentIndex() {
+            return resolveHash().idx;
+          }
+
+          function showSection(idx, scrollTop) {
+            sections.forEach(function (s, i) {
+              if (s) s.classList.toggle("active", i === idx);
+            });
+            markActive(idx);
+            if (prevBtn && nextBtn) {
+              prevBtn.disabled = idx === 0;
+              nextBtn.disabled = idx === tabs.length - 1;
+              prevBtn.textContent =
+                idx > 0 ? "← Back: " + titleOf(idx - 1) : "";
+              nextBtn.textContent =
+                idx < tabs.length - 1 ? "Next: " + titleOf(idx + 1) + " →" : "";
+            }
+            if (scrollTop) window.scrollTo(0, 0);
+          }
+
+          if (prevBtn)
+            prevBtn.addEventListener("click", function () {
+              var i = currentIndex();
+              if (i > 0) location.hash = tabs[i - 1].getAttribute("href");
+            });
+          if (nextBtn)
+            nextBtn.addEventListener("click", function () {
+              var i = currentIndex();
+              if (i < tabs.length - 1)
+                location.hash = tabs[i + 1].getAttribute("href");
+            });
+
+          function syncToHash(initial) {
+            var r = resolveHash();
+            showSection(r.idx, !initial && !r.el);
+            if (r.el) r.el.scrollIntoView();
+          }
+          window.addEventListener("hashchange", function () {
+            syncToHash(false);
+          });
+          syncToHash(true);
+        } else {
+          // Scroll mode: highlight the section currently under the reader.
+          var ticking = false;
+          function spy() {
+            ticking = false;
+            var line = window.scrollY + 140;
+            var idx = 0;
+            for (var i = 0; i < sections.length; i++) {
+              if (sections[i] && sections[i].offsetTop <= line) idx = i;
+            }
+            markActive(idx);
+          }
+          window.addEventListener("scroll", function () {
+            if (!ticking) {
+              ticking = true;
+              window.requestAnimationFrame(spy);
+            }
+          });
+          window.addEventListener("resize", spy);
+          spy();
+        }
+
+        // --- Sidebar minimize toggle ---
+        var sidebarToggle = document.getElementById("sidebarToggle");
+        if (sidebarToggle) {
+          function renderSidebar(collapsed) {
+            sidebar.classList.toggle("collapsed", collapsed);
+            sidebarToggle.textContent = collapsed ? "»" : "«";
+            sidebarToggle.setAttribute("aria-expanded", String(!collapsed));
+            var verb = collapsed ? "Expand sidebar" : "Minimize sidebar";
+            sidebarToggle.setAttribute("aria-label", verb);
+            sidebarToggle.title = verb;
+          }
+
+          var sidebarSaved = null;
+          try {
+            sidebarSaved = localStorage.getItem(STORE_SIDEBAR);
+          } catch (e) {}
+          renderSidebar(sidebarSaved === "collapsed");
+
+          sidebarToggle.addEventListener("click", function () {
+            var collapsed = !sidebar.classList.contains("collapsed");
+            renderSidebar(collapsed);
+            try {
+              localStorage.setItem(
+                STORE_SIDEBAR,
+                collapsed ? "collapsed" : "expanded",
+              );
+            } catch (e) {}
+          });
+        }
+
+        // --- External links open in a new tab; in-page #hash links stay here ---
+        Array.prototype.forEach.call(
+          document.querySelectorAll("a[href]"),
+          function (a) {
+            var href = a.getAttribute("href");
+            if (href && href.charAt(0) !== "#") {
+              a.setAttribute("target", "_blank");
+              a.setAttribute("rel", "noopener");
+            }
+          },
+        );
+      })();
+    </script>
+  </body>
+</html>
