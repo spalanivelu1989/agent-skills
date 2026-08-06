@@ -51,10 +51,12 @@ dark-mode machine".
 
 ## Typography
 
-- **Nunito** (400/600/700/800) — headings, sidebar, labels, chips, buttons, table
-  headers. Anything structural or UI-like.
-- **Work Sans** (400/600/700 + italic 400) — body copy. Set at 17px / 1.65.
+- **`"IBM Plex Mono", monospace`** (400/600/700 + italics) — everything: body copy,
+  headings, sidebar, labels, chips, buttons, table headers. Body is set at
+  17px / 1.65. IBM Plex Mono tops out at 700, so the handful of `800` rules in the
+  CSS resolve to 700 — that is intentional, do not "fix" them.
 - **`ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace`** — code.
+  Kept distinct from the body font so code blocks still read as code.
 
 Scale: `h1` 2.1rem · `h2` 1.45rem · `h3` 1.08rem · `h4` 0.98rem · body 17px ·
 `.lede` 1.12rem · small UI 0.85rem · labels/tags 0.72rem uppercase with wide
