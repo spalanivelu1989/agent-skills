@@ -15,7 +15,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,600;0,700;1,400;1,700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,600;0,700;1,400;1,700&family=Noto+Sans+Elbasan&display=swap"
       rel="stylesheet"
     />
     <script>
@@ -255,6 +255,10 @@
         gap: 1.75rem;
         align-items: flex-start;
       }
+      /* The sidebar is the one place that breaks from IBM Plex Mono: a
+         proportional face here separates navigation from document content at a
+         glance. Noto Sans Elbasan ships regular only, so the 600/700 weights
+         below are synthesised by the browser — intentional, do not "fix". */
       nav.sidebar {
         position: sticky;
         top: 1.25rem;
@@ -264,9 +268,13 @@
         border: 1px solid var(--border);
         border-radius: 12px;
         padding: 0.9rem;
+        font-family: "Noto Sans Elbasan", sans-serif;
         font-size: 0.87rem;
       }
+      /* .label matches the shared mono rule directly, so inheriting from
+         nav.sidebar is not enough — it needs the family restated here. */
       nav.sidebar .label {
+        font-family: "Noto Sans Elbasan", sans-serif;
         text-transform: uppercase;
         letter-spacing: 0.12em;
         font-size: 0.7rem;

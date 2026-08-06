@@ -1,6 +1,6 @@
 ---
 name: html-format
-description: Produces a standalone, self-contained HTML document in the house design system — teal accent, IBM Plex Mono typography, sidebar navigation, card sections, callouts, light/dark toggle. Use this whenever the deliverable is an HTML page rather than Markdown: guides, walkthroughs, runbooks, proposals, explainers, onboarding docs, reports, FAQs, or specs. Trigger it when someone asks for a document "as HTML", "as a web page", "in the same style/format as index.html", "in our house style", "matching the other pages", or asks to convert an existing Markdown/text document into a styled HTML page. Also use it when adding a new companion page to a documentation set that already uses this system, so the new page matches the rest.
+description: Produces a standalone, self-contained HTML document in the house design system — teal accent, IBM Plex Mono typography with a proportional sidebar, sidebar navigation, card sections, callouts, light/dark toggle. Use this whenever the deliverable is an HTML page rather than Markdown: guides, walkthroughs, runbooks, proposals, explainers, onboarding docs, reports, FAQs, or specs. Trigger it when someone asks for a document "as HTML", "as a web page", "in the same style/format as index.html", "in our house style", "matching the other pages", or asks to convert an existing Markdown/text document into a styled HTML page. Also use it when adding a new companion page to a documentation set that already uses this system, so the new page matches the rest.
 ---
 
 # House HTML document format
@@ -116,8 +116,9 @@ open <destination>.html   # macOS
 - Narrow the window below 900px. The sidebar should become a horizontal tab
   strip, not overflow the page.
 - Confirm the file is self-contained: no local CSS or JS files, no build step.
-  The single Google Fonts `<link>` is the only external dependency, and the font
-  stacks degrade to the system monospace if it fails to load.
+  The single Google Fonts `<link>` (two families) is the only external
+  dependency, and the font stacks degrade to the system monospace and sans if it
+  fails to load.
 
 Then tell the user the path and, in a sentence, which navigation mode you chose
 and why.

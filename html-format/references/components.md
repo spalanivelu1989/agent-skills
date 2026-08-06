@@ -51,10 +51,16 @@ dark-mode machine".
 
 ## Typography
 
-- **`"IBM Plex Mono", monospace`** (400/600/700 + italics) — everything: body copy,
-  headings, sidebar, labels, chips, buttons, table headers. Body is set at
-  17px / 1.65. IBM Plex Mono tops out at 700, so the handful of `800` rules in the
-  CSS resolve to 700 — that is intentional, do not "fix" them.
+- **`"IBM Plex Mono", monospace`** (400/600/700 + italics) — the document itself:
+  body copy, headings, callout labels, chips, buttons, table headers. Body is set
+  at 17px / 1.65. IBM Plex Mono tops out at 700, so the handful of `800` rules in
+  the CSS resolve to 700 — that is intentional, do not "fix" them.
+- **`"Noto Sans Elbasan", sans-serif`** — the sidebar only: its heading label, the
+  tab links, and the circled `.num` counters. A proportional face here separates
+  navigation from content at a glance. It ships **regular weight only**, so the
+  `600`/`700` rules inside `nav.sidebar` are synthesised by the browser. Because
+  `.label` also matches the shared mono rule, `nav.sidebar .label` restates the
+  family explicitly — inheriting from `nav.sidebar` alone would not win.
 - **`ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace`** — code.
   Kept distinct from the body font so code blocks still read as code.
 
