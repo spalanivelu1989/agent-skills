@@ -96,6 +96,27 @@ Reach for the components that match what you're actually saying:
 | A handoff between actors or stages           | `.flow`                    |
 | Structured comparison across attributes      | `.tablewrap` + `table`     |
 | At-a-glance facts about a section            | `.phase-meta` with `.chip` |
+| Source code in a known language              | `pre.language-*`           |
+| Terminal output, a file tree, a log excerpt  | plain `pre`                |
+
+Code blocks are syntax-highlighted when you tag them with a language:
+`<pre class="language-python">`, `language-typescript`, `language-bash`,
+`language-sql`, `language-abap` and a dozen more (see the catalog for the list
+and the aliases). The highlighter is built into the template — no library, no
+network call — so this is a one-attribute decision, not a dependency.
+
+Tag the language whenever the block really is source code; a Python function
+that reads as plain grey text is a missed chance to make it scannable. Leave the
+class off when the block is _not_ code — command output, directory listings, log
+lines, ASCII diagrams. Colouring those invents structure that isn't in them, and
+a monochrome block is the visual cue that the reader is looking at output rather
+than something to type.
+
+Every `<pre>` also gets a copy button, added by a script in the template — you
+write a plain block and the button appears on hover. The consequence for writing:
+a block is now something a reader will paste whole, so keep commands and their
+output in separate blocks rather than pasting a `$` prompt and a wall of output
+into someone's terminal.
 
 Callout labels should say something. `<span class="label">What you have now</span>`
 earns its place; `<span class="label">Note</span>` does not.
@@ -115,6 +136,13 @@ open <destination>.html   # macOS
   showing section 0.
 - Narrow the window below 900px. The sidebar should become a horizontal tab
   strip, not overflow the page.
+- Hover a code block and press its copy button. It should say `Copied` and the
+  clipboard should hold the block's text with no highlighting artefacts. A block
+  with no button was wrapped in `.codewrap` by hand — the script skips those, so
+  delete the hand-written wrapper and let it do the work.
+- Check every `language-*` block actually came out coloured. A block that stayed
+  grey means the language name isn't one the highlighter knows — unrecognised
+  names are ignored rather than guessed at, so fix the name or drop the class.
 - Confirm the file is self-contained: no local CSS or JS files, no build step.
   The single Google Fonts `<link>` (two families) is the only external
   dependency, and the font stacks degrade to the system monospace and sans if it

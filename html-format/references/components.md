@@ -12,7 +12,7 @@ the class names.
 - [Sidebar and sections](#sidebar-and-sections) — nav, section shells, tags, chips
 - [Callouts](#callouts) — win / why / warn
 - [Steps and lists](#steps-and-lists) — step headers, ordered steps
-- [Code](#code) — blocks and inline
+- [Code](#code) — blocks, inline, copy button, and syntax highlighting
 - [Tables](#tables)
 - [Cards](#cards)
 - [Choice boxes](#choice-boxes) — two-option comparison
@@ -28,19 +28,20 @@ Every colour in the document resolves through these variables. Light mode is the
 base; dark mode is Catppuccin Frappé. Using a raw hex anywhere in the body means
 one of the two themes will break, so always reach for a token.
 
-| Token                         | Light                 | Dark (Frappé)                | Use for                               |
-| ----------------------------- | --------------------- | ---------------------------- | ------------------------------------- |
-| `--bg`                        | `#f6f8f8`             | `#303446` Base               | page background                       |
-| `--card`                      | `#ffffff`             | `#414559` Surface 0          | section shells, sidebar, buttons      |
-| `--ink`                       | `#1c2529`             | `#c6d0f5` Text               | body text                             |
-| `--muted`                     | `#56676d`             | `#a5adce` Subtext 0          | secondary text, labels, captions      |
-| `--accent`                    | `#0e6e68` teal        | `#81c8be` Teal               | links, active tab, emphasis           |
-| `--accent-soft`               | `#e2efed`             | `#51576d` Surface 1          | tag and hover backgrounds             |
-| `--win-bg` / `--win-border`   | `#e8f3ea` / `#2e7d4f` | `#292c3c` / `#a6d189` Green  | outcome callouts                      |
-| `--warn-bg` / `--warn-border` | `#faf3e0` / `#9a6a00` | `#292c3c` / `#e5c890` Yellow | caution callouts                      |
-| `--why-bg`                    | `#edf2f4`             | `#292c3c` Mantle             | rationale callouts, cards, flow boxes |
-| `--border`                    | `#d8e0e0`             | `#51576d` Surface 1          | all hairlines                         |
-| `--code-bg` / `--code-ink`    | `#eef2f2` / `#17332f` | `#292c3c` / `#99d1db` Sky    | code, chips, Q&A shells               |
+| Token                         | Light                 | Dark (Frappé)                | Use for                                 |
+| ----------------------------- | --------------------- | ---------------------------- | --------------------------------------- |
+| `--bg`                        | `#f6f8f8`             | `#303446` Base               | page background                         |
+| `--card`                      | `#ffffff`             | `#414559` Surface 0          | section shells, sidebar, buttons        |
+| `--ink`                       | `#1c2529`             | `#c6d0f5` Text               | body text                               |
+| `--muted`                     | `#56676d`             | `#a5adce` Subtext 0          | secondary text, labels, captions        |
+| `--accent`                    | `#0e6e68` teal        | `#81c8be` Teal               | links, active tab, emphasis             |
+| `--accent-soft`               | `#e2efed`             | `#51576d` Surface 1          | tag and hover backgrounds               |
+| `--win-bg` / `--win-border`   | `#e8f3ea` / `#2e7d4f` | `#292c3c` / `#a6d189` Green  | outcome callouts                        |
+| `--warn-bg` / `--warn-border` | `#faf3e0` / `#9a6a00` | `#292c3c` / `#e5c890` Yellow | caution callouts                        |
+| `--why-bg`                    | `#edf2f4`             | `#292c3c` Mantle             | rationale callouts, cards, flow boxes   |
+| `--border`                    | `#d8e0e0`             | `#51576d` Surface 1          | all hairlines                           |
+| `--code-bg` / `--code-ink`    | `#eef2f2` / `#17332f` | `#292c3c` / `#99d1db` Sky    | code, chips, Q&A shells                 |
+| `--tok-*` (nine)              | Catppuccin Latte      | Catppuccin Frappé            | syntax highlighting — see [Code](#code) |
 
 Dark mode is declared three times on purpose: once under
 `@media (prefers-color-scheme: dark)` so the OS preference works with JS
@@ -235,6 +236,67 @@ cd repo</pre>
 
 Blocks scroll horizontally rather than wrapping. Inline `<code>` inside `p`, `li`
 and `td` gets a bordered chip treatment automatically.
+
+### Copy button
+
+Every `<pre>` gets one, automatically. A script at the bottom of the template
+wraps each block in `div.codewrap` and appends `button.copy-btn` — **do not write
+that markup yourself**. A block already sitting inside a `.codewrap` is skipped,
+so hand-wrapping one is the way to end up with no button at all. Write a plain
+`<pre>` and the button appears.
+
+The button sits in the top-right corner of the block, fades in on hover (it is
+always visible on touch devices, which never hover), and flips to `Copied` for a
+moment after a successful copy. It is hidden when printing, and with JavaScript
+disabled neither the wrapper nor the button exists at all.
+
+What gets copied is the block's text, not its highlighted markup, with the
+newline after the opening tag and any trailing whitespace trimmed — so the
+clipboard matches what is on screen. That means the block should contain only
+what you want pasted: keep prompts (`$`, `>`) and command output in a separate
+block from the commands themselves, or the reader pastes them too.
+
+### Syntax highlighting
+
+Add a `language-*` class and the block is coloured by the highlighter at the
+bottom of the template — a self-contained tokenizer, no library and no network
+request:
+
+```html
+<pre class="language-python">
+def total(rows):
+    # sum the amounts
+    return sum(r["amount"] for r in rows)</pre>
+```
+
+The class goes on the `<pre>`, or on a `<code>` inside it if you prefer the
+CommonMark shape (`<pre><code class="language-ts">`). It works on inline `<code>`
+too, though a whole highlighted phrase mid-sentence is usually noisier than plain
+`<code>`.
+
+Recognised names, with the obvious aliases (`js`, `ts`, `py`, `sh`, `yml`, `c`,
+`cs`, `rb`, `rs`, `kt`, `htm`, `jsx`, `tsx`, `scss`, …):
+
+`python` · `javascript` · `typescript` · `java` · `kotlin` · `go` · `rust` ·
+`cpp` · `csharp` · `php` · `ruby` · `swift` · `sql` · `bash` · `json` · `yaml` ·
+`html` / `xml` · `css` · `abap`
+
+**Leave the class off when the block is not source code.** Terminal output, file
+trees, log excerpts and ASCII diagrams stay monochrome, which is exactly right —
+colouring them invents meaning that isn't there. `language-text` (or `console`,
+`log`, `diff`) is the explicit way to say "code font, no colour".
+
+An unknown language name is ignored rather than guessed at, so the block simply
+renders plain. To add a language, add one `def()` entry in the highlighter; to
+switch highlighting off entirely, delete that whole IIFE and every block falls
+back to plain `<pre>`.
+
+Tokens are painted through nine variables — `--tok-plain`, `--tok-com`,
+`--tok-str`, `--tok-kw`, `--tok-num`, `--tok-fn`, `--tok-typ`, `--tok-op`,
+`--tok-var` — Catppuccin Latte in light mode and Frappé in dark, so a block
+recolours with the theme toggle like everything else. They sit alongside the
+other tokens in every theme block, and the same "change one, change all" rule
+applies.
 
 `.skill-invoke` is a variant of inline code for things the reader types to invoke
 an agent or command — it renders in the accent colour on the soft accent
