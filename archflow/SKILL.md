@@ -13,7 +13,7 @@ Turns a written architecture description into three things, each built from the 
    - a **simplified architecture diagram** (`system-diagram-simple.puml`) — the same architecture collapsed to 8-10 boxes, for READMEs and slides,
    - a **UML workflow diagram** (`system-workflow.puml`) — a sequence diagram walking one realistic end-to-end request through those components, phase by phase, and
    - a **simplified workflow diagram** (`system-workflow-simple.puml`) — the same scenario retold with the cast collapsed to the simplified architecture's boxes, for READMEs and slides.
-3. An **ArchFlow demo** — an animated, playable visualization of the same request traveling through every component, built from the workflow diagram's phases and messages, as a React component (`*.tsx` + `*.css`) and a zero-dependency `index.html` that opens directly in a browser. It opens in light mode (a 🌙/☀ header button switches theme). The engine ships with play/pause, ⏮ back / ⏭ step (one step at a time), a draggable timeline scrubber, a clickable activity log (every entry jumps to that step), a click-to-open node inspector showing each component's description, connections, and step appearances, draggable node cards (links stay attached and re-route live — lets the viewer pull cards apart when edges overlap; dragging is transient until committed with the 💾 Save layout button, which persists positions per demo via localStorage, so a reload always returns to the last saved or authored arrangement), and removable connections (click any link to open a connection inspector listing what it carries and how many later steps cutting it would strand, then ✂ Remove it — the link is drawn severed, the step over it is **blocked**, and the rest of that request is **skipped as never reached** — the run finishes with a "1 blocked, 2 never reached" summary instead of pretending the flow continued — and a ⛓ Links button reconnects everything; removals persist across reloads too).
+3. An **ArchFlow demo** — an animated, playable visualization of the same request traveling through every component, built from the workflow diagram's phases and messages, as a React component (`*.tsx` + `*.css`) and a zero-dependency `index.html` that opens directly in a browser. It opens in light mode (a 🌙/☀ header button switches theme). The engine ships with play/pause, ⏮ back / ⏭ step (one step at a time), a draggable timeline scrubber, a clickable activity log (every entry jumps to that step), a click-to-open node inspector showing each component's description, connections, and step appearances, draggable node cards (links stay attached and re-route live — lets the viewer pull cards apart when edges overlap; dragging is transient until committed with the 💾 Save layout button, which persists positions per demo via localStorage, so a reload always returns to the last saved or authored arrangement — and an ⬇ Export layout button that downloads the coordinates to bake into the file, since localStorage is per browser profile and only the authored layout travels with the HTML), and removable connections (click any link to open a connection inspector listing what it carries and how many later steps cutting it would strand, then ✂ Remove it — the link is drawn severed, the step over it is **blocked**, and the rest of that request is **skipped as never reached** — the run finishes with a "1 blocked, 2 never reached" summary instead of pretending the flow continued — and a ⛓ Links button reconnects everything; removals persist across reloads too).
 
 This skill codifies a working, previously-debugged implementation. Two non-obvious bugs are already fixed in the templates below — do not "improve" past them without re-testing (see the FAQ at the bottom for what they were and why).
 
@@ -281,6 +281,7 @@ end note
 Author the spine first: the chain user → entry point → core service(s) → key external dependency should read in a clear top-to-bottom 4-tier layout (User → Presentation & Capture → Core API & Broker → Worker, Storage, Toolchains & External AI).
 
 **Essential Layout Rules for PlantUML Architecture Diagrams:**
+
 1. **Never use `skinparam linetype ortho` on diagrams with edge text**: Orthogonal lines cause PlantUML to render label text directly over node borders and shape outlines. Use standard curved arrows or `skinparam linetype polyline` instead.
 2. **Consolidate Local Toolchains**: Group related local CLI utilities, binary tools, and ML engines into a single consolidated node (e.g., `rectangle "Local toolchain\nFFmpeg · Whisper · Kokoro TTS · OpenCV"`) rather than creating separate boxes for each individual command or script.
 3. **Include Specific Tech & Port Annotations**: Give components explicit framework and port subtitles (e.g., `Web App\nNext.js · :3000`, `API\nFastAPI · :8000`, `Redis 7\nCelery broker`).
@@ -477,6 +478,7 @@ In the `.tsx` copy, replace every placeholder:
 - `__BIDIRECTIONAL_PAIRS__` → comma-separated quoted pairKey strings (e.g. `"Node1|Node2"`), or leave empty if no roundTrip steps
 - `__DB_INGEST_*__` placeholders → fill in, or `null`/empty per the "optional" note in Step 5
 - `__TITLE__`, `__SUBTITLE__` → demo title and one-line subtitle
+- `__LAYOUT_STAMP__` → `v1` on first generation. Bump it (`v2`, `v3`, …) **every time you rewrite `__NODES__` coordinates** — including when baking in an exported layout (see "Baking a layout in" below). Saved layouts carry the stamp they were saved under and are ignored once it no longer matches, so a stale localStorage entry can never override newly authored positions.
 - `__FOOTER_JSX__` → 2-4 sentences of real JSX (can use `<b>...</b>` for emphasis) explaining the most important/non-obvious connection in the architecture (the same one called out in the Mermaid diagram's Step 2 prose) — this is the one thing a viewer should remember after watching.
 
 ## Step 7 — Generate the standalone HTML
@@ -494,6 +496,26 @@ curl -sL -o babel.min.js "https://unpkg.com/@babel/standalone@8/babel.min.js"
 ```
 
 If a `vendor/` folder with these three files already exists elsewhere in the project (from a previous ArchFlow run), just copy it instead of re-downloading (~2.5MB, mostly Babel).
+
+### Baking a layout in
+
+💾 Save layout writes to `localStorage`, which is scoped **per browser profile** — a layout saved in one Chrome profile is invisible from another, so the same file opened from a different profile window comes back arranged differently. The layout that truly belongs to the demo is the one baked into `__NODES__`.
+
+When the user has dragged the cards into a better arrangement and wants it to stick (or wants to share the file), have them click **⬇ Export layout** — it downloads `archflow-layout.json`:
+
+```json
+{
+  "title": "...",
+  "stamp": "v1",
+  "pos": { "USER": { "x": 154, "y": 347 }, "OD": { "x": 155, "y": 117 } }
+}
+```
+
+Then, in **both** `demo/index.html` and the `.tsx`:
+
+1. Write each `pos[id]` into that node's `x`/`y` in the `NODES` literal — change only coordinates, never the other node fields.
+2. Bump `LAYOUT_STAMP` (`v1` → `v2`). Skipping this is the whole bug: every viewer's old saved layout would still match the stamp and override the coordinates you just baked in.
+3. Re-run the Step 8 checks (out-of-bounds and overlap rules from Step 5 still apply to hand-dragged positions).
 
 ## Step 8 — Verify before reporting done
 
