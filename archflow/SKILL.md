@@ -13,7 +13,7 @@ Turns a written architecture description into three things, each built from the 
    - a **simplified architecture diagram** (`system-diagram-simple.puml`) — the same architecture collapsed to 8-10 boxes, for READMEs and slides,
    - a **UML workflow diagram** (`system-workflow.puml`) — a sequence diagram walking one realistic end-to-end request through those components, phase by phase, and
    - a **simplified workflow diagram** (`system-workflow-simple.puml`) — the same scenario retold with the cast collapsed to the simplified architecture's boxes, for READMEs and slides.
-3. An **ArchFlow demo** — an animated, playable visualization of the same request traveling through every component, built from the workflow diagram's phases and messages, as a React component (`*.tsx` + `*.css`) and a zero-dependency `index.html` that opens directly in a browser. It opens in light mode (a 🌙/☀ header button switches theme). The engine ships with play/pause, ⏮ back / ⏭ step (one step at a time), a draggable timeline scrubber, a clickable activity log (every entry jumps to that step), a click-to-open node inspector showing each component's description, connections, and step appearances, draggable node cards (links stay attached and re-route live — lets the viewer pull cards apart when edges overlap; dragging is transient until committed with the 💾 Save layout button, which persists positions per demo via localStorage, so a reload always returns to the last saved or authored arrangement — and an ⬇ Export layout button that downloads the coordinates to bake into the file, since localStorage is per browser profile and only the authored layout travels with the HTML), and removable connections (click any link to open a connection inspector listing what it carries and how many later steps cutting it would strand, then ✂ Remove it — the link is drawn severed, the step over it is **blocked**, and the rest of that request is **skipped as never reached** — the run finishes with a "1 blocked, 2 never reached" summary instead of pretending the flow continued — and a ⛓ Links button reconnects everything; removals persist across reloads too).
+3. An **ArchFlow demo** — an animated, playable visualization of the same request traveling through every component, built from the workflow diagram's phases and messages, as a React component (`*.tsx` + `*.css`) and a zero-dependency `index.html` that opens directly in a browser. It opens in light mode (a 🌙/☀ header button switches theme). The engine ships with play/pause, ⏮ back / ⏭ step (one step at a time), a draggable timeline scrubber, a clickable activity log (every entry jumps to that step), a click-to-open node inspector showing each component's description, connections, and step appearances, draggable node cards (links stay attached and re-route live — lets the viewer pull cards apart when edges overlap; dragging is transient until committed with the 💾 Save layout button, which persists positions per demo via localStorage, so a reload always returns to the last saved or authored arrangement — and an ⬇ Export edits button that downloads the coordinates and labels to bake into the file, since localStorage is per browser profile and only what's authored travels with the HTML), multi-select and group drag (⬚ Select all or ⌘/Ctrl+A grabs every card, shift-click picks individual ones, dragging the empty stage rubber-bands a region, Esc or a click on empty stage clears — then dragging any selected card moves the whole selection as one rigid block, which is how a viewer shifts the entire diagram around the stage or repositions a whole subsystem without disturbing its internal arrangement), named group boxes (select two or more cards and hit ▣ Group to draw a subtle titled box around them — a VPC, an owning team, on-prem vs cloud; click a box's name to reselect its cards, double-click to rename, ⤫ Ungroup to drop it, and the box follows its cards as they're dragged), free-text notes under any card (double-click a card — or ✎ Edit in its inspector — to pin your own text under it: a latency budget, an owner, a caveat; it wraps to three lines, travels with the card when dragged, and saves like everything else), labelled connections (each link carries a short line of text on the diagram — the protocol or payload it moves, authored per demo in `LINK_LABELS` — and the viewer can retitle any of them by double-clicking the line or the label, or via ✎ Edit in the connection inspector; edits save immediately and ⬇ Export edits hands them back for baking into the file), and removable connections (click any link to open a connection inspector listing what it carries and how many later steps cutting it would strand, then ✂ Remove it — the link is drawn severed, the step over it is **blocked**, and the rest of that request is **skipped as never reached** — the run finishes with a "1 blocked, 2 never reached" summary instead of pretending the flow continued — and a ⛓ Links button reconnects everything; removals persist across reloads too).
 
 This skill codifies a working, previously-debugged implementation. Two non-obvious bugs are already fixed in the templates below — do not "improve" past them without re-testing (see the FAQ at the bottom for what they were and why).
 
@@ -458,6 +458,7 @@ Read `templates/DemoFlow.template.tsx` now (it has the exact layout rules and th
 - Leave ≥ 100-120px of margin above the topmost row (a bubble above a node renders at `node.y - 101`; anything higher than `y≈110` puts the bubble off-canvas).
 - `STAGE_W` / `STAGE_H` = the bounding box over all nodes (`max(x + NW)`, `max(y + NH)`) plus ~20-40px margin.
 - Mark external systems with `external: true` (renders as a dashed card).
+- If the architecture has a boundary worth boxing (a VPC, an owning team, on-prem vs cloud — see `__GROUPS__` in Step 6), **lay its members out contiguously** and leave ~30px more clearance around the set than usual. A group box is the bounding rectangle of its members plus padding and a title strip, so anything that happens to sit between them looks like it's inside the boundary too.
 - Write a 1-2 sentence `desc` for **every** node — the click-to-open node inspector (side panel) shows it as the "what is this component" line. The inspector derives the node's connections and step appearances from STEPS automatically, so `desc` is the only per-node authoring this feature needs.
 - Build the `BIDIRECTIONAL` set: every pair used with `roundTrip: true` must appear here as `[a,b].sort().join('|')`, or the return arrowhead won't render.
 - Decide if one step deserves the optional "persistence save" flourish (file-transfer console + flying particles) — only if there's one obvious "everything lands here" moment (e.g. a DB write). If not, set `DB_INGEST_TO` to `null` and skip the rest of those placeholders (leave them as harmless-but-unused nulls/empty values).
@@ -472,10 +473,13 @@ In the `.tsx` copy, replace every placeholder:
 
 - `__COMPONENT_NAME__` (3 occurrences: CSS import, function name, default export) → e.g. `CpiDemoFlow`
 - `__STAGE_W__`, `__STAGE_H__` → computed bounding box from Step 5
-- `__NODES__` → complete JS object literal, e.g. `{ Node1: { x: 40, y: 120, icon: "👤", title: "...", sub: "...", color: "...", desc: "..." } }`
+- `__NODES__` → complete JS object literal, e.g. `{ Node1: { x: 40, y: 120, icon: "👤", title: "...", sub: "...", color: "...", desc: "..." } }`. Cards are a fixed 180×76 with ~110px of text width, so aim for a `title` of ~2-3 words and a `sub` of ~3-4 words — the engine shrinks, wraps, and finally truncates anything longer (see the FAQ), but a title that has to be cut reads worse than one written short. Full detail belongs in `desc`, which the inspector shows in full.
 - `__STEPS__` → complete JS array literal of step objects, e.g. `[ { f: "Node1", t: "Node2", ph: 0, k: "call", route: "...", m: "...", chat: [...] } ]`
 - `__PHASES__` → complete JS array literal of phase strings, e.g. `[ "Phase 1", "Phase 2", "Phase 3" ]`
 - `__BIDIRECTIONAL_PAIRS__` → comma-separated quoted pairKey strings (e.g. `"Node1|Node2"`), or leave empty if no roundTrip steps
+- `__LINK_LABELS__` → JS object literal keyed by pairKey with the short text drawn on each line, e.g. `{ "API|WebUI": "HTTP POST /orders", "API|Queue": "publishes OrderPaid" }`. Label the connections whose **mechanism** is worth knowing — protocol, endpoint, event name, transport ("gRPC", "SQL", "S3 presigned URL", "webhook") — not the ones where the arrow already says it. 2-4 words; the engine trims anything that doesn't fit the gap between two cards. Every key must be a real pairKey (both nodes in NODES, and a step actually travels between them); `{}` is fine if nothing is worth labelling. Viewers can retitle any link themselves, so this is a starting point, not a contract.
+- `__NODE_NOTES__` → JS object of free text pinned under a card, keyed by node id, e.g. `{ "API": "p95 220ms — owned by Platform" }`. **Default to `{}`**: this is the viewer's margin, and the per-node `desc` already carries the description the inspector shows. Author one only for a caveat that belongs on the diagram itself and nowhere else (a hard limit, a known weak spot, a planned rewrite). Notes wrap to at most three card-width lines and are trimmed past that, so keep them under ~12 words.
+- `__GROUPS__` → JS array of the named boxes drawn behind the cards, e.g. `[ { name: "AWS eu-west-1", members: ["API", "DB", "Queue"], tone: 0 }, { name: "Payments team", members: ["Pay", "Ledger"], tone: 1 } ]`. Author a box only for a boundary the doc actually asserts — a VPC/region, an ownership or team split, on-prem vs cloud, a trust boundary, "everything in this one deployable" — never as decoration for things that merely sit near each other. `tone` is 0-5 (six preset hues); give adjacent boxes different tones. Members must be laid out **contiguously** in Step 5, because the box is the bounding rectangle of its members: a non-member sitting between them ends up visually inside the box. `[]` is right for most demos.
 - `__DB_INGEST_*__` placeholders → fill in, or `null`/empty per the "optional" note in Step 5
 - `__TITLE__`, `__SUBTITLE__` → demo title and one-line subtitle
 - `__LAYOUT_STAMP__` → `v1` on first generation. Bump it (`v2`, `v3`, …) **every time you rewrite `__NODES__` coordinates** — including when baking in an exported layout (see "Baking a layout in" below). Saved layouts carry the stamp they were saved under and are ignored once it no longer matches, so a stale localStorage entry can never override newly authored positions.
@@ -497,25 +501,33 @@ curl -sL -o babel.min.js "https://unpkg.com/@babel/standalone@8/babel.min.js"
 
 If a `vendor/` folder with these three files already exists elsewhere in the project (from a previous ArchFlow run), just copy it instead of re-downloading (~2.5MB, mostly Babel).
 
-### Baking a layout in
+### Baking a viewer's edits in
 
-💾 Save layout writes to `localStorage`, which is scoped **per browser profile** — a layout saved in one Chrome profile is invisible from another, so the same file opened from a different profile window comes back arranged differently. The layout that truly belongs to the demo is the one baked into `__NODES__`.
+Both the saved layout and the viewer's link labels live in `localStorage`, which is scoped **per browser profile** — edits made in one Chrome profile are invisible from another, so the same file opened from a different profile window comes back arranged and labelled differently. What truly belongs to the demo is what's baked into `__NODES__` and `__LINK_LABELS__`.
 
-When the user has dragged the cards into a better arrangement and wants it to stick (or wants to share the file), have them click **⬇ Export layout** — it downloads `archflow-layout.json`:
+When the user has dragged the cards into a better arrangement or retitled some connections and wants it to stick (or wants to share the file), have them click **⬇ Export edits** — it downloads `archflow-edits.json`:
 
 ```json
 {
   "title": "...",
   "stamp": "v1",
-  "pos": { "USER": { "x": 154, "y": 347 }, "OD": { "x": 155, "y": 117 } }
+  "pos": { "USER": { "x": 154, "y": 347 }, "OD": { "x": 155, "y": 117 } },
+  "labels": { "OD|USER": "HTTP POST /orders" },
+  "notes": { "OD": "p95 220ms" },
+  "groups": [{ "name": "Order service", "tone": 0, "members": ["OD", "DB"] }]
 }
 ```
 
 Then, in **both** `demo/index.html` and the `.tsx`:
 
 1. Write each `pos[id]` into that node's `x`/`y` in the `NODES` literal — change only coordinates, never the other node fields.
-2. Bump `LAYOUT_STAMP` (`v1` → `v2`). Skipping this is the whole bug: every viewer's old saved layout would still match the stamp and override the coordinates you just baked in.
-3. Re-run the Step 8 checks (out-of-bounds and overlap rules from Step 5 still apply to hand-dragged positions).
+2. Replace the `LINK_LABELS` literal with `labels`, `NODE_NOTES` with `notes`, and `GROUPS` with `groups` (each is the complete effective set, authored plus edited, so they paste in wholesale).
+3. Bump `LAYOUT_STAMP` (`v1` → `v2`). Skipping this is the whole bug: every viewer's old saved layout would still match the stamp and override the coordinates you just baked in.
+4. Re-run the Step 8 checks (out-of-bounds and overlap rules from Step 5 still apply to hand-dragged positions).
+
+Groups, labels and notes aren't stamped — a viewer's saved set simply wins until they clear it. That's deliberate for a viewer's own boxes, but it means the one browser profile that drew them keeps seeing its own version even after you bake the same thing in. Nothing is lost either way, and clearing the demo's `localStorage` entries resets it.
+
+Note the two persist differently, on purpose: dragging is transient until 💾 Save layout commits it, while a label edit saves the moment it's typed — a label is content, like a removed link, not a view you're trying out.
 
 ## Step 8 — Verify before reporting done
 
@@ -538,7 +550,7 @@ console.log('TSX TRANSFORM OK');
 "
 ```
 
-**Data-integrity check** — validates the invariants the engine silently depends on: every STEPS `f`/`t` and every `chat` speaker exists in NODES, every `ph` indexes into PHASES, every `roundTrip` pair is in BIDIRECTIONAL (a missing entry means the return arrowhead silently never renders — the exact bug this set exists to prevent), and the DB-ingest flourish, if enabled, points at real nodes and matches exactly one non-roundTrip step. Note the slice deliberately ends at `const TITLE` so it includes the BIDIRECTIONAL and DB_INGEST declarations:
+**Data-integrity check** — validates the invariants the engine silently depends on: every STEPS `f`/`t` and every `chat` speaker exists in NODES, every `ph` indexes into PHASES, every `roundTrip` pair is in BIDIRECTIONAL (a missing entry means the return arrowhead silently never renders — the exact bug this set exists to prevent), every LINK_LABELS key is a connection that actually exists (a typo'd pairKey is a label nobody will ever see), every NODE_NOTES key is a real node, and the DB-ingest flourish, if enabled, points at real nodes and matches exactly one non-roundTrip step. Note the slice deliberately ends at `const TITLE` so it includes the BIDIRECTIONAL, LINK_LABELS, NODE_NOTES, GROUPS and DB_INGEST declarations:
 
 ```bash
 NODE_PATH="$(npm root -g)" node -e "
@@ -550,8 +562,8 @@ const end = code.indexOf('const TITLE');
 const vm = require('vm');
 const sandbox = {};
 vm.createContext(sandbox);
-vm.runInContext(code.slice(start, end) + '\nglobalThis.__NODES=NODES; globalThis.__STEPS=STEPS; globalThis.__PHASES=PHASES; globalThis.__BI=BIDIRECTIONAL; globalThis.__DBF=DB_INGEST_FROM; globalThis.__DBT=DB_INGEST_TO;', sandbox);
-const { __NODES: NODES, __STEPS: STEPS, __PHASES: PHASES, __BI: BI, __DBF: DBF, __DBT: DBT } = sandbox;
+vm.runInContext(code.slice(start, end) + '\nglobalThis.__NODES=NODES; globalThis.__STEPS=STEPS; globalThis.__PHASES=PHASES; globalThis.__BI=BIDIRECTIONAL; globalThis.__DBF=DB_INGEST_FROM; globalThis.__DBT=DB_INGEST_TO; globalThis.__LL=LINK_LABELS; globalThis.__GR=GROUPS; globalThis.__NN=NODE_NOTES;', sandbox);
+const { __NODES: NODES, __STEPS: STEPS, __PHASES: PHASES, __BI: BI, __DBF: DBF, __DBT: DBT, __LL: LL, __GR: GR, __NN: NN } = sandbox;
 const ids = Object.keys(NODES);
 const pairKey = (a,b) => [a,b].sort().join('|');
 let errors = [];
@@ -562,13 +574,26 @@ STEPS.forEach((s,i) => {
   if (s.roundTrip && !BI.has(pairKey(s.f, s.t))) errors.push('step '+i+' roundTrip pair missing from BIDIRECTIONAL: '+pairKey(s.f, s.t));
   (s.chat || []).forEach((c,j) => { if (!ids.includes(c[0])) errors.push('step '+i+' chat['+j+'] bad node: '+c[0]); });
 });
+const linkKeys = new Set(STEPS.filter(s => s.f !== s.t).map(s => pairKey(s.f, s.t)));
+Object.keys(LL).forEach(k => { if (!linkKeys.has(k)) errors.push('LINK_LABELS key is not a real connection: '+k); });
+Object.keys(NN).forEach(id => { if (!ids.includes(id)) errors.push('NODE_NOTES key is not a node: '+id); });
+const claimed = {};
+GR.forEach((g, i) => {
+  if (!g.name) errors.push('group '+i+' has no name');
+  if (!Array.isArray(g.members) || g.members.length < 2) errors.push('group '+(g.name||i)+' needs at least 2 members');
+  (g.members || []).forEach(id => {
+    if (!ids.includes(id)) errors.push('group '+(g.name||i)+' bad member: '+id);
+    if (claimed[id]) errors.push('node '+id+' is in two groups: '+claimed[id]+' and '+(g.name||i));
+    claimed[id] = g.name || i;
+  });
+});
 if (DBT) {
   if (!ids.includes(DBT)) errors.push('DB_INGEST_TO bad node: '+DBT);
   if (!ids.includes(DBF)) errors.push('DB_INGEST_FROM bad node: '+DBF);
   const m = STEPS.filter(s => !s.roundTrip && s.f === DBF && s.t === DBT).length;
   if (m !== 1) errors.push('DB_INGEST must match exactly one non-roundTrip step, found '+m);
 }
-console.log(errors.length ? 'ERRORS:\n'+errors.join('\n') : 'DATA OK — '+ids.length+' nodes, '+STEPS.length+' steps');
+console.log(errors.length ? 'ERRORS:\n'+errors.join('\n') : 'DATA OK — '+ids.length+' nodes, '+STEPS.length+' steps, '+Object.keys(LL).length+'/'+linkKeys.size+' links labelled, '+GR.length+' groups, '+Object.keys(NN).length+' notes');
 "
 ```
 
@@ -588,7 +613,51 @@ const path = require('path');
   await new Promise(r => setTimeout(r, 500));
   const nodeCount = await page.evaluate(() => document.querySelectorAll('.node').length);
   console.log('nodes rendered:', nodeCount, '| errors:', errors);
-  await page.screenshot({ path: '/tmp/archflow-check.png' });
+  // No card text may cross its card's edges (the fit pass shrinks/wraps/truncates).
+  const spill = await page.evaluate(() => [...document.querySelectorAll('.node')].flatMap(g => {
+    const c = g.querySelector('.node-card').getBoundingClientRect();
+    return ['.node-title', '.node-sub'].map(s => {
+      const r = g.querySelector(s).getBoundingClientRect();
+      return r.right > c.right - 2 || r.bottom > c.bottom - 2 ? g.dataset.id + s : null;
+    });
+  }).filter(Boolean));
+  console.log('text spilling out of its card (must be empty):', spill);
+  // Every visible link label must sit on bare line, not under a card.
+  const covered = await page.evaluate(() => {
+    const cards = [...document.querySelectorAll('.node .node-card')].map(c => c.getBoundingClientRect());
+    return [...document.querySelectorAll('.edge-label-g')].filter(g => g.style.display !== 'none').filter(g => {
+      const r = g.querySelector('.edge-label-bg').getBoundingClientRect();
+      return cards.some(c => r.left < c.right - 1 && r.right > c.left + 1 && r.top < c.bottom - 1 && r.bottom > c.top + 1);
+    }).map(g => g.textContent.trim());
+  });
+  console.log('link labels hidden under a card (must be empty):', covered);
+  // A group box is the bounding rect of its members, so a card laid out
+  // between them looks like it belongs to a boundary it isn't in.
+  const strays = await page.evaluate(() => {
+    const nodes = [...document.querySelectorAll('.node')];
+    return [...document.querySelectorAll('.group')].flatMap(g => {
+      const r = g.querySelector('.group-box').getBoundingClientRect();
+      const members = (g.dataset.members || '').split(' ');
+      return nodes.filter(n => {
+        const c = n.querySelector('.node-card').getBoundingClientRect();
+        return c.left >= r.left && c.right <= r.right && c.top >= r.top && c.bottom <= r.bottom;
+      }).map(n => n.dataset.id).filter(id => members.indexOf(id) === -1)
+        .map(id => g.querySelector('.group-name').textContent + ' visually contains ' + id);
+    });
+  });
+  console.log('cards sitting inside a box they do not belong to:', strays);
+  await page.screenshot({ path: '/tmp/archflow-check.png' }); // shoot the authored layout, before any test drag moves it
+  // Group drag: select everything, drag one card, and confirm every card moved
+  // by the SAME offset (one unique value = the block stayed rigid).
+  await page.keyboard.down('Meta'); await page.keyboard.press('a'); await page.keyboard.up('Meta');
+  const c = await page.evaluate(() => { const r = document.querySelector('.node .node-card').getBoundingClientRect(); return { x: r.x + r.width/2, y: r.y + r.height/2 }; });
+  await page.mouse.move(c.x, c.y); await page.mouse.down();
+  await page.mouse.move(c.x + 20, c.y + 12, { steps: 4 });
+  await page.mouse.move(c.x + 60, c.y + 35, { steps: 8 });
+  await page.mouse.up();
+  const offsets = await page.evaluate(() => [...new Set([...document.querySelectorAll('.node')].map(g => g.style.getPropertyValue('--drag-x') + '/' + g.style.getPropertyValue('--drag-y')))]);
+  console.log('selected:', await page.evaluate(() => document.querySelectorAll('.node.selected').length), '| distinct drag offsets (must be 1):', offsets.length);
+  await page.keyboard.press('Escape');
   await browser.close();
 })();
 "
@@ -640,7 +709,41 @@ Four details matter if you touch this: (1) the initiator of a `roundTrip` step i
 The one thing this model can't know is whether a step is genuinely load-bearing: STEPS has no dependency metadata, so a cut fire-and-forget hop (an audit-log write, say) also stops the chain, even though the real system would carry on. Since a demo's STEPS is by construction **one** end-to-end request, stopping is the safer default — but if a demo has a truly optional branch, say so in the step's `m` text so viewers read the stall correctly.
 
 **Q: Why does each link have an invisible duplicate path (`.edge-hit`)?**
-The visible edge is 2.2px wide — effectively unclickable. `.edge-hit` is a transparent 16px-wide twin of the same path with `pointer-events: stroke`, sitting below the node groups in DOM order so a node card still wins any click where the two overlap. Both the visible path and the hit path are rebuilt on every drag (`refreshEdgesFor`), so the hit area never drifts away from the line.
+The visible edge is 2.2px wide — effectively unclickable. `.edge-hit` is a transparent 16px-wide twin of the same path with `pointer-events: stroke`, sitting below the node groups in DOM order so a node card still wins any click where the two overlap. Both the visible path and the hit path are rebuilt on every drag (`refreshEdges`), so the hit area never drifts away from the line.
+
+**Q: Where do node notes live, and why aren't they drawn like everything else?**
+A note is free text pinned under a card — authored in `NODE_NOTES`, overridden per viewer under `archflow-node-notes:<TITLE>`, resolved by `noteFor(id)` with the same reset-to-authored rule as link labels. Double-clicking a card opens the shared editor under it; the node inspector carries the same ✎ Edit row.
+
+The one structural difference: the note's panel and text are appended **inside the node's `<g>`**, not to a stage-level layer. That's deliberate — the card already moves by a CSS transform on that group, so a note inside it follows a drag for free, with no repositioning code and no chance of drifting away from its card (the drag test asserts the card-to-note gap is identical before and after). It also means a note is painted above the edges, so it covers a line that passes under the card rather than being covered by it.
+
+Wrapping is greedy against the element's own measured width, capped at three card-width lines, with the overflow folded into the last line and ellipsized — the same measure-and-trim approach as the card titles, using the text element itself as the ruler instead of a throwaway probe.
+
+**Q: How do group boxes work, and what are their limits?**
+A group is `{ name, members, tone }`. Authored ones live in `GROUPS`; a viewer's set is saved under `archflow-groups:<TITLE>` and **replaces** the authored list wholesale rather than merging — groups have no stable identity to merge on, and a half-merged boundary would be worse than either version. A card belongs to at most one box (the newest claim wins, and a group left with fewer than two members is dropped), because half-overlapping boxes read as a bug rather than a boundary.
+
+The box is drawn as the **bounding rectangle of its members** plus padding and a title strip, in a layer appended before the edges so it sits behind every line and card, with `pointer-events: none` on the rect so a backdrop can never eat a click. Only the name is interactive: click it to select exactly the members (which is what makes a box draggable — the existing group-drag then moves it as one piece), double-click to rename in the shared editor. Elements are kept per group object and only their attributes are updated, both because this re-runs on every frame of a drag and for the same dblclick reason as the link labels.
+
+The limit worth knowing: a bounding rectangle can't exclude anything. A card laid out between two members ends up looking like it's inside the boundary, which is why Step 5 says to lay a group's members out contiguously and Step 8's render check reports every card sitting inside a box it isn't a member of (membership is on the element as `data-members`). If that check fires, either add the card to the group or move it out of the way — there's no third option that keeps the box honest.
+
+**Q: How do link labels work, and why is the placement so fussy?**
+Authored text lives in `LINK_LABELS` (keyed by pairKey); viewer edits live in `LABEL_EDITS`, persisted under `archflow-link-labels:<TITLE>`, and `labelFor(key)` is the one function that resolves the two — an edit back to the authored string _deletes_ the override rather than storing a copy, so a later re-authoring still reaches that viewer. Editing is a real `<input>` inside a `foreignObject` parked over the label: Enter or blur commits, Esc backs out, and its keydown handler calls `stopPropagation()` so the stage's ⌘A / Esc shortcuts don't fire while someone is typing.
+
+The placement rules exist because a label has nowhere safe to sit by default. Cards are painted **above** the label layer, so a label that's too wide doesn't overflow — it vanishes under a card, which is worse than being trimmed. So each label is first trimmed to the bare line the link actually exposes between its two cards (`freeSpan`), then the pill is tested against **every** card and slid along the line (`LABEL_SLOTS`) until it finds clear space — a vertical link often runs right past an unrelated card that has nothing to do with it. If nothing fits, or the gap is under `LABEL_MIN`, the label hides and the connection inspector carries the full text instead.
+
+One more trap: `renderLabel` updates the pill's elements **in place** and never recreates them. A browser only fires `dblclick` when both clicks land on the same element, and this function runs on every link selection — rebuilding the pill on the first click would silently kill double-click-to-edit while leaving every listener looking correct.
+
+**Q: What happens when a node's title or subtitle is too long for the card?**
+It's fitted, not clipped. Card text used to run straight out over the card's right edge and across whatever sat next to it, because the cards are a fixed 180×76 while node names come from the architecture doc. After every card is on the stage, a fit pass measures each `<text>` with `getComputedTextLength()` against ~110px of usable width and, in this order: **titles** step down from 13.5px to a floor of 11px (a component's name is worth more than a uniform type size); **subtitles** wrap to a second line, split on the last word that still fits, at baselines `+47`/`+59` instead of the single-line `+50`; anything still over — a long unbreakable word, or a second line that's also too long — is binary-searched down to an ellipsis and gets an SVG `<title>` child, so the full string is one hover away (and the inspector always shows it in full). Three things to know if you touch it: the pass must run **after** the cards are in the document (`getComputedTextLength()` returns 0 on an unrendered element, which silently disables the whole thing); the wrapped `tspan`s carry absolute `x`/`y` like every other card child, so dragging still works — cards move by CSS transform, never by rewriting child coordinates; and the ellipsis `<title>` is appended last, because `ellipsize()` writes `textContent` and would wipe it.
+
+**Q: How does multi-select / group drag work, and what must not be broken?**
+Selected ids live in `selectionRef` (a plain `Set`), not in state — the pointer handlers are built once inside the `[]`-dep effect and read the ref on every move. Only the count is mirrored into `selCount`, so the toolbar button can re-label itself; `setSelection()` is the single writer and repaints the `.selected` class from the ref, so the highlight can't drift from the truth. Four contracts to keep:
+
+1. **The rubber band starts only when `e.target === svg`.** Everything drawn (cards, edges, `.edge-hit` twins) is its own event target, so that one check is what stops the band from stealing clicks meant for a link or a card. Don't replace it with a full-bleed background `<rect>` — that would become the target everywhere and swallow every edge click.
+2. **The group is clamped as a block, not per card.** `pointerdown` records each member's base position plus the min/max of the group, and the move offset is capped by whichever members are furthest out. Clamping each card to the stage individually instead would let the leading edge of the group pile up on the boundary and silently squash the arrangement.
+3. **Plain click still opens the inspector; shift/⌘/Ctrl click toggles selection instead.** The modifier branch returns before any drag bookkeeping and sets `suppressClick`, so the inspector doesn't open on the way out.
+4. **Grabbing an _unselected_ card drags only that card** and leaves the selection alone — otherwise a viewer with a selection could never nudge a single card again.
+
+The band tests intersection, not containment (brushing a card is enough), and it skips `pointerType === 'touch'` so a touch drag still scrolls the page.
 
 **Q: Can I skip the verification step (Step 8) if the code looks right?**
 No — both bugs above looked completely fine on read-through; they only surfaced when actually rendered in a browser (or, for the JSX-runtime bug, when a syntax/transform check was run). "It compiles" and "it renders" are different claims for this kind of file.

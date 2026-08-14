@@ -268,6 +268,10 @@
   display: block;
   width: 100%;
   height: auto;
+  /* Rubber-band selection drags across node labels — never let that turn into
+     a text selection. */
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .archflow-container .side {
@@ -479,6 +483,23 @@
   cursor: grabbing;
   transition: none;
   transform: translate(var(--drag-x, 0px), var(--drag-y, 0px));
+}
+
+/* Multi-select: shift-click, rubber-band, or ⬚ Select all. Dragging any
+   member moves the whole selection, so the diagram can be shifted around the
+   stage in one piece. */
+.archflow-container .node.selected .node-card {
+  stroke: var(--accent);
+  stroke-width: 2.2;
+  filter: drop-shadow(0 0 6px rgba(99, 102, 241, 0.55));
+}
+
+.archflow-container .marquee {
+  fill: rgba(99, 102, 241, 0.12);
+  stroke: var(--accent);
+  stroke-width: 1.2;
+  stroke-dasharray: 5 4;
+  pointer-events: none;
 }
 
 .archflow-container .node-card {
@@ -1070,6 +1091,109 @@
   pointer-events: none;
 }
 
+/* ---- Node notes (the viewer's own text, pinned under a card) ---- */
+.archflow-container .node-note-bg {
+  fill: var(--panel);
+  stroke: var(--line);
+  stroke-width: 1;
+  opacity: 0.96;
+}
+
+.archflow-container .node-note {
+  font-size: 10.5px;
+  fill: var(--muted);
+  text-anchor: middle;
+  dominant-baseline: middle;
+  pointer-events: none;
+}
+
+/* ---- Group boxes (a named boundary around a set of cards) ----
+   Deliberately quiet: a wash of colour and a dashed edge that reads as "these
+   belong together" without competing with the cards or the animated links
+   running over it. One hue per group so two boxes side by side stay tellable
+   apart. */
+.archflow-container .group.tone-0 {
+  --tone: 99, 102, 241;
+}
+.archflow-container .group.tone-1 {
+  --tone: 14, 165, 164;
+}
+.archflow-container .group.tone-2 {
+  --tone: 245, 158, 11;
+}
+.archflow-container .group.tone-3 {
+  --tone: 244, 63, 94;
+}
+.archflow-container .group.tone-4 {
+  --tone: 139, 92, 246;
+}
+.archflow-container .group.tone-5 {
+  --tone: 2, 132, 199;
+}
+
+.archflow-container .group-box {
+  fill: rgba(var(--tone), 0.13);
+  stroke: rgba(var(--tone), 0.5);
+  stroke-width: 1.4;
+  stroke-dasharray: 7 5;
+  pointer-events: none; /* a backdrop must never eat a click */
+}
+
+.archflow-container.light .group-box {
+  fill: rgba(var(--tone), 0.07);
+  stroke: rgba(var(--tone), 0.42);
+}
+
+.archflow-container .group-name {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  fill: rgb(var(--tone));
+  cursor: pointer;
+}
+
+.archflow-container .group-name:hover {
+  text-decoration: underline;
+}
+
+/* ---- Link labels (what the connection carries) ---- */
+.archflow-container .edge-label-g {
+  cursor: pointer;
+}
+
+/* Opaque pill, so the dashed line doesn't run through the letters. */
+.archflow-container .edge-label-bg {
+  fill: var(--bg);
+  stroke: var(--line);
+  stroke-width: 1;
+}
+
+.archflow-container .edge-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  fill: var(--muted);
+  text-anchor: middle;
+  dominant-baseline: central;
+  pointer-events: none;
+}
+
+.archflow-container .edge-label-g:hover .edge-label-bg {
+  stroke: var(--accent);
+}
+
+.archflow-container .edge-label-input {
+  box-sizing: border-box;
+  width: 100%;
+  font-family: inherit;
+  font-size: 11.5px;
+  padding: 5px 8px;
+  border-radius: 7px;
+  border: 1.5px solid var(--accent);
+  background: var(--panel);
+  color: var(--ink);
+  outline: none;
+}
+
 .archflow-container .edge.blocked-flash {
   stroke: #ef4444;
   stroke-width: 3.2;
@@ -1164,4 +1288,32 @@
 .archflow-container .inspector-action.danger:hover {
   background: rgba(239, 68, 68, 0.12);
   border-color: rgba(239, 68, 68, 0.7);
+}
+
+.archflow-container .inspector-label-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.archflow-container .inspector-label-value {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.archflow-container .inspector-label-value.empty {
+  color: var(--muted);
+  font-style: italic;
+}
+
+.archflow-container .inspector-label-edit {
+  flex: none;
+  padding: 3px 8px;
+  font-size: 11px;
+  border-radius: 6px;
 }

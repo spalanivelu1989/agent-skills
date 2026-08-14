@@ -309,6 +309,10 @@
         display: block;
         width: 100%;
         height: auto;
+        /* Rubber-band selection drags across node labels — never let that turn
+           into a text selection. */
+        user-select: none;
+        -webkit-user-select: none;
       }
 
       .archflow-container .side {
@@ -498,6 +502,21 @@
         cursor: grabbing;
         transition: none;
         transform: translate(var(--drag-x, 0px), var(--drag-y, 0px));
+      }
+      /* Multi-select: shift-click, rubber-band, or ⬚ Select all. Dragging any
+         member moves the whole selection, so the diagram can be shifted around
+         the stage in one piece. */
+      .archflow-container .node.selected .node-card {
+        stroke: var(--accent);
+        stroke-width: 2.2;
+        filter: drop-shadow(0 0 6px rgba(99, 102, 241, 0.55));
+      }
+      .archflow-container .marquee {
+        fill: rgba(99, 102, 241, 0.12);
+        stroke: var(--accent);
+        stroke-width: 1.2;
+        stroke-dasharray: 5 4;
+        pointer-events: none;
       }
       .archflow-container .node-card {
         fill: var(--node-fill);
@@ -1029,6 +1048,99 @@
         dominant-baseline: central;
         pointer-events: none;
       }
+      /* ---- Node notes (the viewer's own text, pinned under a card) ---- */
+      .archflow-container .node-note-bg {
+        fill: var(--panel);
+        stroke: var(--line);
+        stroke-width: 1;
+        opacity: 0.96;
+      }
+      .archflow-container .node-note {
+        font-size: 10.5px;
+        fill: var(--muted);
+        text-anchor: middle;
+        dominant-baseline: middle;
+        pointer-events: none;
+      }
+
+      /* ---- Group boxes (a named boundary around a set of cards) ----
+         Deliberately quiet: a wash of colour and a dashed edge that reads as
+         "these belong together" without competing with the cards or the
+         animated links running over it. One hue per group so two boxes side
+         by side stay tellable apart. */
+      .archflow-container .group.tone-0 {
+        --tone: 99, 102, 241;
+      }
+      .archflow-container .group.tone-1 {
+        --tone: 14, 165, 164;
+      }
+      .archflow-container .group.tone-2 {
+        --tone: 245, 158, 11;
+      }
+      .archflow-container .group.tone-3 {
+        --tone: 244, 63, 94;
+      }
+      .archflow-container .group.tone-4 {
+        --tone: 139, 92, 246;
+      }
+      .archflow-container .group.tone-5 {
+        --tone: 2, 132, 199;
+      }
+      .archflow-container .group-box {
+        fill: rgba(var(--tone), 0.13);
+        stroke: rgba(var(--tone), 0.5);
+        stroke-width: 1.4;
+        stroke-dasharray: 7 5;
+        pointer-events: none; /* a backdrop must never eat a click */
+      }
+      .archflow-container.light .group-box {
+        fill: rgba(var(--tone), 0.07);
+        stroke: rgba(var(--tone), 0.42);
+      }
+      .archflow-container .group-name {
+        font-size: 11.5px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        fill: rgb(var(--tone));
+        cursor: pointer;
+      }
+      .archflow-container .group-name:hover {
+        text-decoration: underline;
+      }
+
+      /* ---- Link labels (what the connection carries) ---- */
+      .archflow-container .edge-label-g {
+        cursor: pointer;
+      }
+      /* Opaque pill, so the dashed line doesn't run through the letters. */
+      .archflow-container .edge-label-bg {
+        fill: var(--bg);
+        stroke: var(--line);
+        stroke-width: 1;
+      }
+      .archflow-container .edge-label {
+        font-size: 10.5px;
+        font-weight: 600;
+        fill: var(--muted);
+        text-anchor: middle;
+        dominant-baseline: central;
+        pointer-events: none;
+      }
+      .archflow-container .edge-label-g:hover .edge-label-bg {
+        stroke: var(--accent);
+      }
+      .archflow-container .edge-label-input {
+        box-sizing: border-box;
+        width: 100%;
+        font-family: inherit;
+        font-size: 11.5px;
+        padding: 5px 8px;
+        border-radius: 7px;
+        border: 1.5px solid var(--accent);
+        background: var(--panel);
+        color: var(--ink);
+        outline: none;
+      }
       .archflow-container .edge.blocked-flash {
         stroke: #ef4444;
         stroke-width: 3.2;
@@ -1110,6 +1222,30 @@
         background: rgba(239, 68, 68, 0.12);
         border-color: rgba(239, 68, 68, 0.7);
       }
+      .archflow-container .inspector-label-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 4px;
+      }
+      .archflow-container .inspector-label-value {
+        flex: 1;
+        min-width: 0;
+        font-size: 12px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .archflow-container .inspector-label-value.empty {
+        color: var(--muted);
+        font-style: italic;
+      }
+      .archflow-container .inspector-label-edit {
+        flex: none;
+        padding: 3px 8px;
+        font-size: 11px;
+        border-radius: 6px;
+      }
     </style>
   </head>
   <body>
@@ -1187,6 +1323,27 @@
 
       const BIDIRECTIONAL = new Set([__BIDIRECTIONAL_PAIRS__]);
 
+      // Short text drawn on each connection — the protocol or payload that
+      // crosses it ("HTTP POST /orders", "publishes OrderPaid"). Keyed by
+      // pairKey; every key must be a link that actually exists. Viewers can
+      // retitle any of them in the browser, so this is the starting point,
+      // not the last word. {} is fine when nothing is worth labelling.
+      const LINK_LABELS = __LINK_LABELS__;
+
+      // Free-text notes pinned under a card — the caveats a diagram can't
+      // hold ("p95 220ms", "owned by Payments", "rewrite planned Q3").
+      // Usually {} at generation time: this is the viewer's own margin, and
+      // the per-node `desc` already carries the description the inspector
+      // shows. Keyed by node id.
+      const NODE_NOTES = __NODE_NOTES__;
+
+      // Named boxes drawn around a set of cards — the deployment or ownership
+      // boundaries the diagram has but the arrows can't show ("AWS VPC",
+      // "Payments team", "Runs on-prem"). Authored per demo; viewers can draw
+      // their own by selecting cards and hitting ▣ Group. [] is fine when the
+      // architecture has no boundary worth boxing.
+      const GROUPS = __GROUPS__;
+
       // OPTIONAL persistence-save flourish. Set DB_INGEST_TO to null to disable.
       const DB_INGEST_FROM = __DB_INGEST_FROM__;
       const DB_INGEST_TO = __DB_INGEST_TO__;
@@ -1216,7 +1373,7 @@
       // profile is invisible in another — the same file opened from a
       // different profile window shows that profile's older layout instead.
       // The durable arrangement is therefore the one baked into NODES above:
-      // ⬇ Export layout downloads the current coordinates so they can be
+      // ⬇ Export edits downloads the current coordinates so they can be
       // written into this file as the authored default. LAYOUT_STAMP is
       // bumped whenever that happens, which retires every previously saved
       // layout in every profile — otherwise a stale localStorage entry would
@@ -1248,15 +1405,16 @@
           localStorage.setItem(LAYOUT_KEY, JSON.stringify({ stamp: LAYOUT_STAMP, pos: currentLayout() }));
         } catch (e) { /* storage unavailable — layout just won't persist */ }
       }
-      // Hand the arrangement back as a file, so it can be baked into NODES and
-      // stop depending on which browser profile happens to open the demo.
+      // Hand the viewer's edits back as a file, so they can be baked into
+      // NODES / LINK_LABELS and stop depending on which browser profile
+      // happens to open the demo.
       function exportLayout() {
-        const payload = { title: TITLE, stamp: LAYOUT_STAMP, pos: currentLayout() };
+        const payload = { title: TITLE, stamp: LAYOUT_STAMP, pos: currentLayout(), labels: currentLabels(), notes: currentNotes(), groups: GROUP_LIST };
         const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'archflow-layout.json';
+        a.download = 'archflow-edits.json';
         document.body.appendChild(a);
         a.click();
         a.remove();
@@ -1286,6 +1444,148 @@
       }
       // Self-working steps (f === t) never travel a link, so can't be blocked.
       const isLinkRemoved = (f, t) => f !== t && REMOVED_LINKS.has(pairKey(f, t));
+
+      // Every connection drawn on the stage, in first-use order. Derived the
+      // same way the component derives its edges, so a label can never be
+      // authored for a link that doesn't exist.
+      const LINK_KEYS = [];
+      (function computeLinkKeys() {
+        STEPS.forEach((s) => {
+          if (s.f === s.t) return;
+          const k = pairKey(s.f, s.t);
+          if (LINK_KEYS.indexOf(k) === -1) LINK_KEYS.push(k);
+        });
+      })();
+
+      // Viewer overrides of LINK_LABELS (double-click a link to retitle it).
+      // Persisted per demo — and per browser profile, so ⬇ Export edits is
+      // what makes a relabelling travel with the file.
+      const LABELS_KEY = 'archflow-link-labels:' + TITLE;
+      const LABEL_EDITS = {};
+      (function loadLinkLabels() {
+        try {
+          const saved = JSON.parse(localStorage.getItem(LABELS_KEY)) || {};
+          Object.keys(saved).forEach((k) => {
+            if (LINK_KEYS.indexOf(k) !== -1 && typeof saved[k] === 'string') LABEL_EDITS[k] = saved[k];
+          });
+        } catch (e) { /* authored labels stand */ }
+      })();
+      // An edit back to the authored text is a *reset*, not an override, so a
+      // later re-authoring of that label still reaches this viewer.
+      const labelFor = (key) => (key in LABEL_EDITS ? LABEL_EDITS[key] : LINK_LABELS[key] || '');
+      function setLinkLabel(key, text) {
+        const next = String(text).replace(/\s+/g, ' ').trim();
+        if (next === (LINK_LABELS[key] || '')) delete LABEL_EDITS[key];
+        else LABEL_EDITS[key] = next;
+        try {
+          localStorage.setItem(LABELS_KEY, JSON.stringify(LABEL_EDITS));
+        } catch (e) { /* storage unavailable — the edit just won't persist */ }
+      }
+      function currentLabels() {
+        const out = {};
+        LINK_KEYS.forEach((k) => {
+          const t = labelFor(k);
+          if (t) out[k] = t;
+        });
+        return out;
+      }
+
+      // Viewer edits of NODE_NOTES (double-click a card to write one), same
+      // shape and same rules as the link labels: an edit back to the authored
+      // text is a reset, and ⬇ Export edits is what makes a note travel.
+      const NOTES_KEY = 'archflow-node-notes:' + TITLE;
+      const NOTE_EDITS = {};
+      (function loadNodeNotes() {
+        try {
+          const saved = JSON.parse(localStorage.getItem(NOTES_KEY)) || {};
+          Object.keys(saved).forEach((id) => {
+            if (NODES[id] && typeof saved[id] === 'string') NOTE_EDITS[id] = saved[id];
+          });
+        } catch (e) { /* authored notes stand */ }
+      })();
+      const noteFor = (id) => (id in NOTE_EDITS ? NOTE_EDITS[id] : NODE_NOTES[id] || '');
+      function setNodeNote(id, text) {
+        const next = String(text).replace(/\s+/g, ' ').trim();
+        if (next === (NODE_NOTES[id] || '')) delete NOTE_EDITS[id];
+        else NOTE_EDITS[id] = next;
+        try {
+          localStorage.setItem(NOTES_KEY, JSON.stringify(NOTE_EDITS));
+        } catch (e) { /* storage unavailable — the note just won't persist */ }
+      }
+      function currentNotes() {
+        const out = {};
+        Object.keys(NODES).forEach((id) => {
+          const t = noteFor(id);
+          if (t) out[id] = t;
+        });
+        return out;
+      }
+
+      // Groups are structural, so a viewer's set REPLACES the authored one
+      // wholesale rather than merging — there's no stable identity to merge
+      // on, and half-merged boundaries would be worse than either version.
+      // Same storage rules as everything else: per demo, best-effort.
+      const GROUP_TONES = 6;
+      const GROUPS_KEY = 'archflow-groups:' + TITLE;
+      let GROUP_LIST = [];
+      (function loadGroups() {
+        const clean = (list) =>
+          (Array.isArray(list) ? list : [])
+            .map((g, i) => ({
+              name: String((g && g.name) || 'Group ' + (i + 1)),
+              tone: ((Number(g && g.tone) || 0) % GROUP_TONES + GROUP_TONES) % GROUP_TONES,
+              members: (g && Array.isArray(g.members) ? g.members : []).filter((id) => NODES[id]),
+            }))
+            // A one-card box is just a card with extra ink.
+            .filter((g) => g.members.length > 1);
+        let saved = null;
+        try {
+          saved = JSON.parse(localStorage.getItem(GROUPS_KEY));
+        } catch (e) { /* authored groups stand */ }
+        GROUP_LIST = clean(saved || GROUPS);
+      })();
+      function saveGroups() {
+        try {
+          localStorage.setItem(GROUPS_KEY, JSON.stringify(GROUP_LIST));
+        } catch (e) { /* storage unavailable — grouping just won't persist */ }
+      }
+      // Index of the group whose members are exactly this selection — what
+      // turns the ▣ Group button into ⤫ Ungroup.
+      function groupMatching(ids) {
+        const want = Array.from(ids).sort().join('|');
+        for (let i = 0; i < GROUP_LIST.length; i++) {
+          if (GROUP_LIST[i].members.slice().sort().join('|') === want) return i;
+        }
+        return -1;
+      }
+      function addGroup(ids) {
+        const members = Array.from(ids).filter((id) => NODES[id]);
+        if (members.length < 2) return null;
+        // A card belongs to at most one box — boxes that overlap halfway read
+        // as a mistake — so the newest claim wins and emptied groups go.
+        GROUP_LIST.forEach((g) => {
+          g.members = g.members.filter((id) => members.indexOf(id) === -1);
+        });
+        GROUP_LIST = GROUP_LIST.filter((g) => g.members.length > 1);
+        const used = GROUP_LIST.map((g) => g.tone);
+        let tone = 0;
+        while (tone < GROUP_TONES && used.indexOf(tone) !== -1) tone++;
+        const group = { name: 'Group ' + (GROUP_LIST.length + 1), members, tone: tone % GROUP_TONES };
+        GROUP_LIST.push(group);
+        saveGroups();
+        return group;
+      }
+      function removeGroup(group) {
+        const i = GROUP_LIST.indexOf(group);
+        if (i === -1) return;
+        GROUP_LIST.splice(i, 1);
+        saveGroups();
+      }
+      function renameGroup(group, name) {
+        const next = String(name).replace(/\s+/g, ' ').trim();
+        if (next) group.name = next;
+        saveGroups();
+      }
 
       // Who *starts* a step. For roundTrip steps the engine's convention is
       // f = responder, t = asker, so the initiator is t — get this wrong and
@@ -1373,6 +1673,11 @@
         // Bumped on every remove/restore so the JSX (which reads
         // REMOVED_LINKS directly) re-renders and the link-visual effect runs.
         const [linkVersion, setLinkVersion] = useState(0);
+        // Same trick for link labels and group boxes, which also live outside
+        // React state.
+        const [labelVersion, setLabelVersion] = useState(0);
+        const [noteVersion, setNoteVersion] = useState(0);
+        const [groupVersion, setGroupVersion] = useState(0);
 
         const stageRef = useRef(null);
         const logRef = useRef(null);
@@ -1419,6 +1724,35 @@
           );
         }, [inspected]);
 
+        // ⌘/Ctrl+A selects every node, Esc drops the selection. The page is
+        // just this demo, so hijacking select-all is safe — except inside a
+        // real text field, where the browser's own meaning must win.
+        useEffect(() => {
+          const onKey = (e) => {
+            const t = e.target;
+            if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+            if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'a') {
+              e.preventDefault();
+              setSelection(Object.keys(NODES));
+            } else if (e.key === 'Escape' && selectionRef.current.size) {
+              setSelection([]);
+            }
+          };
+          document.addEventListener('keydown', onKey);
+          return () => document.removeEventListener('keydown', onKey);
+        }, []);
+
+        // One repaint path for every grouping change (create, rename, ungroup).
+        useEffect(() => {
+          if (renderGroupsRef.current) renderGroupsRef.current();
+        }, [groupVersion]);
+
+        // noteVersion exists so the inspector re-renders with the new text;
+        // the note itself is redrawn by the editor that changed it.
+        useEffect(() => {
+          if (noteVersion && renderNoteRef.current && inspected) renderNoteRef.current(inspected);
+        }, [noteVersion]);
+
         const edgesRef = useRef({});
         const nodeElsRef = useRef({});
         const pulseRef = useRef(null);
@@ -1427,6 +1761,57 @@
         const bubbleElsRef = useRef([]);
         const dbParticlesGroupRef = useRef(null);
         const pgConsoleFORef = useRef(null);
+        // Handles into the imperative stage, so the inspector (React) can
+        // retitle a link and the link-visual effect can redraw one.
+        const renderLabelRef = useRef(null);
+        const openLabelEditorRef = useRef(null);
+        const renderNoteRef = useRef(null);
+        const openNoteEditorRef = useRef(null);
+        const renderGroupsRef = useRef(null);
+        const openGroupEditorRef = useRef(null);
+
+        // Multi-select. The ids live in a ref (the drag handlers, built once,
+        // read it on every pointermove) and only the COUNT is mirrored into
+        // state, purely so the toolbar button can re-label itself.
+        const selectionRef = useRef(new Set());
+        const [selCount, setSelCount] = useState(0);
+        // Single place that turns the ref into what you see, so selection can
+        // never drift from the highlighted cards.
+        const paintSelection = () => {
+          const sel = selectionRef.current;
+          Object.keys(nodeElsRef.current).forEach((id) =>
+            nodeElsRef.current[id].classList.toggle('selected', sel.has(id))
+          );
+          setSelCount(sel.size);
+        };
+        const setSelection = (ids) => {
+          selectionRef.current = new Set(ids);
+          paintSelection();
+        };
+        const toggleSelectAll = () => {
+          setSelection(selectionRef.current.size ? [] : Object.keys(NODES));
+        };
+
+        // ▣ Group boxes the current selection; when that selection IS a group
+        // already (clicking a box's name selects exactly its members), the
+        // same button becomes ⤫ Ungroup. Read from the ref during render,
+        // which is safe because every change to either the selection or the
+        // groups bumps state (selCount / groupVersion) and re-renders.
+        const matchedGroup = groupMatching(selectionRef.current);
+        const toggleGroup = () => {
+          if (matchedGroup !== -1) {
+            removeGroup(GROUP_LIST[matchedGroup]);
+            if (renderGroupsRef.current) renderGroupsRef.current();
+            setGroupVersion((v) => v + 1);
+            return;
+          }
+          const group = addGroup(selectionRef.current);
+          if (!group) return;
+          if (renderGroupsRef.current) renderGroupsRef.current();
+          setGroupVersion((v) => v + 1);
+          // Straight into naming it — an unnamed box is half the feature.
+          if (openGroupEditorRef.current) openGroupEditorRef.current(group);
+        };
 
         const BASE = 2400;
 
@@ -1446,6 +1831,26 @@
             return e;
           };
 
+          // SVG text can't wrap or clip itself, so anything that must stay
+          // inside a box (card titles, link labels) is measured and trimmed
+          // here. Returns true when it had to cut, so the caller can attach
+          // the full string as a hover <title>.
+          const ellipsize = (t, max) => {
+            if (t.getComputedTextLength() <= max) return false;
+            const full = t.textContent;
+            let lo = 0;
+            let hi = full.length - 1;
+            while (lo < hi) {
+              const mid = Math.ceil((lo + hi) / 2);
+              t.textContent = full.slice(0, mid) + '…';
+              if (t.getComputedTextLength() <= max) lo = mid;
+              else hi = mid - 1;
+            }
+            t.textContent = full.slice(0, lo).replace(/[\s,;:.-]+$/, '') + '…';
+            return true;
+          };
+          const fullTextTip = (t, full) => t.appendChild(el('title', {}, full));
+
           const edges = {};
           const directed = new Set();
 
@@ -1456,6 +1861,11 @@
               if (!edges[key]) edges[key] = { from: s.f, to: s.t, d: buildPath(s.f, s.t) };
             }
           });
+
+          // Group boxes go in first so they sit behind every line and card —
+          // they're a backdrop, not something to click through.
+          const groupLayer = el('g', {});
+          stageRef.current.appendChild(groupLayer);
 
           const edgeLayer = el('g', {});
           stageRef.current.appendChild(edgeLayer);
@@ -1552,14 +1962,272 @@
           });
           allArrowsRef.current = allArrows;
 
+          // ---- Link labels ----------------------------------------------
+          // Each connection carries a short line of text at its midpoint,
+          // sitting on an opaque pill so the dashed line doesn't run through
+          // the letters. The layer goes above the lines but below the node
+          // groups, so a card still wins any click where the two overlap.
+          const LABEL_MAX = 128;
+          const LABEL_MIN = 44; // below this a stub reads as noise, so hide it
+          const labelLayer = el('g', {});
+          stageRef.current.appendChild(labelLayer);
+
+          // How much bare line this link actually exposes between the two
+          // cards. Cards are painted over the label layer, so a label wider
+          // than this doesn't overflow — it disappears under a card, which is
+          // worse. Neighbouring cards make this tiny, so the budget is
+          // per-link and recomputed whenever a card moves.
+          const freeSpan = (e) => {
+            let start = 0;
+            let end = e.len;
+            for (let q = 0; q <= e.len; q += 2) {
+              if (!insideCard(e.el.getPointAtLength(q), NODES[e.from], 2)) { start = q; break; }
+            }
+            for (let q = e.len; q >= 0; q -= 2) {
+              if (!insideCard(e.el.getPointAtLength(q), NODES[e.to], 2)) { end = q; break; }
+            }
+            return Math.max(0, end - start);
+          };
+          // A vertical link can still run past a card that sits beside it, so
+          // the pill is also tested against every card — not just the two it
+          // connects — and slid along the line until it finds clear space.
+          const hitsAnyCard = (x, y, w, h) =>
+            Object.keys(NODES).some((id) => {
+              const n = NODES[id];
+              return x < n.x + NW + 2 && x + w > n.x - 2 && y < n.y + NH + 2 && y + h > n.y - 2;
+            });
+          const LABEL_SLOTS = [0.5, 0.42, 0.58, 0.34, 0.66, 0.26, 0.74];
+
+          // Updates the pill in place — never replaces its elements. That
+          // matters: a browser only fires dblclick when both clicks land on
+          // the SAME element, so rebuilding the pill on the first click (this
+          // runs whenever a link is selected) would silently kill the
+          // double-click-to-edit gesture.
+          const renderLabel = (key) => {
+            const e = edgesRef.current[key];
+            if (!e || !e.labelG) return;
+            const txt = labelFor(key);
+            // A severed link already says everything with its ✕ marker, which
+            // sits at this exact midpoint — two things there would collide.
+            if (!txt || REMOVED_LINKS.has(key)) {
+              e.labelG.style.display = 'none';
+              return;
+            }
+            // Two cards sitting shoulder to shoulder leave nothing to write
+            // on; the inspector still shows the label in full.
+            const budget = Math.min(LABEL_MAX, freeSpan(e) - 10);
+            if (budget < LABEL_MIN) {
+              e.labelG.style.display = 'none';
+              return;
+            }
+            e.labelG.style.display = '';
+            e.labelText.textContent = txt; // reset before measuring
+            ellipsize(e.labelText, budget);
+            const w = e.labelText.getComputedTextLength() + 12;
+            let at = null;
+            for (let i = 0; i < LABEL_SLOTS.length; i++) {
+              const pt = e.el.getPointAtLength(e.len * LABEL_SLOTS[i]);
+              if (!hitsAnyCard(pt.x - w / 2, pt.y - 9, w, 18)) { at = pt; break; }
+            }
+            if (!at) {
+              e.labelG.style.display = 'none';
+              return;
+            }
+            e.labelAt = at; // where the editor should open
+            e.labelText.setAttribute('x', at.x);
+            e.labelText.setAttribute('y', at.y);
+            e.labelTip.textContent = txt + ' — double-click to edit';
+            e.labelBg.setAttribute('x', at.x - w / 2);
+            e.labelBg.setAttribute('y', at.y - 9);
+            e.labelBg.setAttribute('width', w);
+          };
+          renderLabelRef.current = renderLabel;
+
+          // One editor for the whole stage — a real <input> in a foreignObject,
+          // parked over whatever is being retitled (a link label or a group
+          // name). Enter/blur commits, Esc backs out. Edits persist
+          // immediately: they're content, like a removed link, not view state
+          // waiting on 💾 Save layout.
+          const editorFO = el('foreignObject', { width: 190, height: 34, style: 'display: none;' });
+          const editorInput = document.createElement('input');
+          editorInput.className = 'edge-label-input';
+          editorInput.setAttribute('maxlength', '48');
+          editorFO.appendChild(editorInput);
+          stageRef.current.appendChild(editorFO);
+          let editing = null; // { kind: 'link' | 'group', key }
+          const closeEditor = (commit) => {
+            if (!editing) return;
+            const what = editing;
+            editing = null;
+            editorFO.style.display = 'none';
+            if (!commit) return;
+            if (what.kind === 'link') {
+              setLinkLabel(what.key, editorInput.value);
+              renderLabel(what.key);
+              setLabelVersion((v) => v + 1);
+            } else if (what.kind === 'note') {
+              setNodeNote(what.key, editorInput.value);
+              renderNote(what.key);
+              setNoteVersion((v) => v + 1);
+            } else {
+              renameGroup(what.key, editorInput.value);
+              renderGroups();
+              setGroupVersion((v) => v + 1);
+            }
+          };
+          const openEditorAt = (kind, key, at, value, placeholder) => {
+            editing = { kind, key };
+            editorFO.setAttribute('x', at.x - 95);
+            editorFO.setAttribute('y', at.y - 17);
+            editorFO.style.display = '';
+            editorInput.setAttribute('placeholder', placeholder);
+            editorInput.value = value;
+            editorInput.focus();
+            editorInput.select();
+          };
+          const openLabelEditor = (key) => {
+            const e = edgesRef.current[key];
+            if (!e) return;
+            // Open over the label if one is drawn, else at the midpoint.
+            const at = e.labelG.style.display !== 'none' && e.labelAt ? e.labelAt : e.el.getPointAtLength(e.len / 2);
+            openEditorAt('link', key, at, labelFor(key), 'Label this connection…');
+          };
+          openLabelEditorRef.current = openLabelEditor;
+          // Notes are written where they'll be read: just under the card.
+          const openNoteEditor = (id) => {
+            const n = NODES[id];
+            if (!n) return;
+            // openEditorAt centres the box on the point it's given.
+            openEditorAt('note', id, { x: n.x + NW / 2, y: n.y + NH + 23 }, noteFor(id), 'Add a note…');
+          };
+          openNoteEditorRef.current = openNoteEditor;
+          editorInput.addEventListener('keydown', (ev) => {
+            // The stage owns ⌘A and Esc — while typing, they mean the usual
+            // text-field things instead.
+            ev.stopPropagation();
+            if (ev.key === 'Enter') closeEditor(true);
+            else if (ev.key === 'Escape') closeEditor(false);
+          });
+          editorInput.addEventListener('blur', () => closeEditor(true));
+
+          Object.keys(edgesRef.current).forEach((key) => {
+            const e = edgesRef.current[key];
+            const grp = el('g', { class: 'edge-label-g' });
+            e.labelTip = el('title', {});
+            e.labelBg = el('rect', { class: 'edge-label-bg', rx: 5, x: 0, y: 0, width: 0, height: 18 });
+            e.labelText = el('text', { class: 'edge-label', x: 0, y: 0 });
+            grp.appendChild(e.labelTip);
+            grp.appendChild(e.labelBg);
+            grp.appendChild(e.labelText);
+            grp.addEventListener('click', (ev) => {
+              ev.stopPropagation();
+              setInspected(null);
+              setSelectedLink((prev) => (prev === key ? null : key));
+            });
+            grp.addEventListener('dblclick', (ev) => {
+              ev.stopPropagation();
+              openLabelEditor(key);
+            });
+            labelLayer.appendChild(grp);
+            e.labelG = grp;
+            // Double-clicking anywhere on the line works too — the label may
+            // not exist yet, and an empty one is nothing to aim at.
+            if (e.hit) {
+              e.hit.addEventListener('dblclick', (ev) => {
+                ev.stopPropagation();
+                openLabelEditor(key);
+              });
+            }
+            renderLabel(key);
+          });
+
+          // ---- Group boxes ----------------------------------------------
+          // A named box drawn around a set of cards. Elements are kept per
+          // group object and only their attributes change, for the same
+          // dblclick reason as the link labels — and because this re-runs on
+          // every frame of a drag.
+          const GROUP_PAD = 20;
+          const GROUP_HEAD = 22; // strip above the cards that holds the name
+          const groupEls = new Map();
+          // Rename in place, over the box's own title strip.
+          const openGroupEditor = (g) => {
+            const els = groupEls.get(g);
+            if (!els) return;
+            const at = { x: +els.rect.getAttribute('x') + 95, y: +els.rect.getAttribute('y') + 11 };
+            openEditorAt('group', g, at, g.name, 'Name this group…');
+          };
+          openGroupEditorRef.current = openGroupEditor;
+          const renderGroups = () => {
+            groupEls.forEach((els, g) => {
+              if (GROUP_LIST.indexOf(g) === -1) {
+                groupLayer.removeChild(els.g);
+                groupEls.delete(g);
+              }
+            });
+            GROUP_LIST.forEach((g) => {
+              let els = groupEls.get(g);
+              if (!els) {
+                const box = el('g', { class: 'group' });
+                const tip = el('title', {});
+                const rect = el('rect', { class: 'group-box', rx: 14 });
+                const name = el('text', { class: 'group-name' });
+                box.appendChild(tip);
+                box.appendChild(rect);
+                box.appendChild(name);
+                // Selecting the members is what makes a group draggable: the
+                // existing group-drag then moves the whole box as one piece.
+                name.addEventListener('click', (ev) => {
+                  ev.stopPropagation();
+                  setSelection(g.members);
+                });
+                name.addEventListener('dblclick', (ev) => {
+                  ev.stopPropagation();
+                  openGroupEditor(g);
+                });
+                groupLayer.appendChild(box);
+                els = { g: box, rect, name, tip };
+                groupEls.set(g, els);
+              }
+              const xs = g.members.map((id) => NODES[id].x);
+              const ys = g.members.map((id) => NODES[id].y);
+              const x = Math.max(2, Math.min.apply(null, xs) - GROUP_PAD);
+              const y = Math.max(2, Math.min.apply(null, ys) - GROUP_PAD - GROUP_HEAD);
+              const x2 = Math.min(STAGE_W - 2, Math.max.apply(null, xs) + NW + GROUP_PAD);
+              const y2 = Math.min(STAGE_H - 2, Math.max.apply(null, ys) + NH + GROUP_PAD);
+              els.g.setAttribute('class', 'group tone-' + g.tone);
+              // Membership on the element, so a check (and a reader of the DOM)
+              // can tell a card inside the box from a card merely surrounded
+              // by it — see the stray-card check in the skill's Step 8.
+              els.g.setAttribute('data-members', g.members.join(' '));
+              els.rect.setAttribute('x', x);
+              els.rect.setAttribute('y', y);
+              els.rect.setAttribute('width', Math.max(0, x2 - x));
+              els.rect.setAttribute('height', Math.max(0, y2 - y));
+              els.name.setAttribute('x', x + 14);
+              els.name.setAttribute('y', y + 15);
+              els.name.textContent = g.name; // reset before measuring
+              ellipsize(els.name, Math.max(40, x2 - x - 28));
+              els.tip.textContent = g.name + ' — click to select these cards, double-click to rename';
+            });
+          };
+          renderGroupsRef.current = renderGroups;
+          renderGroups();
+
           const pulse = el('circle', { r: 5.5, class: 'pulse', cx: -100, cy: -100, opacity: 0 });
           pulseRef.current = pulse;
 
-          // Node dragging: NODES coords update live and every edge touching
-          // the node (path + both arrowheads) is rebuilt each move, so links
+          // Node dragging: NODES coords update live and every edge touching a
+          // moved node (path + both arrowheads) is rebuilt each move, so links
           // stay attached while the user pulls cards apart to declutter
           // overlapping edges. A small movement threshold keeps a plain click
           // still opening the inspector.
+          //
+          // Dragging a SELECTED card moves the whole selection as one rigid
+          // block — ⌘/Ctrl+A (or ⬚ Select all) then drag shoves the entire
+          // diagram around the stage. The stage clamp is therefore computed
+          // for the block, not per card: the offset is capped by whichever
+          // members sit furthest out, otherwise cards would pile up against
+          // the edge and the arrangement would collapse.
           const svg = stageRef.current;
           const toSvgPoint = (evt) => {
             const pt = svg.createSVGPoint();
@@ -1567,9 +2235,10 @@
             pt.y = evt.clientY;
             return pt.matrixTransform(svg.getScreenCTM().inverse());
           };
-          const refreshEdgesFor = (nodeId) => {
-            Object.values(edgesRef.current).forEach((e) => {
-              if (e.from !== nodeId && e.to !== nodeId) return;
+          const refreshEdges = (ids) => {
+            Object.keys(edgesRef.current).forEach((key) => {
+              const e = edgesRef.current[key];
+              if (!ids.has(e.from) && !ids.has(e.to)) return;
               e.el.setAttribute('d', buildPath(e.from, e.to));
               e.len = e.el.getTotalLength();
               if (e.hit) e.hit.setAttribute('d', e.el.getAttribute('d'));
@@ -1581,12 +2250,23 @@
               Object.keys(e.arrows).forEach((endId) => {
                 e.arrows[endId].setAttribute('points', arrowPoints(e.el, e.len, NODES[endId], endId === e.to ? 'to' : 'from'));
               });
+              renderLabel(key); // the midpoint moved with the line
             });
           };
           const basePos = {};
-          const dragState = { id: null, suppressClick: false };
+          const dragState = { id: null, suppressClick: false, group: [], base: {} };
 
           const nodeEls = {};
+          const noteEls = {};
+          // Cards never rewrite their child coordinates — they ride a CSS
+          // transform measured from where they were first drawn — so moving a
+          // card is "update NODES + update the two vars".
+          const moveNode = (nid, x, y) => {
+            NODES[nid].x = x;
+            NODES[nid].y = y;
+            nodeEls[nid].style.setProperty('--drag-x', (x - basePos[nid].x) + 'px');
+            nodeEls[nid].style.setProperty('--drag-y', (y - basePos[nid].y) + 'px');
+          };
           Object.keys(NODES).forEach((id) => {
             const n = NODES[id];
             const g = el('g', { class: 'node' + (n.external ? ' external' : ''), 'data-id': id });
@@ -1595,41 +2275,84 @@
             g.appendChild(el('text', { class: 'node-icon', x: n.x + 30, y: n.y + NH / 2 + 1 }, n.icon));
             g.appendChild(el('text', { class: 'node-title', x: n.x + 58, y: n.y + 31 }, n.title));
             g.appendChild(el('text', { class: 'node-sub', x: n.x + 58, y: n.y + 50 }, n.sub));
+            // The note panel lives INSIDE the node group, so it rides the same
+            // CSS transform as the card and needs no repositioning on drag.
+            const noteBg = el('rect', { class: 'node-note-bg', rx: 7, x: 0, y: 0, width: 0, height: 0 });
+            const noteText = el('text', { class: 'node-note' });
+            g.appendChild(noteBg);
+            g.appendChild(noteText);
+            noteEls[id] = { bg: noteBg, text: noteText };
             g.addEventListener('click', () => {
               if (dragState.suppressClick) return;
               setSelectedLink(null);
               setInspected((prev) => (prev === id ? null : id));
             });
+            g.addEventListener('dblclick', (ev) => {
+              ev.stopPropagation();
+              openNoteEditor(id);
+            });
             basePos[id] = { x: n.x, y: n.y };
             g.addEventListener('pointerdown', (e) => {
               if (e.button !== 0) return;
+              // Shift / ⌘ / Ctrl click adds or removes this card from the
+              // selection instead of dragging it or opening the inspector.
+              if (e.shiftKey || e.metaKey || e.ctrlKey) {
+                const sel = new Set(selectionRef.current);
+                if (sel.has(id)) sel.delete(id);
+                else sel.add(id);
+                setSelection(sel);
+                dragState.suppressClick = true;
+                return;
+              }
               const p = toSvgPoint(e);
               dragState.id = id;
               dragState.suppressClick = false;
               dragState.px = p.x;
               dragState.py = p.y;
-              dragState.nx = n.x;
-              dragState.ny = n.y;
+              // Grabbing a selected card drags the whole selection; grabbing an
+              // unselected one drags only it and leaves the selection alone.
+              dragState.group = selectionRef.current.has(id) ? Array.from(selectionRef.current) : [id];
+              dragState.base = {};
+              let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+              dragState.group.forEach((gid) => {
+                const gn = NODES[gid];
+                dragState.base[gid] = { x: gn.x, y: gn.y };
+                minX = Math.min(minX, gn.x);
+                maxX = Math.max(maxX, gn.x);
+                minY = Math.min(minY, gn.y);
+                maxY = Math.max(maxY, gn.y);
+              });
+              // Clamp the block, not each card: the offset the whole group may
+              // travel is whatever its outermost members still have room for.
+              dragState.minDx = 4 - minX;
+              dragState.maxDx = STAGE_W - NW - 4 - maxX;
+              dragState.minDy = 4 - minY;
+              dragState.maxDy = STAGE_H - NH - 4 - maxY;
               g.setPointerCapture(e.pointerId);
             });
             g.addEventListener('pointermove', (e) => {
               if (dragState.id !== id) return;
               const p = toSvgPoint(e);
-              const dx = p.x - dragState.px;
-              const dy = p.y - dragState.py;
+              let dx = p.x - dragState.px;
+              let dy = p.y - dragState.py;
               if (!dragState.suppressClick && Math.hypot(dx, dy) < 3) return;
               dragState.suppressClick = true;
-              g.classList.add('dragging');
-              n.x = Math.max(4, Math.min(STAGE_W - NW - 4, dragState.nx + dx));
-              n.y = Math.max(4, Math.min(STAGE_H - NH - 4, dragState.ny + dy));
-              g.style.setProperty('--drag-x', (n.x - basePos[id].x) + 'px');
-              g.style.setProperty('--drag-y', (n.y - basePos[id].y) + 'px');
-              refreshEdgesFor(id);
+              dx = Math.min(dragState.maxDx, Math.max(dragState.minDx, dx));
+              dy = Math.min(dragState.maxDy, Math.max(dragState.minDy, dy));
+              const moved = new Set();
+              dragState.group.forEach((gid) => {
+                const b = dragState.base[gid];
+                nodeEls[gid].classList.add('dragging');
+                moveNode(gid, b.x + dx, b.y + dy);
+                moved.add(gid);
+              });
+              refreshEdges(moved);
+              renderGroups(); // boxes are drawn from where their cards are
             });
             const endDrag = () => {
               if (dragState.id !== id) return;
               dragState.id = null;
-              g.classList.remove('dragging');
+              dragState.group.forEach((gid) => nodeEls[gid].classList.remove('dragging'));
               // Dragging is deliberately NOT persisted here — the 💾 Save
               // layout button is what commits it, so a viewer can shove
               // cards around to read a busy diagram and reload to get the
@@ -1642,6 +2365,120 @@
             nodeEls[id] = g;
           });
           nodeElsRef.current = nodeEls;
+
+          // Keep card text inside the card. Node names come from the
+          // architecture doc, so some are simply longer than the 180px box —
+          // before this, they ran out over the card edge and across whatever
+          // was next to them. Titles shrink a couple of points before they
+          // truncate (a component's name is worth more than a uniform type
+          // size); subtitles are phrases, so they wrap to a second line first.
+          // Whatever still doesn't fit is cut with an ellipsis and gets a
+          // <title> so the full string is one hover away (the inspector always
+          // shows it in full).
+          //
+          // Measuring needs the text laid out in the document, which is why
+          // this is a pass over the finished cards rather than part of the
+          // loop that builds them.
+          const TEXT_X = 58; // icon gutter
+          const TEXT_MAX = NW - TEXT_X - 12; // minus right padding
+          Object.keys(NODES).forEach((id) => {
+            const n = NODES[id];
+            const titleEl = nodeEls[id].querySelector('.node-title');
+            const subEl = nodeEls[id].querySelector('.node-sub');
+
+            let size = 13.5;
+            while (titleEl.getComputedTextLength() > TEXT_MAX && size > 11) {
+              size = Math.max(11, size - 0.5);
+              titleEl.style.fontSize = size + 'px';
+            }
+            if (ellipsize(titleEl, TEXT_MAX)) fullTextTip(titleEl, n.title);
+
+            if (subEl.getComputedTextLength() > TEXT_MAX) {
+              const words = String(n.sub).trim().split(/\s+/);
+              if (words.length < 2) {
+                // One unbreakable word — nothing to wrap, so just trim it.
+                if (ellipsize(subEl, TEXT_MAX)) fullTextTip(subEl, n.sub);
+              } else {
+                // Longest first line that fits, so line 2 carries the rest.
+                let cut = words.length - 1;
+                while (cut > 1) {
+                  subEl.textContent = words.slice(0, cut).join(' ');
+                  if (subEl.getComputedTextLength() <= TEXT_MAX) break;
+                  cut--;
+                }
+                subEl.textContent = '';
+                const l1 = el('tspan', { x: n.x + TEXT_X, y: n.y + 47 }, words.slice(0, cut).join(' '));
+                const l2 = el('tspan', { x: n.x + TEXT_X, y: n.y + 59 }, words.slice(cut).join(' '));
+                subEl.appendChild(l1);
+                subEl.appendChild(l2);
+                const cut1 = ellipsize(l1, TEXT_MAX);
+                const cut2 = ellipsize(l2, TEXT_MAX);
+                if (cut1 || cut2) fullTextTip(subEl, n.sub);
+              }
+            }
+          });
+
+          // ---- Node notes -----------------------------------------------
+          // A viewer's own margin, pinned under the card: the caveats a
+          // diagram can't hold. Wrapped to at most three lines the width of
+          // the card, on a quiet panel so it reads as attached to that card
+          // rather than floating on the stage. Everything sits inside the
+          // node group, so a dragged card takes its note with it.
+          const NOTE_W = NW + 16;
+          const NOTE_LINES = 3;
+          const NOTE_LH = 13;
+          const renderNote = (id) => {
+            const els = noteEls[id];
+            if (!els) return;
+            const n = NODES[id];
+            const txt = noteFor(id);
+            while (els.text.firstChild) els.text.removeChild(els.text.firstChild);
+            if (!txt) {
+              els.text.style.display = 'none';
+              els.bg.style.display = 'none';
+              return;
+            }
+            els.text.style.display = '';
+            els.bg.style.display = '';
+            // Greedy wrap: fill each line with as many words as fit, and trim
+            // the last one if the note outruns the three lines it's given.
+            const max = NOTE_W - 16;
+            const widthOf = (s) => {
+              els.text.textContent = s; // the element itself is the ruler
+              return els.text.getComputedTextLength();
+            };
+            const lines = [];
+            let line = '';
+            txt.split(' ').forEach((w) => {
+              const next = line ? line + ' ' + w : w;
+              if (line && widthOf(next) > max) {
+                lines.push(line);
+                line = w;
+              } else {
+                line = next;
+              }
+            });
+            if (line) lines.push(line);
+            const shown = lines.slice(0, NOTE_LINES);
+            // Anything past the third line joins it and gets trimmed there.
+            if (lines.length > NOTE_LINES) shown[NOTE_LINES - 1] += ' ' + lines.slice(NOTE_LINES).join(' ');
+            els.text.textContent = '';
+
+            const top = n.y + NH + 8;
+            let widest = 0;
+            shown.forEach((s, i) => {
+              const t = el('tspan', { x: n.x + NW / 2, y: top + 12 + i * NOTE_LH }, s);
+              els.text.appendChild(t);
+              ellipsize(t, max);
+              widest = Math.max(widest, t.getComputedTextLength());
+            });
+            els.bg.setAttribute('x', n.x + NW / 2 - widest / 2 - 8);
+            els.bg.setAttribute('y', top);
+            els.bg.setAttribute('width', widest + 16);
+            els.bg.setAttribute('height', shown.length * NOTE_LH + 8);
+          };
+          renderNoteRef.current = renderNote;
+          Object.keys(NODES).forEach(renderNote);
 
           stageRef.current.appendChild(pulse);
 
@@ -1678,6 +2515,59 @@
             pgConsoleFORef.current = pgConsoleFO;
           }
 
+          // Rubber-band selection. Appended last so the band draws over
+          // everything, and pointer-events:none so it can never swallow the
+          // drag that is creating it.
+          const marquee = el('rect', { class: 'marquee', x: 0, y: 0, width: 0, height: 0, style: 'display: none;' });
+          stageRef.current.appendChild(marquee);
+
+          // A pointerdown whose target IS the <svg> happened on empty stage —
+          // anything drawn (card, edge, hit twin) is its own target, so this
+          // never steals a click from them.
+          const band = { on: false, moved: false, x0: 0, y0: 0, keep: [] };
+          svg.addEventListener('pointerdown', (e) => {
+            if (e.button !== 0 || e.target !== svg || e.pointerType === 'touch') return;
+            const p = toSvgPoint(e);
+            band.on = true;
+            band.moved = false;
+            band.x0 = p.x;
+            band.y0 = p.y;
+            // Shift-banding extends the current selection instead of replacing it.
+            band.keep = e.shiftKey || e.metaKey || e.ctrlKey ? Array.from(selectionRef.current) : [];
+            svg.setPointerCapture(e.pointerId);
+          });
+          svg.addEventListener('pointermove', (e) => {
+            if (!band.on) return;
+            const p = toSvgPoint(e);
+            const x = Math.min(band.x0, p.x);
+            const y = Math.min(band.y0, p.y);
+            const w = Math.abs(p.x - band.x0);
+            const h = Math.abs(p.y - band.y0);
+            if (!band.moved && Math.hypot(w, h) < 3) return;
+            band.moved = true;
+            marquee.setAttribute('x', x);
+            marquee.setAttribute('y', y);
+            marquee.setAttribute('width', w);
+            marquee.setAttribute('height', h);
+            marquee.style.display = '';
+            // Touched, not enclosed: brushing a card is enough to catch it.
+            const hit = new Set(band.keep);
+            Object.keys(NODES).forEach((nid) => {
+              const nn = NODES[nid];
+              if (nn.x < x + w && nn.x + NW > x && nn.y < y + h && nn.y + NH > y) hit.add(nid);
+            });
+            setSelection(hit);
+          });
+          const endBand = () => {
+            if (!band.on) return;
+            band.on = false;
+            marquee.style.display = 'none';
+            // A click on empty stage (no band drawn) means "deselect".
+            if (!band.moved) setSelection([]);
+          };
+          svg.addEventListener('pointerup', endBand);
+          svg.addEventListener('pointercancel', endBand);
+
           resetAnimation(false);
         }, []);
 
@@ -1699,8 +2589,11 @@
               e.cut.setAttribute('y', mid.y);
               e.cut.style.display = off ? '' : 'none';
             }
+            // Labels hide behind the ✕ of a severed link and come back when
+            // it's restored, so this has to run with the rest of the repaint.
+            if (renderLabelRef.current) renderLabelRef.current(key);
           });
-        }, [selectedLink, linkVersion]);
+        }, [selectedLink, linkVersion, labelVersion]);
 
         // Remove / restore one connection. The demo is re-rendered at the
         // current step so the consequence is immediately visible: steps that
@@ -2340,8 +3233,20 @@
               >
                 {layoutSaved ? '✓ Saved' : '💾 Save layout'}
               </button>
-              <button onClick={exportLayout} title="Download these coordinates so they can be baked into the file as the default layout (survives browser profiles and machines)">
-                ⬇ Export layout
+              <button onClick={exportLayout} title="Download the current card positions and link labels so they can be baked into the file as the defaults (survives browser profiles and machines)">
+                ⬇ Export edits
+              </button>
+              <button onClick={toggleSelectAll} title="Select every card (⌘/Ctrl+A), then drag any one of them to move the whole diagram. Shift-click a card or rubber-band the empty stage to pick a few; Esc clears.">
+                {selCount ? `✕ Clear (${selCount})` : '⬚ Select all'}
+              </button>
+              <button
+                onClick={toggleGroup}
+                disabled={matchedGroup === -1 && selCount < 2}
+                title={matchedGroup === -1
+                  ? 'Draw a named box around the selected cards (select two or more first)'
+                  : 'Remove this box — the cards stay where they are'}
+              >
+                {matchedGroup === -1 ? '▣ Group' : '⤫ Ungroup'}
               </button>
               <button onClick={restoreAllLinks} disabled={REMOVED_LINKS.size === 0} title="Reconnect every link you removed (click a link on the diagram to remove one)">
                 ⛓ Links{REMOVED_LINKS.size > 0 ? ` (${REMOVED_LINKS.size})` : ''}
@@ -2412,6 +3317,19 @@
                           : `Cutting it also strands ${strandedBy(selectedLink)} later step${strandedBy(selectedLink) === 1 ? '' : 's'} — nothing downstream would reach them.`}
                       </p>
                     )}
+                    <div className="inspector-section">Label on the line</div>
+                    <div className="inspector-label-row">
+                      <span className={'inspector-label-value' + (labelFor(selectedLink) ? '' : ' empty')}>
+                        {labelFor(selectedLink) || 'No label'}
+                      </span>
+                      <button
+                        className="inspector-label-edit"
+                        onClick={() => openLabelEditorRef.current && openLabelEditorRef.current(selectedLink)}
+                        title="Type the protocol or payload this connection carries (or double-click the line itself)"
+                      >
+                        ✎ Edit
+                      </button>
+                    </div>
                     <div className="inspector-section">Carries</div>
                     <ul className="inspector-routes">
                       {linkInfo(selectedLink).routes.map((r) => (
@@ -2447,6 +3365,19 @@
                       <span className="inspector-badge">External system — depended on, not owned</span>
                     )}
                     {NODES[inspected].desc && <p className="inspector-desc">{NODES[inspected].desc}</p>}
+                    <div className="inspector-section">Note under the card</div>
+                    <div className="inspector-label-row">
+                      <span className={'inspector-label-value' + (noteFor(inspected) ? '' : ' empty')}>
+                        {noteFor(inspected) || 'No note'}
+                      </span>
+                      <button
+                        className="inspector-label-edit"
+                        onClick={() => openNoteEditorRef.current && openNoteEditorRef.current(inspected)}
+                        title="Pin your own text under this card (or double-click the card itself)"
+                      >
+                        ✎ Edit
+                      </button>
+                    </div>
                     <div className="inspector-section">Connections</div>
                     <ul className="inspector-routes">
                       {nodeInfo(inspected).routes.map((r) => (
