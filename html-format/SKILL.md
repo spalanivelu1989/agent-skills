@@ -1,14 +1,20 @@
 ---
 name: html-format
-description: Produces a standalone, self-contained HTML document in the house design system — teal accent, IBM Plex Mono typography with a proportional sidebar, sidebar navigation, card sections, callouts, light/dark toggle. Use this whenever the deliverable is an HTML page rather than Markdown: guides, walkthroughs, runbooks, proposals, explainers, onboarding docs, reports, FAQs, or specs. Trigger it when someone asks for a document "as HTML", "as a web page", "in the same style/format as index.html", "in our house style", "matching the other pages", or asks to convert an existing Markdown/text document into a styled HTML page. Also use it when adding a new companion page to a documentation set that already uses this system, so the new page matches the rest.
+description: Produces a standalone, self-contained HTML document in the house design system — teal accent, IBM Plex Mono typography with a proportional sidebar, a capped reading column with margin sidenotes, generated sidebar navigation, card sections, callouts, per-section reading time, a reading-progress rail, and a light/paper/dark toggle. Use this whenever the deliverable is an HTML page rather than Markdown: guides, walkthroughs, runbooks, proposals, explainers, onboarding docs, reports, FAQs, or specs. Trigger it when someone asks for a document "as HTML", "as a web page", "in the same style/format as index.html", "in our house style", "matching the other pages", or asks to convert an existing Markdown/text document into a styled HTML page. Also use it when adding a new companion page to a documentation set that already uses this system, so the new page matches the rest.
 ---
 
 # House HTML document format
 
 This skill produces one file: a self-contained HTML document that looks and
 behaves like the reference implementation at `index.html` — a teal-accented,
-card-based reading experience with a sidebar, semantic callouts, and a light/dark
-toggle that respects the OS but can be overridden.
+card-based reading experience with a sidebar, semantic callouts, margin
+sidenotes, and a light/paper/dark toggle that respects the OS but can be
+overridden.
+
+The layout is built for sustained reading: prose is capped at about 68
+characters per line, the whole page is centred on that column, and a gutter to
+its right holds sidenotes. A progress rail and a per-section reading-time chip
+are added by the template's own script.
 
 The whole design system already exists as CSS in `assets/template.html`. Your job
 is to structure the content well and reach for the right components — not to
@@ -77,9 +83,17 @@ card styling of `section.phase` still works standalone.
 ### 4. Write the content
 
 Section titles are `h2` inside `section.phase`; the document has exactly one
-`h1`, above the layout. Give every section an `id`, and make the sidebar `a.tab`
-hrefs match those ids in the same order — the script derives everything from that
-correspondence, including the pager labels.
+`h1`, above the layout. **Give every section an `id`** — that is the only thing
+the navigation needs. The sidebar links are generated at load from the sections
+themselves, so there is no list of hrefs to keep in sync and no way to point a
+tab at an id that does not exist. Put `data-nav-label` on a section when its
+`h2` is too long for the sidebar, and `data-nav-num` when the counter should not
+be the section's position (`0` on a "read this first" preface renumbers what
+follows, so step 1 stays 1).
+
+A `Read — N min` chip is appended to each section from its word count, ignoring
+code blocks. Write only the chips the page cannot work out for itself — who the
+section is for, what they need first.
 
 Reach for the components that match what you're actually saying:
 
@@ -98,6 +112,7 @@ Reach for the components that match what you're actually saying:
 | At-a-glance facts about a section            | `.phase-meta` with `.chip` |
 | Source code in a known language              | `pre.language-*`           |
 | Terminal output, a file tree, a log excerpt  | plain `pre`                |
+| An aside the reader can safely skip          | `aside.sidenote`           |
 
 Code blocks are syntax-highlighted when you tag them with a language:
 `<pre class="language-python">`, `language-typescript`, `language-bash`,
@@ -118,6 +133,13 @@ a block is now something a reader will paste whole, so keep commands and their
 output in separate blocks rather than pasting a `$` prompt and a wall of output
 into someone's terminal.
 
+Sidenotes go in the margin gutter, immediately before the paragraph they belong
+to. Reach for one when you would otherwise write a parenthesis and then delete
+it for breaking the sentence — provenance, a caveat, a pointer. The test is
+whether a reader who skips it still gets everything they need: a sidenote is
+skippable by construction, so a prerequisite or an irreversible action belongs
+in a `.warn` callout instead, where it is not.
+
 Callout labels should say something. `<span class="label">What you have now</span>`
 earns its place; `<span class="label">Note</span>` does not.
 
@@ -129,13 +151,20 @@ Open the file and check it actually works — these are the failures that recur:
 open <destination>.html   # macOS
 ```
 
-- Toggle to dark mode and back. Every surface should change. Anything that stays
-  stubbornly white or black is a hardcoded colour that should be a token.
+- Press the theme button three times: light → paper → dark → light. Every
+  surface should change at each step. Anything that stays stubbornly white or
+  black is a hardcoded colour that should be a token.
+- Check the sidebar lists every section, in order, with the labels you expect. A
+  section missing from it has no `id`.
 - In tabbed mode, click through every sidebar tab and use the pager to the last
-  section. A tab whose `href` doesn't match a section id silently falls back to
-  showing section 0.
+  section. Watch the progress rail at the top of the window advance as you go.
+- Widen the window past 1440px and confirm each sidenote sits in the right
+  margin beside its paragraph; narrow it again and confirm the same note folds
+  into the reading column as a tinted block.
 - Narrow the window below 900px. The sidebar should become a horizontal tab
   strip, not overflow the page.
+- Check the reading-time chips are plausible. A section estimating at 12 minutes
+  is usually telling you it should be two sections.
 - Hover a code block and press its copy button. It should say `Copied` and the
   clipboard should hold the block's text with no highlighting artefacts. A block
   with no button was wrapped in `.codewrap` by hand — the script skips those, so
@@ -180,16 +209,25 @@ colour to be interesting stops being part of the set.
 ## Adapting the palette
 
 If a document belongs to a different project and needs its own identity, change
-only the `--accent` / `--accent-soft` pair in all three token blocks (`:root`,
-`@media (prefers-color-scheme: dark)`, and `:root[data-theme="dark"]` /
-`[data-theme="light"]`). Everything else — greys, callout colours, borders — is
-tuned for contrast in both themes and should stay put. Pick a dark-mode accent
-that is noticeably lighter than the light-mode one; the reference uses
-`#0e6e68` against white and Catppuccin Frappé Teal `#81c8be` against `#303446`.
+only the `--accent` / `--accent-soft` pair in **all five** token blocks:
+`:root`, `@media (prefers-color-scheme: dark)`, `:root[data-theme="dark"]`,
+`:root[data-theme="light"]` and `:root[data-theme="paper"]`. Everything else —
+greys, callout colours, borders — is tuned for contrast in all three themes and
+should stay put. Pick a dark-mode accent that is noticeably lighter than the
+light-mode one; the reference uses `#0e6e68` against white, `#0c635d` against
+warm paper, and Catppuccin Frappé Teal `#81c8be` against `#303446`.
 
-Changing tokens in only one of the three blocks is the most common way this
-breaks: the OS-preference block and the manual-toggle block must agree, or the
-document will look correct until someone presses the button.
+Changing tokens in only some of the blocks is the most common way this breaks:
+the OS-preference block and the manual-toggle blocks must agree, or the document
+will look correct until someone presses the button.
+
+## Adapting the reading column
+
+`--measure` on `:root` sets the prose width and everything else derives from it,
+so widening or narrowing the reading column is a one-token change. Keep it in
+`rem`, not `ch`: a custom property in `ch` resolves against each element's own
+font size, so the masthead would compute a different page width than the layout
+under it and stop lining up with it.
 
 ## Files
 

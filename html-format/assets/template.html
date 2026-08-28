@@ -25,10 +25,14 @@
         var r = document.documentElement;
         try {
           var t = localStorage.getItem("doc-theme");
-          if (t === "dark" || t === "light") r.setAttribute("data-theme", t);
+          if (t === "dark" || t === "light" || t === "paper")
+            r.setAttribute("data-theme", t);
         } catch (e) {
           /* private browsing — the toggle still works for this visit */
         }
+        // The sidebar's links are generated from the sections at load, so the
+        // stylesheet needs to know whether that is going to happen at all.
+        r.classList.add("js");
         // Sections stay visible by default, so the document still reads fine
         // with JavaScript disabled; tabbing is opt-in via this class.
         if (r.getAttribute("data-nav") !== "scroll")
@@ -42,6 +46,25 @@
         box-sizing: border-box;
       }
       :root {
+        /* Layout. --measure is the prose column — about 68 characters of
+           IBM Plex Mono at the body size, which is the line length long-form
+           reading wants. Widening it is a one-token change; everything else
+           below derives from it. It is deliberately NOT in ch: a custom
+           property in ch resolves against each element's own font size, so
+           the masthead would compute a different page width than the layout
+           and stop lining up with it. */
+        --measure: 43.5rem;
+        --card-pad: 2.75rem;
+        /* The sidenote gutter is zero until the viewport can spare the room;
+           the min-width block further down turns it on. */
+        --sidenote-w: 0rem;
+        --sidenote-gap: 0rem;
+        --content-w: calc(
+          var(--measure) + 2 * var(--card-pad) + var(--sidenote-w) +
+            var(--sidenote-gap)
+        );
+        --page-w: calc(256px + 1.75rem + var(--content-w));
+
         --bg: #f6f8f8;
         --card: #ffffff;
         --ink: #1c2529;
@@ -149,6 +172,70 @@
         --tok-typ: #a8710d; /* Yellow */
         --tok-op: #179299; /* Teal */
         --tok-var: #d20f39; /* Red */
+      }
+      /* Paper: a warm, low-glare third theme for long reading sessions. The OS
+         never selects it — only the toggle, which cycles light → paper → dark.
+         The greys are warmed rather than replaced, so every component that is
+         tuned for contrast in the other two stays tuned here. */
+      :root[data-theme="paper"] {
+        --bg: #ece3d2;
+        --card: #faf5ea;
+        --ink: #332e26;
+        --muted: #6b6153;
+        --accent: #0c635d;
+        --accent-soft: #dce8e3;
+        --win-bg: #e5eeda;
+        --win-border: #44712f;
+        --warn-bg: #f6e9cd;
+        --warn-border: #8a5c00;
+        --why-bg: #f1e9da;
+        --border: #d9cdb6;
+        --code-bg: #f2ead8;
+        --code-ink: #332e26;
+        /* Syntax tokens: Catppuccin Latte, which sits on warm paper unchanged. */
+        --tok-plain: #332e26;
+        --tok-com: #7c7f93; /* Overlay 2 */
+        --tok-str: #40a02b; /* Green */
+        --tok-kw: #8839ef; /* Mauve */
+        --tok-num: #d9640b; /* Peach */
+        --tok-fn: #1e66f5; /* Blue */
+        --tok-typ: #a8710d; /* Yellow */
+        --tok-op: #179299; /* Teal */
+        --tok-var: #d20f39; /* Red */
+      }
+
+      /* Sidenotes need a gutter wide enough that it does not come out of the
+         prose. Below this width --sidenote-w stays 0, the section's right
+         padding collapses back to --card-pad, and .sidenote renders inline. */
+      @media (min-width: 1440px) {
+        :root {
+          --sidenote-w: 14rem;
+          --sidenote-gap: 1.75rem;
+        }
+      }
+
+      /* Reading progress. In scroll mode the rail tracks scroll depth; in
+         tabbed mode only one section is on screen at a time, so it tracks
+         position through the section sequence instead. */
+      .progress-rail {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        z-index: 20;
+        background: transparent;
+        pointer-events: none;
+      }
+      .progress-fill {
+        height: 100%;
+        width: 0;
+        background: var(--accent);
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        .progress-fill {
+          transition: width 0.12s linear;
+        }
       }
 
       .theme-toggle {
@@ -296,6 +383,22 @@
         gap: 1.75rem;
         align-items: flex-start;
       }
+      /* The masthead sits outside .layout but shares its width, so the whole
+         page reads as one centred column rather than a header that runs wider
+         than the text under it. */
+      main > .eyebrow,
+      main > h1,
+      main > .lede,
+      main > .meta-strip,
+      .layout {
+        max-width: var(--page-w);
+        margin-inline: auto;
+      }
+      /* The sidebar's links are generated at load, so with scripting off there
+         is nothing in it and an empty card would just be furniture. */
+      html:not(.js) nav.sidebar {
+        display: none;
+      }
       /* The sidebar is the one place that breaks from IBM Plex Mono: a
          proportional face here separates navigation from document content at a
          glance. Noto Sans Elbasan ships regular only, so the 600/700 weights
@@ -410,6 +513,7 @@
       .content {
         flex: 1;
         min-width: 0;
+        max-width: var(--content-w);
       }
       .pager {
         display: flex;
@@ -484,13 +588,57 @@
         background: var(--card);
         border: 1px solid var(--border);
         border-radius: 12px;
-        padding: 2rem 2.75rem 1.75rem;
+        /* The right padding carries the sidenote gutter. With --sidenote-w at
+           0 it collapses back to --card-pad on its own, so this one rule
+           covers both the wide and the narrow layout. */
+        padding: 2rem
+          calc(var(--card-pad) + var(--sidenote-w) + var(--sidenote-gap))
+          1.75rem var(--card-pad);
         margin-bottom: 2.25rem;
         scroll-margin-top: 1.25rem;
       }
       @media (max-width: 640px) {
         section.phase {
           padding: 1.4rem 1.1rem;
+        }
+      }
+
+      /* Sidenote. Floats into the gutter the section's right padding reserves,
+         so it sits beside the paragraph it follows without pushing anything
+         down the page. Below the gutter breakpoint it becomes an ordinary
+         block in the reading column — same markup, no author decision. */
+      .sidenote {
+        float: right;
+        clear: right;
+        width: var(--sidenote-w);
+        margin: 0.35rem calc(-1 * (var(--sidenote-w) + var(--sidenote-gap)))
+          1.1rem 0;
+        padding-left: 0.8rem;
+        border-left: 2px solid var(--accent);
+        font-size: 0.78rem;
+        line-height: 1.55;
+        color: var(--muted);
+      }
+      .sidenote .label {
+        display: block;
+        font-weight: 700;
+        font-size: 0.68rem;
+        text-transform: uppercase;
+        letter-spacing: 0.11em;
+        color: var(--accent);
+        margin-bottom: 0.2rem;
+      }
+      .sidenote > :last-child {
+        margin-bottom: 0;
+      }
+      @media (max-width: 1439px) {
+        .sidenote {
+          float: none;
+          width: auto;
+          margin: 1.25rem 0;
+          padding: 0.7rem 1rem 0.7rem 0.85rem;
+          background: var(--why-bg);
+          border-radius: 0 8px 8px 0;
         }
       }
       /* The .js-tabbed class is set on <html> by the head script when
@@ -1000,13 +1148,23 @@
         }
         nav.sidebar,
         .pager,
-        .copy-btn {
+        .copy-btn,
+        .progress-rail {
           display: none;
+        }
+        .sidenote {
+          float: none;
+          width: auto;
+          margin: 1rem 0;
+          break-inside: avoid-page;
         }
       }
     </style>
   </head>
   <body>
+    <div class="progress-rail" aria-hidden="true">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
     <button
       class="theme-toggle"
       id="themeToggle"
@@ -1047,16 +1205,21 @@
               «
             </button>
           </div>
-          <a class="tab" href="#s1"><span class="num">1</span>First section</a>
-          <a class="tab" href="#s2"><span class="num">2</span>Second section</a>
+          <!-- The tabs are generated at load from every section.phase that
+               has an id, in document order, using its <h2> as the label. Do
+               not hand-write them: an href that no longer matches an id is
+               the failure this removes. Put data-nav-label on a section to
+               give it a shorter sidebar label, or data-nav-num to override
+               its counter (a "read this first" preface is usually 0). -->
         </nav>
         <div class="content">
           <section class="phase" id="s1">
             <span class="phase-tag">Part 1 · Label</span>
             <h2>First section</h2>
+            <!-- A "Read — N min" chip is appended here automatically from the
+                 section's word count. Write the chips only you can know. -->
             <div class="phase-meta">
               <span class="chip">Who — <strong>everyone</strong></span>
-              <span class="chip">Time — <strong>10 minutes</strong></span>
             </div>
             <p>Body copy goes here.</p>
           </section>
@@ -1064,6 +1227,13 @@
           <section class="phase" id="s2">
             <span class="phase-tag">Part 2 · Label</span>
             <h2>Second section</h2>
+            <!-- A sidenote sits in the right margin beside the paragraph it
+                 follows, and folds into the column on narrower screens. -->
+            <aside class="sidenote">
+              <span class="label">Aside</span>
+              An aside the reader can take or leave — provenance, a caveat, a
+              pointer. Anything they must not miss belongs in a callout.
+            </aside>
             <p>Body copy goes here.</p>
           </section>
 
@@ -1092,22 +1262,27 @@
         var label = document.getElementById("themeLabel");
         var media = window.matchMedia("(prefers-color-scheme: dark)");
 
+        // light → paper → dark → light. Paper is toggle-only: no OS setting
+        // asks for it, so it can never be the resolved default.
+        var NEXT = { light: "paper", paper: "dark", dark: "light" };
+        var FACE = {
+          paper: { icon: "◑", label: "Paper mode" },
+          dark: { icon: "◐", label: "Dark mode" },
+          light: { icon: "☀", label: "Light mode" },
+        };
+
         function currentTheme() {
           var forced = root.getAttribute("data-theme");
-          if (forced === "dark" || forced === "light") return forced;
+          if (forced === "dark" || forced === "light" || forced === "paper")
+            return forced;
           return media.matches ? "dark" : "light";
         }
 
         // The button describes the mode you'll switch TO.
         function render() {
-          var theme = currentTheme();
-          if (theme === "dark") {
-            icon.textContent = "☀";
-            label.textContent = "Light mode";
-          } else {
-            icon.textContent = "◐";
-            label.textContent = "Dark mode";
-          }
+          var face = FACE[NEXT[currentTheme()]] || FACE.dark;
+          icon.textContent = face.icon;
+          label.textContent = face.label;
         }
 
         function apply(theme) {
@@ -1121,7 +1296,7 @@
         }
 
         button.addEventListener("click", function () {
-          apply(currentTheme() === "dark" ? "light" : "dark");
+          apply(NEXT[currentTheme()] || "dark");
         });
 
         // A saved choice was already applied by the head script; with none, the
@@ -1129,10 +1304,115 @@
         media.addEventListener("change", render);
         render();
 
+        // --- Reading progress ---
+        // progressAt is reassigned in tabbed mode below; everything else here
+        // is mode-independent, so a document with no sidebar at all still
+        // gets a working rail.
+        var fill = document.getElementById("progressFill");
+        var progressAt = function () {
+          var h = document.documentElement.scrollHeight - window.innerHeight;
+          return h > 0 ? window.scrollY / h : 1;
+        };
+        function setProgress() {
+          if (!fill) return;
+          var f = Math.max(0, Math.min(1, progressAt()));
+          fill.style.width = f * 100 + "%";
+        }
+        var pTicking = false;
+        function reportProgress() {
+          if (pTicking) return;
+          pTicking = true;
+          window.requestAnimationFrame(function () {
+            pTicking = false;
+            setProgress();
+          });
+        }
+        window.addEventListener("scroll", reportProgress);
+        window.addEventListener("resize", reportProgress);
+        setProgress();
+
         // --- Sidebar navigation ---
         var sidebar = document.querySelector("nav.sidebar");
         if (!sidebar) return;
         var mode = root.classList.contains("js-tabbed") ? "tabbed" : "scroll";
+
+        // --- Sidebar contents, generated from the sections ---
+        // The section ids are the single source: a tab whose href points at
+        // nothing cannot be written, because no one writes the tabs. A section
+        // without an id is skipped rather than becoming a dead link.
+        var phases = Array.prototype.slice.call(
+          document.querySelectorAll(".content section.phase[id]"),
+        );
+        if (phases.length) {
+          Array.prototype.forEach.call(
+            sidebar.querySelectorAll("a.tab"),
+            function (a) {
+              a.parentNode.removeChild(a);
+            },
+          );
+          // data-nav-num renumbers everything after it as well, so putting
+          // 0 on a "read this first" preface leaves the first real step at 1
+          // rather than pushing it to 2.
+          var counter = 1;
+          phases.forEach(function (sec) {
+            var forced = sec.getAttribute("data-nav-num");
+            if (forced !== null && forced !== "" && !isNaN(Number(forced)))
+              counter = Number(forced);
+            var h2 = sec.querySelector("h2");
+            var a = document.createElement("a");
+            a.className = "tab";
+            a.href = "#" + sec.id;
+            var num = document.createElement("span");
+            num.className = "num";
+            num.textContent = forced !== null && forced !== "" ? forced
+              : String(counter);
+            counter += 1;
+            a.appendChild(num);
+            a.appendChild(
+              document.createTextNode(
+                sec.getAttribute("data-nav-label") ||
+                  (h2 ? h2.textContent.trim() : sec.id),
+              ),
+            );
+            sidebar.appendChild(a);
+          });
+        }
+
+        // --- Reading time ---
+        // Counted from the prose only. Code blocks are scanned rather than
+        // read, and counting them would inflate every technical section past
+        // the point where the number means anything. A hand-written
+        // "Read — …" chip wins, so an author can always override the estimate.
+        if (root.getAttribute("data-readtime") !== "off") {
+          phases.forEach(function (sec) {
+            var meta = sec.querySelector(".phase-meta");
+            if (meta && /Read\s*—/.test(meta.textContent)) return;
+            var copy = sec.cloneNode(true);
+            Array.prototype.forEach.call(
+              copy.querySelectorAll("pre, .phase-meta, .phase-tag"),
+              function (el) {
+                el.parentNode.removeChild(el);
+              },
+            );
+            var words = copy.textContent.trim().split(/\s+/).filter(Boolean);
+            if (!words.length) return;
+            if (!meta) {
+              meta = document.createElement("div");
+              meta.className = "phase-meta";
+              var h2 = sec.querySelector("h2");
+              if (h2) h2.parentNode.insertBefore(meta, h2.nextSibling);
+              else sec.insertBefore(meta, sec.firstChild);
+            }
+            var chip = document.createElement("span");
+            chip.className = "chip";
+            chip.appendChild(document.createTextNode("Read — "));
+            var strong = document.createElement("strong");
+            strong.textContent = Math.max(1, Math.round(words.length / 200))
+              + " min";
+            chip.appendChild(strong);
+            meta.appendChild(chip);
+          });
+        }
 
         var tabs = Array.prototype.slice.call(
           sidebar.querySelectorAll("a.tab"),
@@ -1157,6 +1437,15 @@
         }
 
         if (mode === "tabbed") {
+          // Only one section is on screen, so scroll depth says nothing about
+          // progress through the document. Count position in the sequence,
+          // with scroll depth filling in the fraction of the current section.
+          progressAt = function () {
+            var h = document.documentElement.scrollHeight - window.innerHeight;
+            var within = h > 0 ? window.scrollY / h : 0;
+            return tabs.length ? (currentIndex() + within) / tabs.length : 1;
+          };
+
           var prevBtn = document.getElementById("pagerPrev");
           var nextBtn = document.getElementById("pagerNext");
 
@@ -1202,6 +1491,7 @@
                 idx < tabs.length - 1 ? "Next: " + titleOf(idx + 1) + " →" : "";
             }
             if (scrollTop) window.scrollTo(0, 0);
+            setProgress();
           }
 
           if (prevBtn)
@@ -1236,6 +1526,7 @@
               if (sections[i] && sections[i].offsetTop <= line) idx = i;
             }
             markActive(idx);
+            setProgress();
           }
           window.addEventListener("scroll", function () {
             if (!ticking) {

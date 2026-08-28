@@ -6,8 +6,8 @@ the class names.
 
 ## Contents
 
-- [Design tokens](#design-tokens) — the colour variables and what each means
-- [Typography](#typography) — the two font families and the type scale
+- [Design tokens](#design-tokens) — the colour and layout variables
+- [Typography](#typography) — the two font families, the type scale, the measure
 - [Page furniture](#page-furniture) — eyebrow, title, lede, meta-strip, footer
 - [Sidebar and sections](#sidebar-and-sections) — nav, section shells, tags, chips
 - [Callouts](#callouts) — win / why / warn
@@ -19,14 +19,18 @@ the class names.
 - [Q&A blocks](#qa-blocks)
 - [Flow diagram](#flow-diagram) — pipeline / handoff visual
 - [Figures](#figures) — screenshots with captions
+- [Sidenotes](#sidenotes) — margin notes beside the prose
+- [What the page does on its own](#what-the-page-does-on-its-own) — generated
+  sidebar, reading time, progress rail
 
 ---
 
 ## Design tokens
 
 Every colour in the document resolves through these variables. Light mode is the
-base; dark mode is Catppuccin Frappé. Using a raw hex anywhere in the body means
-one of the two themes will break, so always reach for a token.
+base; dark mode is Catppuccin Frappé; paper is a warm third theme. Using a raw
+hex anywhere in the body means one of the three themes will break, so always
+reach for a token.
 
 | Token                         | Light                 | Dark (Frappé)                | Use for                                 |
 | ----------------------------- | --------------------- | ---------------------------- | --------------------------------------- |
@@ -43,12 +47,34 @@ one of the two themes will break, so always reach for a token.
 | `--code-bg` / `--code-ink`    | `#eef2f2` / `#17332f` | `#292c3c` / `#99d1db` Sky    | code, chips, Q&A shells                 |
 | `--tok-*` (nine)              | Catppuccin Latte      | Catppuccin Frappé            | syntax highlighting — see [Code](#code) |
 
-Dark mode is declared three times on purpose: once under
-`@media (prefers-color-scheme: dark)` so the OS preference works with JS
-disabled, and once each under `:root[data-theme="dark"]` and
-`:root[data-theme="light"]` so the manual toggle can override the OS in _both_
-directions. Dropping the explicit `light` block silently breaks "force light on a
-dark-mode machine".
+### The three themes
+
+The toggle cycles **light → paper → dark**, and the button always names the mode
+you are about to switch _to_. Paper is warm, low-glare and meant for long
+reading sessions: `--bg: #ece3d2`, `--card: #faf5ea`, `--ink: #332e26`, with the
+greys warmed rather than replaced so every component stays tuned for contrast.
+No OS setting asks for paper, so it is only ever reached through the toggle.
+
+The palette is declared four times on purpose: once on bare `:root` (light),
+once under `@media (prefers-color-scheme: dark)` so the OS preference works with
+JS disabled, and once each under `:root[data-theme="dark"]`,
+`:root[data-theme="light"]` and `:root[data-theme="paper"]` so the manual toggle
+can override the OS in _every_ direction. Dropping the explicit `light` block
+silently breaks "force light on a dark-mode machine".
+
+### Layout tokens
+
+| Token                             | Value                        | Controls                                          |
+| --------------------------------- | ---------------------------- | ------------------------------------------------- |
+| `--measure`                       | `43.5rem`                    | the prose column — about 68 characters per line    |
+| `--card-pad`                      | `2.75rem`                    | horizontal padding inside `section.phase`          |
+| `--sidenote-w` / `--sidenote-gap` | `0` → `14rem` / `1.75rem`    | the margin gutter, switched on at 1440px           |
+| `--content-w` / `--page-w`        | derived                      | the reading column and the whole centred page      |
+
+Widening the reading column is a one-token change: everything else derives from
+`--measure`. It is deliberately **not** expressed in `ch`. A custom property in
+`ch` resolves against each element's own font size, so the masthead would
+compute a different page width than the layout under it and stop lining up.
 
 ## Typography
 
@@ -71,6 +97,12 @@ tracking. `h1`/`h2` use `text-wrap: balance` and slight negative letter-spacing.
 
 One `h1` per document, in `<main>` above the layout. `h2` is the section title
 inside each `section.phase`. `h3`/`h4` subdivide within a section.
+
+Prose is capped at `--measure`, roughly 68 characters per line, and the whole
+page — masthead included — is centred on that column rather than filling the
+window. Long lines are the main reason a document reads as a dump rather than
+something written, so nothing should escape the cap except content that is
+genuinely wide: tables, `.flow`, `.cards`, code blocks and figures.
 
 ## Page furniture
 
@@ -123,12 +155,7 @@ Navigation mode is set once, on the `<html>` element at the top of the file
         «
       </button>
     </div>
-    <a class="tab" href="#phase1"
-      ><span class="num">1</span>Create the repository</a
-    >
-    <a class="tab" href="#phase2"
-      ><span class="num">2</span>Design the structure</a
-    >
+    <!-- No links here. They are generated at load. -->
   </nav>
   <div class="content">
     <section class="phase" id="phase1">…</section>
@@ -141,14 +168,29 @@ Navigation mode is set once, on the `<html>` element at the top of the file
 </div>
 ```
 
-- Every `a.tab` `href` must match a `section.phase` `id`, in the same order.
-- `.num` is the circled counter. Start at `0` when there is an orientation
-  section that precedes step 1, exactly like a "read this first" preface.
-- Sidebar labels should be short; the full text becomes the `title` tooltip and
-  the pager button text, so keep them under about 60 characters.
+**Do not hand-write the `a.tab` links.** They are generated at load from every
+`section.phase` that has an `id`, in document order, using its `<h2>` as the
+label. The section ids are the single source of truth, which is what makes an
+href pointing at nothing impossible to write. A section without an `id` is
+skipped rather than becoming a dead link.
+
+Two attributes on `section.phase` steer the generated tab:
+
+| Attribute        | Use it when                                                                 |
+| ---------------- | --------------------------------------------------------------------------- |
+| `data-nav-label` | the `h2` is too long for the sidebar — keep labels under about 60 characters |
+| `data-nav-num`   | the counter should not simply be the section's position                     |
+
+`data-nav-num` renumbers everything after it too, so `data-nav-num="0"` on a
+"read this first" preface leaves the first real step at 1 rather than pushing it
+to 2.
+
+- The label text also becomes the `title` tooltip and the pager button text.
 - The collapse button and its `id="sidebarToggle"` are required by the script.
   Its state persists in `localStorage`.
 - Below 900px the sidebar becomes a horizontal scrolling tab strip automatically.
+- With JavaScript off there are no links to show, so the sidebar hides itself
+  (`html:not(.js) nav.sidebar`) and the document reads as a plain scrolling page.
 
 Section shell:
 
@@ -168,6 +210,14 @@ Section shell:
 part/phase. `.phase-meta` holds `.chip`s: 2–4 at-a-glance facts scoped to this
 section (who, how long, what you need first). `<strong>` inside a chip renders in
 the accent colour.
+
+A `Read — N min` chip is appended to every section automatically, so write only
+the chips that you know and the page cannot work out: who it is for, what they
+need first, who owns it. The estimate counts prose at 200 words per minute and
+ignores `<pre>` blocks — code is scanned rather than read, and counting it would
+inflate every technical section past the point where the number means anything.
+Writing your own `Read — …` chip suppresses the estimate; `data-readtime="off"`
+on `<html>` suppresses it document-wide.
 
 ## Callouts
 
@@ -438,3 +488,49 @@ and `<ol>` renders as a compact muted step list.
 Images stretch to the content width with a border, rounded corners and a soft
 shadow. Always write a real `alt` — the caption and the alt text serve different
 readers and should not be identical.
+
+## Sidenotes
+
+```html
+<aside class="sidenote">
+  <span class="label">Aside</span>
+  Provenance, a caveat, a pointer — something the reader can take or leave.
+</aside>
+<p>The paragraph the note sits beside.</p>
+```
+
+Place the `<aside>` immediately **before** the paragraph it belongs to; it floats
+into the margin starting at that paragraph's first line. The `.label` is
+optional and, like every other label in the system, should say something.
+
+Above 1440px the note sits in a 14rem gutter that `section.phase` reserves in its
+right padding, so it never pushes the prose around or interrupts the line of the
+argument. Below that the gutter collapses to zero and the same markup renders as
+an ordinary tinted block in the reading column — no author decision, no second
+component.
+
+The gutter is reserved in every section, whether or not it holds a note. That is
+deliberate: the prose column then starts and ends at the same place on every
+section, instead of shifting whenever a note appears.
+
+**What belongs in a sidenote:** the aside you would otherwise put in parentheses
+and then delete for breaking the sentence. **What does not:** anything the reader
+must not miss. A sidenote is skippable by construction — a prerequisite, a trap
+or an irreversible action belongs in a `.warn` callout, where it is not.
+
+## What the page does on its own
+
+Three things are handled by the template's script, so they are not markup you
+write — but they do change how you write.
+
+**The sidebar is generated** from the section ids. See
+[Sidebar and sections](#sidebar-and-sections).
+
+**Reading time** is measured per section and appended to `.phase-meta`. The
+consequence for writing: a section that estimates at 12 minutes is telling you it
+should probably be two sections.
+
+**A progress rail** sits at the top of the viewport in `--accent`. In scroll mode
+it tracks scroll depth; in tabbed mode it tracks position through the section
+sequence, because there only one section is on screen and scroll depth would say
+nothing about progress through the document. It is hidden in print.
