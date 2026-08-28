@@ -66,15 +66,19 @@ silently breaks "force light on a dark-mode machine".
 
 | Token                             | Value                        | Controls                                          |
 | --------------------------------- | ---------------------------- | ------------------------------------------------- |
-| `--measure`                       | `43.5rem`                    | the prose column — about 68 characters per line    |
+| `--measure`                       | `43.5rem`                    | reference value only — nothing is capped by it     |
 | `--card-pad`                      | `2.75rem`                    | horizontal padding inside `section.phase`          |
-| `--sidenote-w` / `--sidenote-gap` | `0` → `14rem` / `1.75rem`    | the margin gutter, switched on at 1440px           |
-| `--content-w` / `--page-w`        | derived                      | the reading column and the whole centred page      |
+| `--sidenote-w` / `--sidenote-gap` | `0` → `14rem` / `1.75rem`    | the margin gutter; opens at 1440px, and only in documents that contain a sidenote |
 
-Widening the reading column is a one-token change: everything else derives from
-`--measure`. It is deliberately **not** expressed in `ch`. A custom property in
-`ch` resolves against each element's own font size, so the masthead would
-compute a different page width than the layout under it and stop lining up.
+No rule reads `--measure` for layout — it is kept on `:root` so a single
+prose-heavy document can opt into a narrow column locally (see **Width** in
+`SKILL.md`). If you ever do reach for it, keep it in `rem`, not `ch`: a custom
+property in `ch` resolves against each element's own font size, so different
+elements would compute different widths and stop lining up with each other.
+
+The section's own width comes from `.content { flex: 1 }` against the 256px
+sidebar, and `--card-pad` sets the padding inside it. Those two are the whole
+horizontal layout.
 
 ## Typography
 
@@ -98,11 +102,12 @@ tracking. `h1`/`h2` use `text-wrap: balance` and slight negative letter-spacing.
 One `h1` per document, in `<main>` above the layout. `h2` is the section title
 inside each `section.phase`. `h3`/`h4` subdivide within a section.
 
-Prose is capped at `--measure`, roughly 68 characters per line, and the whole
-page — masthead included — is centred on that column rather than filling the
-window. Long lines are the main reason a document reads as a dump rather than
-something written, so nothing should escape the cap except content that is
-genuinely wide: tables, `.flow`, `.cards`, code blocks and figures.
+Nothing is width-capped. The page fills the window and every element — prose,
+tables, `.flow`, `.cards`, `.choice`, code blocks and figures — runs the full
+width of its section, so a paragraph and the table beneath it share an edge.
+`--measure` is retained on `:root` as a reference value; no layout rule reads
+it. See **Width** in `SKILL.md` for the two capping strategies that were tried
+and why both were removed.
 
 ## Page furniture
 
@@ -503,15 +508,18 @@ Place the `<aside>` immediately **before** the paragraph it belongs to; it float
 into the margin starting at that paragraph's first line. The `.label` is
 optional and, like every other label in the system, should say something.
 
-Above 1440px the note sits in a 14rem gutter that `section.phase` reserves in its
-right padding, so it never pushes the prose around or interrupts the line of the
-argument. Below that the gutter collapses to zero and the same markup renders as
-an ordinary tinted block in the reading column — no author decision, no second
-component.
+Above 1440px, in a document that contains at least one sidenote, the note sits
+in a 14rem gutter that `section.phase` reserves in its right padding, so it
+never pushes the prose around or interrupts the line of the argument. Below that
+width — or in a document with no sidenotes, where the `:root:has(.sidenote)`
+guard never opens the gutter — the same markup renders as an ordinary tinted
+block in the flow of the section. No author decision, no second component.
 
-The gutter is reserved in every section, whether or not it holds a note. That is
-deliberate: the prose column then starts and ends at the same place on every
-section, instead of shifting whenever a note appears.
+Within a document that uses sidenotes the gutter is reserved in every section,
+whether or not that section holds a note — the prose column then starts and ends
+at the same place throughout, instead of shifting whenever a note appears. A
+document with no sidenotes at all opens no gutter, so a table-dense page does
+not pay 14rem of right padding for a feature it never uses.
 
 **What belongs in a sidenote:** the aside you would otherwise put in parentheses
 and then delete for breaking the sentence. **What does not:** anything the reader

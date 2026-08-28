@@ -53,17 +53,13 @@
            property in ch resolves against each element's own font size, so
            the masthead would compute a different page width than the layout
            and stop lining up with it. */
+        /* Retained as a reference value only — nothing is capped by it. */
         --measure: 43.5rem;
         --card-pad: 2.75rem;
         /* The sidenote gutter is zero until the viewport can spare the room;
            the min-width block further down turns it on. */
         --sidenote-w: 0rem;
         --sidenote-gap: 0rem;
-        --content-w: calc(
-          var(--measure) + 2 * var(--card-pad) + var(--sidenote-w) +
-            var(--sidenote-gap)
-        );
-        --page-w: calc(256px + 1.75rem + var(--content-w));
 
         --bg: #f6f8f8;
         --card: #ffffff;
@@ -207,8 +203,13 @@
       /* Sidenotes need a gutter wide enough that it does not come out of the
          prose. Below this width --sidenote-w stays 0, the section's right
          padding collapses back to --card-pad, and .sidenote renders inline. */
+      /* :has() keeps the gutter out of documents that never use a sidenote —
+         otherwise every section pays 14rem of right padding for a feature the
+         page does not use. Where :has() is unsupported the gutter simply never
+         opens and sidenotes render inline, which is the same graceful fallback
+         used below 1440px. */
       @media (min-width: 1440px) {
-        :root {
+        :root:has(.sidenote) {
           --sidenote-w: 14rem;
           --sidenote-gap: 1.75rem;
         }
@@ -383,17 +384,14 @@
         gap: 1.75rem;
         align-items: flex-start;
       }
-      /* The masthead sits outside .layout but shares its width, so the whole
-         page reads as one centred column rather than a header that runs wider
-         than the text under it. */
-      main > .eyebrow,
-      main > h1,
-      main > .lede,
-      main > .meta-strip,
-      .layout {
-        max-width: var(--page-w);
-        margin-inline: auto;
-      }
+      /* Nothing in this system is width-capped. The page fills the window and
+         every element — prose, tables, .cards, .flow, figures, code — runs the
+         full width of its section, so a paragraph and the table under it line
+         up. Do NOT reintroduce a max-width on .content, .layout, main or the
+         prose elements: capping the container crushes wide content (a table
+         cannot outgrow its box) and strands the sidebar collapse button, while
+         capping only the prose leaves paragraphs stranded beside full-width
+         tables. --measure survives below purely as a sizing reference. */
       /* The sidebar's links are generated at load, so with scripting off there
          is nothing in it and an empty card would just be furniture. */
       html:not(.js) nav.sidebar {
@@ -513,7 +511,6 @@
       .content {
         flex: 1;
         min-width: 0;
-        max-width: var(--content-w);
       }
       .pager {
         display: flex;

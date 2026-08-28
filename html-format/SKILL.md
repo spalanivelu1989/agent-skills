@@ -1,6 +1,6 @@
 ---
 name: html-format
-description: Produces a standalone, self-contained HTML document in the house design system — teal accent, IBM Plex Mono typography with a proportional sidebar, a capped reading column with margin sidenotes, generated sidebar navigation, card sections, callouts, per-section reading time, a reading-progress rail, and a light/paper/dark toggle. Use this whenever the deliverable is an HTML page rather than Markdown: guides, walkthroughs, runbooks, proposals, explainers, onboarding docs, reports, FAQs, or specs. Trigger it when someone asks for a document "as HTML", "as a web page", "in the same style/format as index.html", "in our house style", "matching the other pages", or asks to convert an existing Markdown/text document into a styled HTML page. Also use it when adding a new companion page to a documentation set that already uses this system, so the new page matches the rest.
+description: Produces a standalone, self-contained HTML document in the house design system — teal accent, IBM Plex Mono typography with a proportional sidebar, a full-width layout with margin sidenotes, generated sidebar navigation, card sections, callouts, per-section reading time, a reading-progress rail, and a light/paper/dark toggle. Use this whenever the deliverable is an HTML page rather than Markdown: guides, walkthroughs, runbooks, proposals, explainers, onboarding docs, reports, FAQs, or specs. Trigger it when someone asks for a document "as HTML", "as a web page", "in the same style/format as index.html", "in our house style", "matching the other pages", or asks to convert an existing Markdown/text document into a styled HTML page. Also use it when adding a new companion page to a documentation set that already uses this system, so the new page matches the rest.
 ---
 
 # House HTML document format
@@ -11,10 +11,11 @@ card-based reading experience with a sidebar, semantic callouts, margin
 sidenotes, and a light/paper/dark toggle that respects the OS but can be
 overridden.
 
-The layout is built for sustained reading: prose is capped at about 68
-characters per line, the whole page is centred on that column, and a gutter to
-its right holds sidenotes. A progress rail and a per-section reading-time chip
-are added by the template's own script.
+The layout fills the window. Nothing is width-capped: prose, tables, cards,
+flow diagrams, figures and code blocks all run the full width of their section,
+so a paragraph and the table under it share an edge. In documents that use
+sidenotes, a gutter opens on the right to hold them. A progress rail and a
+per-section reading-time chip are added by the template's own script.
 
 The whole design system already exists as CSS in `assets/template.html`. Your job
 is to structure the content well and reach for the right components — not to
@@ -158,9 +159,11 @@ open <destination>.html   # macOS
   section missing from it has no `id`.
 - In tabbed mode, click through every sidebar tab and use the pager to the last
   section. Watch the progress rail at the top of the window advance as you go.
-- Widen the window past 1440px and confirm each sidenote sits in the right
-  margin beside its paragraph; narrow it again and confirm the same note folds
-  into the reading column as a tinted block.
+- If the document uses sidenotes, widen the window past 1440px and confirm each
+  one sits in the right margin beside its paragraph; narrow it again and confirm
+  the same note folds into the section as a tinted block. A document with no
+  sidenotes should show no right-hand gutter at any width — if it does, the
+  `:has()` guard on the gutter has been dropped.
 - Narrow the window below 900px. The sidebar should become a horizontal tab
   strip, not overflow the page.
 - Check the reading-time chips are plausible. A section estimating at 12 minutes
@@ -221,13 +224,26 @@ Changing tokens in only some of the blocks is the most common way this breaks:
 the OS-preference block and the manual-toggle blocks must agree, or the document
 will look correct until someone presses the button.
 
-## Adapting the reading column
+## Width
 
-`--measure` on `:root` sets the prose width and everything else derives from it,
-so widening or narrowing the reading column is a one-token change. Keep it in
-`rem`, not `ch`: a custom property in `ch` resolves against each element's own
-font size, so the masthead would compute a different page width than the layout
-under it and stop lining up with it.
+Nothing in this system is width-capped. The page fills the window; every element
+runs the full width of its section. `--measure` remains defined on `:root` as a
+reference value, but no rule reads it for layout.
+
+Two capping strategies have been tried and both were wrong, so do not
+reintroduce either:
+
+- **A cap on the container** (`.content`, `.layout`, `main`) crushes wide
+  content, because a table cannot be wider than the box it sits in — and it
+  strands the sidebar collapse button, which frees ~216px that a capped
+  `.content` is not allowed to use.
+- **A cap on the prose elements only** leaves paragraphs stranded at 696px
+  beside tables running 1400px+, which reads worse than either extreme.
+
+If one document is nearly all prose and genuinely wants a narrow column, add
+`max-width: var(--measure); margin-inline: auto;` to `.content` in **that file
+only**. Do not put it back in the template — the rest of the set is full-width
+and a new page that is not will look out of place.
 
 ## Files
 
