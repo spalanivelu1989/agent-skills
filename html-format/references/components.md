@@ -521,6 +521,12 @@ at the same place throughout, instead of shifting whenever a note appears. A
 document with no sidenotes at all opens no gutter, so a table-dense page does
 not pay 14rem of right padding for a feature it never uses.
 
+**Count them first.** The gutter is a document-level switch, not a per-section
+one: the first `aside.sidenote` anywhere makes every section reserve the 14rem,
+so one aside costs the entire page about 224px of usable width. With fewer than
+about three, or in a document dense with tables and code that want the room,
+use a `.why` callout and let the sections run full width.
+
 **What belongs in a sidenote:** the aside you would otherwise put in parentheses
 and then delete for breaking the sentence. **What does not:** anything the reader
 must not miss. A sidenote is skippable by construction — a prerequisite, a trap

@@ -1225,7 +1225,12 @@
             <span class="phase-tag">Part 2 · Label</span>
             <h2>Second section</h2>
             <!-- A sidenote sits in the right margin beside the paragraph it
-                 follows, and folds into the column on narrower screens. -->
+                 follows, and folds into the column on narrower screens.
+                 DELETE THIS if the document has no real use for one: the
+                 gutter is document-wide, so a single leftover sidenote makes
+                 every section reserve 14rem of right padding and the page
+                 looks like it is ignoring the window. Fewer than ~3 notes, or
+                 a table-heavy page? Use a .why callout instead. -->
             <aside class="sidenote">
               <span class="label">Aside</span>
               An aside the reader can take or leave — provenance, a caveat, a

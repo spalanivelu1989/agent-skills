@@ -113,7 +113,7 @@ Reach for the components that match what you're actually saying:
 | At-a-glance facts about a section            | `.phase-meta` with `.chip` |
 | Source code in a known language              | `pre.language-*`           |
 | Terminal output, a file tree, a log excerpt  | plain `pre`                |
-| An aside the reader can safely skip          | `aside.sidenote`           |
+| An aside the reader can safely skip          | `aside.sidenote` (see cost) |
 
 Code blocks are syntax-highlighted when you tag them with a language:
 `<pre class="language-python">`, `language-typescript`, `language-bash`,
@@ -141,6 +141,17 @@ whether a reader who skips it still gets everything they need: a sidenote is
 skippable by construction, so a prerequisite or an irreversible action belongs
 in a `.warn` callout instead, where it is not.
 
+**Sidenotes are all-or-nothing, so count them before you use one.** The gutter
+opens per _document_, not per section: one `aside.sidenote` anywhere makes every
+section reserve 14rem of right padding, whether or not it holds a note. That is
+deliberate — it stops the prose column shifting each time a note appears — but it
+means a single aside costs the whole document about 224px of width. Below roughly
+three sidenotes, or in a document dense with tables, code blocks and flow
+diagrams that want the room, put the aside in a `.why` callout instead and let
+every section run full width. The empty right margin this otherwise produces
+reads as a layout bug, and it is the most common reason a finished page looks
+like it is ignoring the window.
+
 Callout labels should say something. `<span class="label">What you have now</span>`
 earns its place; `<span class="label">Note</span>` does not.
 
@@ -164,6 +175,11 @@ open <destination>.html   # macOS
   the same note folds into the section as a tinted block. A document with no
   sidenotes should show no right-hand gutter at any width — if it does, the
   `:has()` guard on the gutter has been dropped.
+- Count the sidenotes. If there are only one or two, look at the page above
+  1440px and decide whether the gutter is earning its keep: every section is
+  paying for it, including the table-heavy ones. One stray note left over from
+  the template scaffold is the usual culprit — convert it to a `.why` callout and
+  the whole document reclaims the width.
 - Narrow the window below 900px. The sidebar should become a horizontal tab
   strip, not overflow the page.
 - Check the reading-time chips are plausible. A section estimating at 12 minutes
