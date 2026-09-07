@@ -11,6 +11,7 @@ the class names.
 - [Page furniture](#page-furniture) — eyebrow, title, lede, meta-strip, footer
 - [Sidebar and sections](#sidebar-and-sections) — nav, section shells, tags, chips
 - [Callouts](#callouts) — win / why / warn
+- [Disclosure](#disclosure) — a collapsible block that opens on click
 - [Steps and lists](#steps-and-lists) — step headers, ordered steps
 - [Code](#code) — blocks, inline, copy button, and syntax highlighting
 - [Tables](#tables)
@@ -254,6 +255,50 @@ boilerplate like "Note", it should say what the reader is about to get.
 - `.warn` — amber left border. Cautions and prerequisites.
 
 Callouts may contain lists; the last child's bottom margin is already collapsed.
+
+## Disclosure
+
+A block the reader opens for themselves. Native `<details>`, so it works with
+JavaScript off and is keyboard-operable for free.
+
+```html
+<details class="disclose">
+  <summary>What each part does</summary>
+  <div class="disclose-body">
+    <p>…</p>
+    <p>…</p>
+  </div>
+</details>
+```
+
+- The `<summary>` takes **no class** — it is styled by position. Do not put
+  `.label` on it; that is the callout label and will fight the header bar.
+- Everything else must sit inside `.disclose-body`. That div owns the padding
+  and the hairline under the header, so content placed as a direct child of
+  `<details>` renders flush against the edges.
+- Add `open` to start expanded. Default is closed, which is the point: a
+  disclosure exists so a section can be skipped.
+- The header shows a **Show** / **Hide** pill and a chevron, both generated in
+  CSS from the open state. Write neither into the markup.
+- Print styles force a collapsed block open, so nothing is lost on paper.
+
+**Do not use it for anything the reader must not miss.** A prerequisite, an
+irreversible action, or a warning belongs in `.warn`, which is always visible.
+Everything in a disclosure is, by construction, skippable.
+
+### Why it looks different from the callouts
+
+`.win` / `.why` / `.warn` are tinted bands with a 4px left edge and no
+interactivity. A disclosure is a bordered card with a solid header bar and a
+button in it, so "this opens" is legible before a word is read. It carries its
+own indigo token pair — `--disclose-bg` and `--disclose-ink` — which keeps it
+clear of the teal accent, the green `.win` and the amber `.warn`. That pair is
+the one sanctioned exception to the single-accent rule, and it exists because a
+control has to look like a control. Do not introduce further colours.
+
+Both tokens are defined in **all five** theme blocks. Verified contrast of the
+header text on its bar: 6.1 light, 6.5 paper, 5.3 dark — and of the pill text on
+the pill: 7.2 / 7.3 / 5.2. Recolour the pair only in all five blocks at once.
 
 ## Steps and lists
 

@@ -114,6 +114,7 @@ Reach for the components that match what you're actually saying:
 | Source code in a known language              | `pre.language-*`           |
 | Terminal output, a file tree, a log excerpt  | plain `pre`                |
 | An aside the reader can safely skip          | `aside.sidenote` (see cost) |
+| A long block worth collapsing by default     | `details.disclose`         |
 
 Code blocks are syntax-highlighted when you tag them with a language:
 `<pre class="language-python">`, `language-typescript`, `language-bash`,

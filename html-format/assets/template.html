@@ -67,6 +67,10 @@
         --muted: #56676d;
         --accent: #0e6e68;
         --accent-soft: #e2efed;
+        /* Disclosure. Indigo, deliberately not the teal accent, so a
+           collapsible block is never mistaken for a callout. */
+        --disclose-bg: #eceafb;
+        --disclose-ink: #4f46b8;
         --win-bg: #e8f3ea;
         --win-border: #2e7d4f;
         --warn-bg: #faf3e0;
@@ -96,6 +100,8 @@
           --muted: #a5adce; /* Subtext 0 */
           --accent: #81c8be; /* Teal */
           --accent-soft: #51576d; /* Surface 1 */
+          --disclose-bg: #454063;
+          --disclose-ink: #babbf1; /* Lavender */
           --win-bg: #292c3c; /* Mantle */
           --win-border: #a6d189; /* Green */
           --warn-bg: #292c3c; /* Mantle */
@@ -124,6 +130,8 @@
         --muted: #a5adce; /* Subtext 0 */
         --accent: #81c8be; /* Teal */
         --accent-soft: #51576d; /* Surface 1 */
+        --disclose-bg: #454063;
+        --disclose-ink: #babbf1; /* Lavender */
         --win-bg: #292c3c; /* Mantle */
         --win-border: #a6d189; /* Green */
         --warn-bg: #292c3c; /* Mantle */
@@ -150,6 +158,8 @@
         --muted: #56676d;
         --accent: #0e6e68;
         --accent-soft: #e2efed;
+        --disclose-bg: #eceafb;
+        --disclose-ink: #4f46b8;
         --win-bg: #e8f3ea;
         --win-border: #2e7d4f;
         --warn-bg: #faf3e0;
@@ -180,6 +190,8 @@
         --muted: #6b6153;
         --accent: #0c635d;
         --accent-soft: #dce8e3;
+        --disclose-bg: #ece7f5;
+        --disclose-ink: #4a41ad;
         --win-bg: #e5eeda;
         --win-border: #44712f;
         --warn-bg: #f6e9cd;
@@ -716,6 +728,94 @@
         margin-bottom: 0;
       }
 
+      /* --- Disclosure -----------------------------------------------------
+         A collapsible block, and deliberately the one component that does not
+         look like a callout. .win/.why/.warn are tinted bands with a 4px left
+         edge and no interactivity; a disclosure is a bordered card with a solid
+         header bar and a button in it, so "this opens" is legible before a word
+         is read. Its own indigo token pair keeps it distinct from the teal
+         accent, the green .win and the amber .warn.
+
+         Native <details>: opens with no JavaScript, keyboard-operable for free,
+         and degrades to a plain visible block if scripts never run. */
+      details.disclose {
+        margin: 1.25rem 0;
+        border: 1px solid var(--disclose-ink);
+        border-radius: 10px;
+        overflow: hidden;
+        background: var(--card);
+        font-size: 0.95rem;
+      }
+      details.disclose > summary {
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        padding: 0.6rem 0.75rem 0.6rem 0.9rem;
+        background: var(--disclose-bg);
+        color: var(--disclose-ink);
+        font-weight: 700;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.11em;
+        list-style: none;
+        -webkit-tap-highlight-color: transparent;
+      }
+      /* Safari and older Chrome draw their own triangle. */
+      details.disclose > summary::-webkit-details-marker {
+        display: none;
+      }
+      /* The glyph is swapped rather than rotated: once the summary is a flex
+         container a transform on the marker is unreliable, and two characters
+         say the same thing. */
+      details.disclose > summary::before {
+        content: "\25B8";
+        display: inline-block;
+        font-size: 1.05em;
+        line-height: 1;
+      }
+      details.disclose[open] > summary::before {
+        content: "\25BE";
+      }
+      /* The pill is the attention cue: a solid button that names the action, so
+         a closed block reads as an invitation rather than a heading that
+         happens to be clickable. */
+      details.disclose > summary::after {
+        content: "Show";
+        margin-left: auto;
+        padding: 0.2rem 0.6rem;
+        border-radius: 999px;
+        background: var(--disclose-ink);
+        color: var(--card);
+        font-size: 0.68rem;
+        letter-spacing: 0.09em;
+      }
+      details.disclose[open] > summary::after {
+        content: "Hide";
+      }
+      details.disclose > summary:hover::after {
+        opacity: 0.85;
+      }
+      details.disclose > summary:focus-visible {
+        outline: 2px solid var(--disclose-ink);
+        outline-offset: -2px;
+      }
+      details.disclose .disclose-body {
+        padding: 0.9rem 1.1rem 0.1rem;
+        border-top: 1px solid var(--border);
+      }
+      details.disclose .disclose-body > p:last-child {
+        margin-bottom: 0.8rem;
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        /* Only the hover cue animates. Transitioning background-color here
+           would also animate the theme toggle, so the header bar would fade
+           while the rest of the page switched instantly. */
+        details.disclose > summary::after {
+          transition: opacity 0.15s ease;
+        }
+      }
+
       pre {
         background: var(--code-bg);
         color: var(--code-ink);
@@ -1130,6 +1230,14 @@
         }
       }
       @media print {
+        /* A block someone happened to collapse on screen must still print. */
+        details.disclose > summary::before,
+        details.disclose > summary::after {
+          display: none;
+        }
+        details.disclose:not([open]) > *:not(summary) {
+          display: block;
+        }
         body {
           background: #fff;
         }
