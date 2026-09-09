@@ -12,6 +12,7 @@ the class names.
 - [Sidebar and sections](#sidebar-and-sections) — nav, section shells, tags, chips
 - [Callouts](#callouts) — win / why / warn
 - [Disclosure](#disclosure) — a collapsible block that opens on click
+- [Output capture](#output-capture) — a box the reader pastes command output into
 - [Steps and lists](#steps-and-lists) — step headers, ordered steps
 - [Code](#code) — blocks, inline, copy button, and syntax highlighting
 - [Tables](#tables)
@@ -299,6 +300,109 @@ control has to look like a control. Do not introduce further colours.
 Both tokens are defined in **all five** theme blocks. Verified contrast of the
 header text on its bar: 6.1 light, 6.5 paper, 5.3 dark — and of the pill text on
 the pill: 7.2 / 7.3 / 5.2. Recolour the pair only in all five blocks at once.
+
+## Output capture
+
+A box the reader pastes something into, which the page then remembers. Use it
+when the document asks someone to run a command and you want what it printed
+back — a runbook whose steps produce output, a diagnostic script someone else
+executes, an install check with results you need returned.
+
+```html
+<div class="capture" data-capture="test1">
+  <div class="capture-head">
+    <span class="label">Output — Test 1</span>
+    <span class="count"></span>
+  </div>
+  <textarea
+    spellcheck="false"
+    placeholder="Paste what the window printed here. If it printed nothing, type: no output"
+  ></textarea>
+  <div class="capture-foot">
+    <button type="button" class="primary" data-act="save">Save</button>
+    <button type="button" data-act="clear">Clear</button>
+    <span class="capture-status"></span>
+  </div>
+</div>
+```
+
+- **`data-capture` is the storage key** and must be unique in the document. It
+  is what a saved value is filed under, so renaming it orphans whatever was
+  already typed.
+- The `.label` text names the box in the collector below, with a leading
+  `Output — ` stripped. Write `Output — Test 1`, get `Test 1` in the summary.
+- `.count`, `.capture-status` and either button may be omitted; the script
+  checks for each before wiring it. Only the `textarea` is required.
+- Saving turns the block green (it borrows the `.win` pair) and stamps the
+  time. Editing after a save flips the status to `Unsaved changes`, so a
+  half-finished box is visible at a glance.
+- Put it **directly under the `<pre>` it belongs to**. A capture that is not
+  adjacent to the thing that produced the output reads as a general comment box.
+
+### Giving the document its own storage bucket
+
+```html
+<html lang="en" data-nav="tabbed" data-capture-store="deploy-check-v1"></html>
+```
+
+Values live in `localStorage`, which is scoped to the origin, not the file. Two
+documents opened from the same origin with no `data-capture-store` both write
+to `doc-captures` and silently overwrite each other. Set it per document, and
+version it — bumping the suffix is how you deliberately abandon saved answers
+whose meaning has changed.
+
+### The collector
+
+Optional, and at most one per document. It gathers every capture into one
+pasteable block, marking the ones left empty so "skipped" stays
+distinguishable from "the command printed nothing".
+
+```html
+<div class="capture" data-collect="1">
+  <div class="capture-head">
+    <span class="label">All captured output</span>
+    <span class="count" id="collectCount"></span>
+  </div>
+  <textarea id="collectBox" spellcheck="false" readonly
+    placeholder="Press Gather to assemble everything you saved."></textarea>
+  <div class="capture-foot">
+    <button type="button" class="primary" id="collectBtn">Gather</button>
+    <button type="button" id="copyAllBtn">Copy to clipboard</button>
+    <button type="button" id="wipeBtn">Erase all saved output</button>
+    <span class="capture-status" id="collectStatus"></span>
+  </div>
+</div>
+```
+
+The four ids are what the script binds to, so keep them exactly. `wipeBtn`
+requires two presses and disarms itself after five seconds — it destroys work
+and there is no undo. `copyAllBtn` falls back to selecting the text when the
+clipboard API is unavailable, which is the usual case for a page opened from
+`file://`.
+
+### What to tell the reader
+
+Say where the answers live. People assume a box on a page submits somewhere,
+and this one does not:
+
+> Stored in this browser only, on this machine. Nothing is uploaded. Opening
+> the file in a different browser, or a private window, shows empty boxes.
+
+### When not to use it
+
+- **For anything the page must act on.** Nothing reads these values back except
+  the collector. It is a clipboard with a memory, not a form.
+- **For secrets.** A pasted password persists in `localStorage` in clear text
+  until someone erases it. If a command might print credentials, say so next to
+  the box in a `.warn` and ask for the property names rather than the values.
+- **For one command in a page about something else.** A single box on a
+  reference page is clutter; the component earns its space when the document is
+  a sequence of things to run.
+
+Textareas keep `white-space: pre` and scroll horizontally, because command
+output is column-aligned and wrapping destroys the alignment. Printing hides
+the buttons and lets the text run to full height, so a completed page prints
+as a filled-in record.
 
 ## Steps and lists
 

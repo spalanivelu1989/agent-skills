@@ -115,6 +115,7 @@ Reach for the components that match what you're actually saying:
 | Terminal output, a file tree, a log excerpt  | plain `pre`                |
 | An aside the reader can safely skip          | `aside.sidenote` (see cost) |
 | A long block worth collapsing by default     | `details.disclose`         |
+| Output the reader must paste back to you     | `.capture`                 |
 
 Code blocks are syntax-highlighted when you tag them with a language:
 `<pre class="language-python">`, `language-typescript`, `language-bash`,
@@ -192,6 +193,10 @@ open <destination>.html   # macOS
 - Check every `language-*` block actually came out coloured. A block that stayed
   grey means the language name isn't one the highlighter knows — unrecognised
   names are ignored rather than guessed at, so fix the name or drop the class.
+- If the document uses `.capture` blocks, type into one, press Save, reload the
+  page and confirm the text came back. Then check `data-capture-store` is set on
+  `<html>`: without it the document shares the default bucket with every other
+  capture page from the same origin and they overwrite each other.
 - Confirm the file is self-contained: no local CSS or JS files, no build step.
   The single Google Fonts `<link>` (two families) is the only external
   dependency, and the font stacks degrade to the system monospace and sans if it

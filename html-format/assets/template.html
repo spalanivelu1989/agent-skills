@@ -816,6 +816,102 @@
         }
       }
 
+      /* --- Output capture --------------------------------------------------
+         A place for a reader to paste what a command printed, and keep it.
+         Built entirely from the existing tokens, so it needs no entry in the
+         five theme blocks and introduces no new colour. The save/restore
+         script lives at the bottom of this file and no-ops when the document
+         contains no .capture blocks. */
+      .capture {
+        margin: 1.6rem 0 0;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: var(--card);
+        overflow: hidden;
+      }
+      .capture-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.55rem 1rem;
+        background: var(--why-bg);
+        border-bottom: 1px solid var(--border);
+      }
+      .capture-head .label {
+        margin: 0;
+        font-size: 0.72rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .capture-head .count {
+        font-size: 0.78rem;
+        color: var(--muted);
+      }
+      .capture textarea {
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+        min-height: 10rem;
+        resize: vertical;
+        border: 0;
+        outline: 0;
+        padding: 0.9rem 1.1rem;
+        background: var(--code-bg);
+        color: var(--code-ink);
+        font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas,
+          monospace;
+        font-size: 0.85rem;
+        line-height: 1.5;
+        /* Command output is column-aligned; wrapping destroys the alignment,
+           so scroll instead. */
+        white-space: pre;
+        overflow-wrap: normal;
+        overflow-x: auto;
+      }
+      .capture textarea:focus {
+        box-shadow: inset 0 0 0 2px var(--accent);
+      }
+      .capture-foot {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+        padding: 0.6rem 1rem;
+        border-top: 1px solid var(--border);
+      }
+      .capture-foot button {
+        font: inherit;
+        font-size: 0.82rem;
+        padding: 0.35rem 0.9rem;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        background: var(--card);
+        color: var(--ink);
+        cursor: pointer;
+      }
+      .capture-foot button.primary {
+        border-color: var(--accent);
+        color: var(--accent);
+        font-weight: 600;
+      }
+      .capture-foot button:hover {
+        background: var(--accent-soft);
+      }
+      .capture-status {
+        font-size: 0.8rem;
+        color: var(--muted);
+      }
+      /* Green edge is the only "you are done" signal, and it uses the same
+         pair as the .win callout so the meaning carries across the document. */
+      .capture.is-saved {
+        border-color: var(--win-border);
+      }
+      .capture.is-saved .capture-head {
+        background: var(--win-bg);
+      }
+
       pre {
         background: var(--code-bg);
         color: var(--code-ink);
@@ -1237,6 +1333,16 @@
         }
         details.disclose:not([open]) > *:not(summary) {
           display: block;
+        }
+        /* Whatever was pasted must survive to paper; the buttons must not. */
+        .capture-foot {
+          display: none;
+        }
+        .capture textarea {
+          min-height: 0;
+          height: auto;
+          overflow: visible;
+          white-space: pre-wrap;
         }
         body {
           background: #fff;
@@ -2184,6 +2290,221 @@
             });
           },
         );
+      })();
+
+      // --- Output capture -------------------------------------------------
+      // Gives every .capture[data-capture] block a textarea that remembers
+      // what was typed into it. Does nothing at all when the document has no
+      // .capture blocks, so it costs an unused page one querySelectorAll.
+      //
+      // Storage is localStorage, which means: this browser, this machine,
+      // never uploaded. It can also throw outright (private window, site data
+      // blocked, thumbnail capture), so every read and write is guarded and
+      // the page still renders correctly with nothing stored.
+      (function () {
+        var boxes = [].slice.call(
+          document.querySelectorAll(".capture[data-capture]"),
+        );
+        if (!boxes.length) return;
+
+        // Set data-capture-store on <html> to give a document its own bucket.
+        // Two documents opened from the same origin share localStorage, so
+        // leaving the default makes the second one overwrite the first.
+        var STORE =
+          document.documentElement.getAttribute("data-capture-store") ||
+          "doc-captures";
+
+        function readAll() {
+          try {
+            return JSON.parse(localStorage.getItem(STORE) || "{}") || {};
+          } catch (e) {
+            return {};
+          }
+        }
+        function writeAll(data) {
+          try {
+            localStorage.setItem(STORE, JSON.stringify(data));
+            return true;
+          } catch (e) {
+            return false;
+          }
+        }
+        function stamp() {
+          var d = new Date();
+          return (
+            ("0" + d.getHours()).slice(-2) +
+            ":" +
+            ("0" + d.getMinutes()).slice(-2)
+          );
+        }
+        function label(box) {
+          var el = box.querySelector(".capture-head .label");
+          return el
+            ? el.textContent.replace(/^Output\s*[\u2014-]\s*/, "").trim()
+            : box.getAttribute("data-capture");
+        }
+        function describe(box, saved) {
+          var ta = box.querySelector("textarea");
+          var count = box.querySelector(".count");
+          var n = ta.value.length;
+          if (count) count.textContent = n ? n.toLocaleString() + " characters" : "";
+          box.classList.toggle("is-saved", !!saved && n > 0);
+        }
+
+        var data = readAll();
+
+        boxes.forEach(function (box) {
+          var key = box.getAttribute("data-capture");
+          var ta = box.querySelector("textarea");
+          var status = box.querySelector(".capture-status");
+          var entry = data[key];
+
+          if (entry && typeof entry.text === "string") {
+            ta.value = entry.text;
+            if (status) status.textContent = entry.at ? "Saved " + entry.at : "Saved";
+            describe(box, true);
+          } else {
+            describe(box, false);
+          }
+
+          ta.addEventListener("input", function () {
+            if (status) status.textContent = "Unsaved changes";
+            box.classList.remove("is-saved");
+            describe(box, false);
+          });
+
+          var saveBtn = box.querySelector('[data-act="save"]');
+          if (saveBtn)
+            saveBtn.addEventListener("click", function () {
+              var all = readAll();
+              var at = stamp();
+              all[key] = { text: ta.value, at: at, label: label(box) };
+              if (writeAll(all)) {
+                if (status)
+                  status.textContent = ta.value.trim()
+                    ? "Saved " + at
+                    : "Saved (empty)";
+                describe(box, true);
+              } else if (status) {
+                status.textContent = "Could not save - browser storage is blocked";
+              }
+            });
+
+          var clearBtn = box.querySelector('[data-act="clear"]');
+          if (clearBtn)
+            clearBtn.addEventListener("click", function () {
+              ta.value = "";
+              var all = readAll();
+              delete all[key];
+              writeAll(all);
+              if (status) status.textContent = "Cleared";
+              describe(box, false);
+            });
+        });
+
+        // --- Optional collector -----------------------------------------
+        // Present only if the document includes the .capture[data-collect]
+        // block. Assembles every box into one pasteable lump, marking the
+        // ones left empty so "skipped" stays distinguishable from "blank".
+        var collectBtn = document.getElementById("collectBtn");
+        var collectBox = document.getElementById("collectBox");
+        var collectStatus = document.getElementById("collectStatus");
+        var collectCount = document.getElementById("collectCount");
+        if (!collectBox) return;
+
+        function rule() {
+          return new Array(61).join("=");
+        }
+        function gather() {
+          var lines = ["Captured " + new Date().toString(), ""];
+          var filled = 0;
+          boxes.forEach(function (box) {
+            var ta = box.querySelector("textarea");
+            lines.push(rule(), label(box), rule());
+            if (ta.value.trim()) {
+              lines.push(ta.value.replace(/\s+$/, ""));
+              filled++;
+            } else {
+              lines.push("(not filled in)");
+            }
+            lines.push("");
+          });
+          collectBox.value = lines.join("\n");
+          if (collectCount)
+            collectCount.textContent =
+              filled + " of " + boxes.length + " filled in";
+          if (collectStatus)
+            collectStatus.textContent =
+              filled === boxes.length
+                ? "All boxes have content."
+                : boxes.length - filled + " still empty.";
+        }
+        if (collectBtn) collectBtn.addEventListener("click", gather);
+
+        var copyBtn = document.getElementById("copyAllBtn");
+        if (copyBtn)
+          copyBtn.addEventListener("click", function () {
+            if (!collectBox.value) gather();
+            function done(ok) {
+              if (!collectStatus) return;
+              collectStatus.textContent = ok
+                ? "Copied to clipboard."
+                : "Could not copy - select the text above and copy manually.";
+            }
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              navigator.clipboard.writeText(collectBox.value).then(
+                function () {
+                  done(true);
+                },
+                function () {
+                  done(false);
+                },
+              );
+            } else {
+              collectBox.removeAttribute("readonly");
+              collectBox.select();
+              var ok = false;
+              try {
+                ok = document.execCommand("copy");
+              } catch (e) {
+                ok = false;
+              }
+              collectBox.setAttribute("readonly", "readonly");
+              done(ok);
+            }
+          });
+
+        // Two presses, because this throws away work and there is no undo.
+        var wipeBtn = document.getElementById("wipeBtn");
+        if (wipeBtn) {
+          var wipeLabel = wipeBtn.textContent;
+          wipeBtn.addEventListener("click", function () {
+            if (wipeBtn.getAttribute("data-armed") !== "1") {
+              wipeBtn.setAttribute("data-armed", "1");
+              wipeBtn.textContent = "Press again to erase";
+              if (collectStatus) collectStatus.textContent = "This cannot be undone.";
+              setTimeout(function () {
+                wipeBtn.removeAttribute("data-armed");
+                wipeBtn.textContent = wipeLabel;
+              }, 5000);
+              return;
+            }
+            try {
+              localStorage.removeItem(STORE);
+            } catch (e) {}
+            boxes.forEach(function (box) {
+              box.querySelector("textarea").value = "";
+              var st = box.querySelector(".capture-status");
+              if (st) st.textContent = "";
+              describe(box, false);
+            });
+            collectBox.value = "";
+            if (collectCount) collectCount.textContent = "";
+            if (collectStatus) collectStatus.textContent = "All saved output erased.";
+            wipeBtn.removeAttribute("data-armed");
+            wipeBtn.textContent = wipeLabel;
+          });
+        }
       })();
     </script>
   </body>
