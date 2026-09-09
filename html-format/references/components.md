@@ -207,7 +207,7 @@ Section shell:
   <h2>Create the GitHub repository</h2>
   <div class="phase-meta">
     <span class="chip">Who — <strong>one technical person</strong></span>
-    <span class="chip">Time — <strong>15 minutes</strong></span>
+    <span class="chip">Needs first — <strong>repo admin rights</strong></span>
   </div>
   <p>Body copy.</p>
 </section>
@@ -215,16 +215,22 @@ Section shell:
 
 `.phase-tag` is the small uppercase pill above the heading — use it to name the
 part/phase. `.phase-meta` holds `.chip`s: 2–4 at-a-glance facts scoped to this
-section (who, how long, what you need first). `<strong>` inside a chip renders in
-the accent colour.
+section. `<strong>` inside a chip renders in the accent colour.
 
-A `Read — N min` chip is appended to every section automatically, so write only
-the chips that you know and the page cannot work out: who it is for, what they
-need first, who owns it. The estimate counts prose at 200 words per minute and
-ignores `<pre>` blocks — code is scanned rather than read, and counting it would
-inflate every technical section past the point where the number means anything.
-Writing your own `Read — …` chip suppresses the estimate; `data-readtime="off"`
-on `<html>` suppresses it document-wide.
+Write only facts the reader cannot get by looking at the section: who it is for,
+what they need in hand first, who owns it, what order it runs in. **Do not write
+`Time — …`, `Writes — …` or `Read — …` chips.** A duration is a guess about
+someone else's machine, an output path is already in the command right below the
+chip, and repeating either puts a number at the top of the section that goes
+stale the first time the content changes. Sections whose chips would say nothing
+beyond that should have no `.phase-meta` at all — an empty chip row is worse than
+none.
+
+The automatic `Read — N min` estimate is **off by default**. Set
+`data-readtime="on"` on `<html>` to switch it on document-wide, which is worth
+doing only for long prose documents that are genuinely read start to finish. It
+counts prose at 200 words per minute and ignores `<pre>` blocks; a hand-written
+`Read — …` chip suppresses it for that section.
 
 ## Callouts
 
@@ -689,9 +695,10 @@ write — but they do change how you write.
 **The sidebar is generated** from the section ids. See
 [Sidebar and sections](#sidebar-and-sections).
 
-**Reading time** is measured per section and appended to `.phase-meta`. The
-consequence for writing: a section that estimates at 12 minutes is telling you it
-should probably be two sections.
+**Reading time** is measured per section and appended to `.phase-meta`, but only
+when `<html>` carries `data-readtime="on"` — it is off by default. If you do turn
+it on, the consequence for writing: a section that estimates at 12 minutes is
+telling you it should probably be two sections.
 
 **A progress rail** sits at the top of the viewport in `--accent`. In scroll mode
 it tracks scroll depth; in tabbed mode it tracks position through the section

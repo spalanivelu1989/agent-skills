@@ -14,8 +14,8 @@ overridden.
 The layout fills the window. Nothing is width-capped: prose, tables, cards,
 flow diagrams, figures and code blocks all run the full width of their section,
 so a paragraph and the table under it share an edge. In documents that use
-sidenotes, a gutter opens on the right to hold them. A progress rail and a
-per-section reading-time chip are added by the template's own script.
+sidenotes, a gutter opens on the right to hold them. A progress rail is added by
+the template's own script.
 
 The whole design system already exists as CSS in `assets/template.html`. Your job
 is to structure the content well and reach for the right components — not to
@@ -92,9 +92,17 @@ tab at an id that does not exist. Put `data-nav-label` on a section when its
 be the section's position (`0` on a "read this first" preface renumbers what
 follows, so step 1 stays 1).
 
-A `Read — N min` chip is appended to each section from its word count, ignoring
-code blocks. Write only the chips the page cannot work out for itself — who the
-section is for, what they need first.
+`.phase-meta` chips carry facts the reader cannot get by looking at the section:
+who it is for, what they need in hand first, who owns it, what order things run
+in. **Never write `Time — …`, `Writes — …` or `Read — …` chips.** A duration is a
+guess about someone else's machine, an output path is already in the command
+directly below the chip, and both go stale the moment the content changes — a
+wrong number at the top of a section costs more trust than the chip ever bought.
+A section with nothing else to say should carry no `.phase-meta` at all.
+
+The automatic reading-time estimate is off unless `<html>` carries
+`data-readtime="on"`. Leave it off for anything instructional; turn it on only
+for a long prose document that is genuinely read start to finish.
 
 Reach for the components that match what you're actually saying:
 
@@ -110,7 +118,7 @@ Reach for the components that match what you're actually saying:
 | An anticipated question                      | `.qa` with `.q`            |
 | A handoff between actors or stages           | `.flow`                    |
 | Structured comparison across attributes      | `.tablewrap` + `table`     |
-| At-a-glance facts about a section            | `.phase-meta` with `.chip` |
+| Who a section is for, or what it needs first | `.phase-meta` with `.chip` |
 | Source code in a known language              | `pre.language-*`           |
 | Terminal output, a file tree, a log excerpt  | plain `pre`                |
 | An aside the reader can safely skip          | `aside.sidenote` (see cost) |
@@ -184,8 +192,8 @@ open <destination>.html   # macOS
   the whole document reclaims the width.
 - Narrow the window below 900px. The sidebar should become a horizontal tab
   strip, not overflow the page.
-- Check the reading-time chips are plausible. A section estimating at 12 minutes
-  is usually telling you it should be two sections.
+- Check no chip states a duration, an output path or a reading time. If a
+  `.phase-meta` row is left holding nothing else, delete the row.
 - Hover a code block and press its copy button. It should say `Copied` and the
   clipboard should hold the block's text with no highlighting artefacts. A block
   with no button was wrapped in `.codewrap` by hand — the script skips those, so
@@ -210,9 +218,10 @@ and why.
 The visual system is only half of it. The reference document earns its clarity
 from a few habits worth copying:
 
-**State who each section is for and how long it takes.** The `.chip` row under a
+**State who each section is for and what it assumes.** The `.chip` row under a
 heading answers "is this for me, right now?" before the reader invests in the
-prose.
+prose. Keep it to things only the author knows — not timings or file paths the
+section already shows.
 
 **Explain the why, not just the what.** The `.why` callout exists because
 instructions that don't justify themselves get skipped or cargo-culted. When a

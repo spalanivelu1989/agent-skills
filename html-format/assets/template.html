@@ -1427,8 +1427,11 @@
           <section class="phase" id="s1">
             <span class="phase-tag">Part 1 · Label</span>
             <h2>First section</h2>
-            <!-- A "Read — N min" chip is appended here automatically from the
-                 section's word count. Write the chips only you can know. -->
+            <!-- Chips carry facts a reader cannot get from the prose: who the
+                 section is for, what they need first, who owns it. Do not
+                 write "Time — …", "Writes — …" or "Read — …" chips: durations
+                 and output paths are guesses that age badly, and the reading
+                 estimate is off unless <html> carries data-readtime="on". -->
             <div class="phase-meta">
               <span class="chip">Who — <strong>everyone</strong></span>
             </div>
@@ -1594,12 +1597,15 @@
           });
         }
 
-        // --- Reading time ---
-        // Counted from the prose only. Code blocks are scanned rather than
-        // read, and counting them would inflate every technical section past
-        // the point where the number means anything. A hand-written
-        // "Read — …" chip wins, so an author can always override the estimate.
-        if (root.getAttribute("data-readtime") !== "off") {
+        // --- Reading time (opt in) ---
+        // Off unless <html> carries data-readtime="on". The estimate was more
+        // noise than help on documents whose sections are commands to run
+        // rather than prose to read, so it is no longer written by default.
+        // When it is switched on: counted from the prose only, because code
+        // blocks are scanned rather than read and counting them would inflate
+        // every technical section past the point where the number means
+        // anything. A hand-written "Read — …" chip still wins.
+        if (root.getAttribute("data-readtime") === "on") {
           phases.forEach(function (sec) {
             var meta = sec.querySelector(".phase-meta");
             if (meta && /Read\s*—/.test(meta.textContent)) return;
