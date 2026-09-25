@@ -5,11 +5,12 @@ description: Produces a standalone, self-contained HTML document in the house de
 
 # House HTML document format
 
-This skill produces one file: a self-contained HTML document that looks and
-behaves like the reference implementation at `index.html` — a teal-accented,
-card-based reading experience with a sidebar, semantic callouts, margin
-sidenotes, and a light/paper/dark toggle that respects the OS but can be
-overridden.
+This skill produces one file: a self-contained HTML document built from
+`assets/template.html` — a teal-accented, card-based reading experience with a
+sidebar, semantic callouts, margin sidenotes, and a light/paper/dark toggle that
+respects the OS but can be overridden. When someone asks for a page "like
+index.html" they mean an existing page in their own documentation set; open it
+and match it (see step 1).
 
 The layout fills the window. Nothing is width-capped: prose, tables, cards,
 flow diagrams, figures and code blocks all run the full width of their section,
@@ -37,8 +38,14 @@ scratch is what guarantees the theme tokens, the toggle script, the responsive
 breakpoints and the print styles all stay intact — they are easy to reproduce
 almost-correctly and hard to reproduce exactly.
 
+Fill in `<title>` and `<meta name="description">` straight away — the
+description is the one sentence shown under the link when the page is shared.
+
 If the document is joining an existing set of pages, open a sibling page first
 and match its conventions (storage keys, footer style, relative link paths).
+Link siblings with relative paths (`setup.html`): the template opens only
+off-site links in a new tab, so a reader walking through the set stays in one
+tab.
 
 ### 2. Read the component catalog
 
@@ -74,6 +81,10 @@ dead markup in the file invites confusion later).
 
 Both modes degrade gracefully: with JavaScript disabled every section is visible
 and the pager disappears, so a tabbed document still reads as an ordinary page.
+In tabbed mode, Ctrl-F still finds text in hidden sections — they carry
+`hidden="until-found"`, and a match switches to that tab — so choosing tabbed no
+longer costs a reference reader their search (in browsers without support, find
+sees only the open section).
 That is why the CSS keys off a `.js-tabbed` class the head script adds rather
 than off `data-nav` directly — leave that arrangement alone.
 
@@ -165,9 +176,30 @@ like it is ignoring the window.
 Callout labels should say something. `<span class="label">What you have now</span>`
 earns its place; `<span class="label">Note</span>` does not.
 
+Every section `h2` and every `h3` gets a `#` link on hover, and an `h3` without
+an `id` is given one from its text. That makes each subsection linkable — so
+write `h3`s that make sense out of context, and give one an explicit `id` when
+other pages will link to it (a generated id changes when the heading text
+does).
+
 ### 5. Verify before you hand it over
 
-Open the file and check it actually works — these are the failures that recur:
+Run the checker first. It catches most of what follows without a browser:
+scaffold text left in, sections without ids, `Time —` chips, empty chip rows,
+a lone sidenote, unknown `language-*` names, hand-written `.codewrap` or
+`a.tab` markup, duplicate capture keys or a missing `data-capture-store`,
+`style=` attributes and extra `<style>` blocks, external scripts, and theme
+blocks that have drifted apart.
+
+```bash
+python3 ~/.claude/skills/html-format/scripts/check.py <destination>.html
+```
+
+Fix every `ERROR` (the exit status is 1 while any remain). `WARN` lines are
+judgement calls — a sidenote count, a tabbed document with only three sections —
+so read each and either fix it or be able to say why not.
+
+Then open the file for what only a browser shows:
 
 ```bash
 open <destination>.html   # macOS
@@ -176,8 +208,9 @@ open <destination>.html   # macOS
 - Press the theme button three times: light → paper → dark → light. Every
   surface should change at each step. Anything that stays stubbornly white or
   black is a hardcoded colour that should be a token.
-- Check the sidebar lists every section, in order, with the labels you expect. A
-  section missing from it has no `id`.
+- In dark mode, open print preview. The page should come out dark ink on white
+  — the print block resets the palette to light.
+- Check the sidebar lists every section, in order, with the labels you expect.
 - In tabbed mode, click through every sidebar tab and use the pager to the last
   section. Watch the progress rail at the top of the window advance as you go.
 - If the document uses sidenotes, widen the window past 1440px and confirm each
@@ -192,21 +225,13 @@ open <destination>.html   # macOS
   the whole document reclaims the width.
 - Narrow the window below 900px. The sidebar should become a horizontal tab
   strip, not overflow the page.
-- Check no chip states a duration, an output path or a reading time. If a
-  `.phase-meta` row is left holding nothing else, delete the row.
 - Hover a code block and press its copy button. It should say `Copied` and the
   clipboard should hold the block's text with no highlighting artefacts. A block
   with no button was wrapped in `.codewrap` by hand — the script skips those, so
   delete the hand-written wrapper and let it do the work.
-- Check every `language-*` block actually came out coloured. A block that stayed
-  grey means the language name isn't one the highlighter knows — unrecognised
-  names are ignored rather than guessed at, so fix the name or drop the class.
 - If the document uses `.capture` blocks, type into one, press Save, reload the
-  page and confirm the text came back. Then check `data-capture-store` is set on
-  `<html>`: without it the document shares the default bucket with every other
-  capture page from the same origin and they overwrite each other.
-- Confirm the file is self-contained: no local CSS or JS files, no build step.
-  The single Google Fonts `<link>` (two families) is the only external
+  page and confirm the text came back.
+- The single Google Fonts `<link>` (two families) is the only external
   dependency, and the font stacks degrade to the system monospace and sans if it
   fails to load.
 
@@ -240,12 +265,44 @@ turns a wall of instructions into a checkpoint.
 muted greys are semantic, not decorative. A document that introduces a fourth
 colour to be interesting stops being part of the set.
 
+## Converting Markdown
+
+When the source is a Markdown or text document, translate its constructs into
+the components rather than transcribing them — a converted page that is all
+`<p>` and `<ul>` has lost what the system is for.
+
+| Markdown                                        | Becomes                                              |
+| ----------------------------------------------- | ---------------------------------------------------- |
+| `# Title` and the paragraph under it            | `h1` and `.lede`                                     |
+| `## Heading`                                    | a `section.phase` with an `id` and that `h2`         |
+| `### Heading`                                   | `h3` inside the section                              |
+| `> **Note:**`, `> **Why:**`, background prose   | `.why` with a label that says what it is             |
+| `> **Warning:**`, `> **Important:**`, prereqs   | `.warn`                                              |
+| "You should now have…", "Done when…"            | `.win` closing the section                           |
+| `1.` list whose items carry code or paragraphs  | `.step-h` headers                                    |
+| `1.` list of one-liners                         | `ol.steps`                                           |
+| `- [ ]` task list                               | `ol.steps`, or `.step-h` if the items have substance |
+| ` ```lang ` fence                               | `<pre class="language-lang">`, or plain `<pre>` for output |
+| pipe table                                      | `.tablewrap` + `table`, short key in column 1        |
+| `**Q:** …` / FAQ headings                       | `.qa` with `.q`                                      |
+| "Option A vs option B" subsections              | `.choice`                                            |
+| `<details>`                                     | `details.disclose` with `.disclose-body`             |
+| Front matter (author, audience, status)         | `.meta-strip`, dropping any duration                 |
+| Footnotes                                       | sidenotes if there are three or more, else `.why`    |
+| `![alt](src)` with a caption line               | `figure.shot` with a distinct `alt` and `figcaption` |
+
+Escape `<`, `>` and `&` inside code blocks — a fenced `<div>` pasted raw into a
+`<pre>` becomes a real element. Keep the Markdown's section order and wording
+unless asked to edit; the job is structure, not a rewrite.
+
 ## Adapting the palette
 
 If a document belongs to a different project and needs its own identity, change
-only the `--accent` / `--accent-soft` pair in **all five** token blocks:
+only the `--accent` / `--accent-soft` pair in **all six** token blocks:
 `:root`, `@media (prefers-color-scheme: dark)`, `:root[data-theme="dark"]`,
-`:root[data-theme="light"]` and `:root[data-theme="paper"]`. Everything else —
+`:root[data-theme="light"]`, `:root[data-theme="paper"]`, and the `@media print`
+block (which repeats the light palette so every theme prints dark-on-white).
+`check.py` reports any pair of blocks that should match and does not. Everything else —
 greys, callout colours, borders — is tuned for contrast in all three themes and
 should stay put. Pick a dark-mode accent that is noticeably lighter than the
 light-mode one; the reference uses `#0e6e68` against white, `#0c635d` against
@@ -253,7 +310,7 @@ warm paper, and Catppuccin Frappé Teal `#81c8be` against `#303446`.
 
 Changing tokens in only some of the blocks is the most common way this breaks:
 the OS-preference block and the manual-toggle blocks must agree, or the document
-will look correct until someone presses the button.
+will look correct until someone presses the button — or prints it.
 
 ## Width
 
@@ -282,3 +339,5 @@ and a new page that is not will look out of place.
   toggle, both navigation modes, print styles.
 - `references/components.md` — every component with markup and guidance on when
   to use it. Read this before writing content.
+- `scripts/check.py` — lints a finished page (stdlib Python, no install). Run it
+  before handing a page over.

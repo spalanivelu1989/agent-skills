@@ -23,7 +23,7 @@ the class names.
 - [Figures](#figures) — screenshots with captions
 - [Sidenotes](#sidenotes) — margin notes beside the prose
 - [What the page does on its own](#what-the-page-does-on-its-own) — generated
-  sidebar, reading time, progress rail
+  sidebar, reading time, progress rail, heading anchors, find, link targets
 
 ---
 
@@ -57,12 +57,19 @@ reading sessions: `--bg: #ece3d2`, `--card: #faf5ea`, `--ink: #332e26`, with the
 greys warmed rather than replaced so every component stays tuned for contrast.
 No OS setting asks for paper, so it is only ever reached through the toggle.
 
-The palette is declared four times on purpose: once on bare `:root` (light),
+The palette is declared six times on purpose: once on bare `:root` (light),
 once under `@media (prefers-color-scheme: dark)` so the OS preference works with
-JS disabled, and once each under `:root[data-theme="dark"]`,
+JS disabled, once each under `:root[data-theme="dark"]`,
 `:root[data-theme="light"]` and `:root[data-theme="paper"]` so the manual toggle
-can override the OS in _every_ direction. Dropping the explicit `light` block
-silently breaks "force light on a dark-mode machine".
+can override the OS in _every_ direction, and once more under `@media print`,
+which repeats the light palette so a page printed from dark or paper mode still
+comes out dark ink on white. Dropping the explicit `light` block silently breaks
+"force light on a dark-mode machine"; dropping the print block brings back pale
+text on white paper. `scripts/check.py` compares the blocks that must agree.
+
+Each block also sets `color-scheme` (`light` or `dark`), which is what makes
+scrollbars, the capture `<textarea>` and other native controls follow the
+theme instead of staying light.
 
 ### Layout tokens
 
@@ -120,7 +127,7 @@ and why both were removed.
 
 <div class="meta-strip">
   <span><strong>Audience</strong> — technical &amp; non-technical</span>
-  <span><strong>Time</strong> — ~1 working day</span>
+  <span><strong>Owner</strong> — platform team</span>
   <span
     ><strong>Repo</strong> — <a href="https://example.com">org/repo</a></span
   >
@@ -128,7 +135,13 @@ and why both were removed.
 ```
 
 The meta-strip is a horizontal rule-bounded band of 2–5 framing facts. Each
-`<span>` is `<strong>Label</strong> — value`. It wraps on narrow screens.
+`<span>` is `<strong>Label</strong> — value`. It wraps on narrow screens. The
+chip rule applies here too: **no `Time — …`**. A duration at the top of the
+document is the first thing to go stale and the first number a reader
+distrusts.
+
+Fill in `<meta name="description">` in the `<head>` as well — one sentence,
+shown under the link when the page is pasted into chat or email.
 
 Footer sits at the end of `.content`, inside the layout:
 
@@ -303,9 +316,9 @@ clear of the teal accent, the green `.win` and the amber `.warn`. That pair is
 the one sanctioned exception to the single-accent rule, and it exists because a
 control has to look like a control. Do not introduce further colours.
 
-Both tokens are defined in **all five** theme blocks. Verified contrast of the
+Both tokens are defined in **all six** theme blocks. Verified contrast of the
 header text on its bar: 6.1 light, 6.5 paper, 5.3 dark — and of the pill text on
-the pill: 7.2 / 7.3 / 5.2. Recolour the pair only in all five blocks at once.
+the pill: 7.2 / 7.3 / 5.2. Recolour the pair only in all six blocks at once.
 
 ## Output capture
 
@@ -689,7 +702,7 @@ or an irreversible action belongs in a `.warn` callout, where it is not.
 
 ## What the page does on its own
 
-Three things are handled by the template's script, so they are not markup you
+Several things are handled by the template's script, so they are not markup you
 write — but they do change how you write.
 
 **The sidebar is generated** from the section ids. See
@@ -704,3 +717,21 @@ telling you it should probably be two sections.
 it tracks scroll depth; in tabbed mode it tracks position through the section
 sequence, because there only one section is on screen and scroll depth would say
 nothing about progress through the document. It is hidden in print.
+
+**Heading anchors.** Every section `h2` and every `h3` gets a `#` link that
+appears on hover (always faintly visible on touch screens, hidden in print). An
+`h3` without an `id` is given one from its text — `Rotate the keys` becomes
+`#rotate-the-keys`, de-duplicated with a `-2` suffix. Links to it work in both
+navigation modes; in tabbed mode they open the right section first. Give an `h3`
+an explicit `id` if other pages will link to it, since a generated one changes
+with the heading text.
+
+**Find in tabbed mode.** Inactive sections carry `hidden="until-found"` rather
+than `display: none`, so the browser's Ctrl-F still searches them; a match
+switches to that section's tab and scrolls to the hit. Browsers without support
+fall back to plain hiding, where find sees only the open section.
+
+**Link targets.** Links to another origin open in a new tab with
+`rel="noopener"`. In-page `#` links and relative links to sibling pages stay in
+the current tab, so a reader walking through a documentation set is not left
+with a tab per page. Do not write `target="_blank"` yourself.
