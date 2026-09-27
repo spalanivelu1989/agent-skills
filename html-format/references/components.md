@@ -268,11 +268,16 @@ boilerplate like "Note", it should say what the reader is about to get.
 </div>
 ```
 
-- `.win` — green left border. Milestones, outcomes, "you're done with X".
-- `.why` — accent left border. Reasoning, context, cross-references. This is the
-  workhorse; it carries the explanatory voice that makes the document teach
+- `.win` — green tint, green label. Milestones, outcomes, "you're done with X".
+- `.why` — grey tint, accent label. Reasoning, context, cross-references. This is
+  the workhorse; it carries the explanatory voice that makes the document teach
   rather than merely instruct.
-- `.warn` — amber left border. Cautions and prerequisites.
+- `.warn` — amber tint, amber label. Cautions and prerequisites.
+
+**No coloured leading edge.** Callouts, cards and the folded sidenote are told
+apart by their tint and their coloured label, never by a bar down the left side.
+Do not add `border-left` (or an inset shadow doing the same job) to any box with
+a background — `scripts/check.py` reports it as an error.
 
 Callouts may contain lists; the last child's bottom margin is already collapsed.
 
@@ -308,7 +313,7 @@ Everything in a disclosure is, by construction, skippable.
 
 ### Why it looks different from the callouts
 
-`.win` / `.why` / `.warn` are tinted bands with a 4px left edge and no
+`.win` / `.why` / `.warn` are tinted bands with no border and no
 interactivity. A disclosure is a bordered card with a solid header bar and a
 button in it, so "this opens" is legible before a word is read. It carries its
 own indigo token pair — `--disclose-bg` and `--disclose-ink` — which keeps it

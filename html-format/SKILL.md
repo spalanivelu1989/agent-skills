@@ -265,6 +265,12 @@ turns a wall of instructions into a checkpoint.
 muted greys are semantic, not decorative. A document that introduces a fourth
 colour to be interesting stops being part of the set.
 
+**No coloured leading edges.** A box with a background — a callout, a card, a
+folded sidenote — is identified by its tint and its coloured label. Never give it
+a coloured bar down its left side (`border-left`, or an inset shadow standing in
+for one): repeated on every box it becomes decoration, and it pulls the eye to
+the edge rather than the content. `check.py` fails a page that has one.
+
 ## Converting Markdown
 
 When the source is a Markdown or text document, translate its constructs into

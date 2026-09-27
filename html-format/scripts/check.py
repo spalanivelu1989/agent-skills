@@ -7,8 +7,8 @@ Catches the failures that recur and that can be seen without a browser:
 scaffold text left in, sections the sidebar cannot link to, chips that state a
 duration, a lone sidenote paying for a whole gutter, language names the
 highlighter does not know, hand-written markup the scripts generate, capture
-boxes sharing a storage bucket, new CSS, and theme blocks that have drifted
-apart. Exit status is 1 if any ERROR was reported, else 0. WARN lines are
+boxes sharing a storage bucket, new CSS, a coloured leading edge on a tinted
+box, and theme blocks that have drifted apart. Exit status is 1 if any ERROR was reported, else 0. WARN lines are
 judgement calls — read them, then decide.
 
 Standard library only.
@@ -340,8 +340,25 @@ def check(path):
         line = src[: body_start + m.start()].count("\n") + 1
         warn(line, f"raw colour {m.group(1)} in the body — use var(--token) / currentColor")
 
-    # --- Theme blocks agree ----------------------------------------------
+    # --- No coloured leading edge on a tinted box ------------------------
+    # House rule: a box with a background is identified by its tint and its
+    # label, not by a coloured bar down its left side.
     css = "\n".join(t.raw["style"])
+    flat = re.sub(r"/\*.*?\*/", "", css, flags=re.S)
+    for m in re.finditer(r"([^{}]+)\{([^{}]*)\}", flat):
+        selector, body = m.group(1).strip(), m.group(2)
+        edge = re.search(r"border-left\s*:\s*([^;]+)", body)
+        shadow = re.search(r"box-shadow\s*:\s*inset\s+\d+(?:\.\d+)?(?:px|rem)\s+0\s+0\s+", body)
+        tinted = re.search(r"background(?:-color)?\s*:\s*(?!none|transparent)", body)
+        if tinted and ((edge and not re.match(r"\s*(none|0)\b", edge.group(1))) or shadow):
+            last = selector.splitlines()[-1].strip()
+            hit = re.search(re.escape(last) + r"\s*\{[^}]*?(?:border-left|box-shadow)", src)
+            line = hit.start() if hit else -1
+            err(src[: line].count("\n") + 1 if line >= 0 else 1,
+                f"{selector.splitlines()[-1].strip()} has a background and a coloured leading edge"
+                " — tinted boxes carry no left bar; drop the border-left")
+
+    # --- Theme blocks agree ----------------------------------------------
     blocks = {name: block_tokens(css, pat) for name, pat in THEME_BLOCKS.items()}
     for name, toks in blocks.items():
         if toks is None:
