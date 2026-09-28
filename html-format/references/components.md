@@ -53,9 +53,17 @@ reach for a token.
 
 The toggle cycles **light → paper → dark**, and the button always names the mode
 you are about to switch _to_. Paper is warm, low-glare and meant for long
-reading sessions: `--bg: #ece3d2`, `--card: #faf5ea`, `--ink: #332e26`, with the
+reading sessions: `--bg: #f4f0e8`, `--card: #fdfbf7`, `--ink: #34312b`, with the
 greys warmed rather than replaced so every component stays tuned for contrast.
 No OS setting asks for paper, so it is only ever reached through the toggle.
+
+Keep paper **subtle**: a faint warm tint, not a beige. An earlier palette
+(`--bg: #ece3d2`, `--card: #faf5ea`) read as too intense, so the surfaces were
+lightened to about half the tint at the same hue. The tinted surfaces
+(`--why-bg`, `--code-bg`, `--win-bg`, `--warn-bg`, `--accent-soft`, `--border`)
+follow the same rule. If you retune paper, keep the tint this light and check
+every text/background pair stays at 4.5:1 or better. The current palette's
+lowest is 5.0 (`--win-border` on `--win-bg`); body text on a card is 12.5.
 
 The palette is declared six times on purpose: once on bare `:root` (light),
 once under `@media (prefers-color-scheme: dark)` so the OS preference works with
