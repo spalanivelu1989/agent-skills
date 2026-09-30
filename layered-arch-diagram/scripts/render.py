@@ -113,7 +113,13 @@ def render(spec):
     out.append(f'<rect width="{W}" height="{H}" fill="#FFFFFF"/>')
     out.append(f'<text x="{W/2}" y="38" text-anchor="middle" font-size="24" font-weight="700" fill="#1E2530">{esc(spec["title"])}</text>')
     for b in spec.get("bands", []):
-        out.append(f'<rect x="{b["x"]}" y="{b["y"]}" width="{b["w"]}" height="{b["h"]}" rx="14" fill="#FBFCFE" stroke="#C9D1DB" stroke-width="1.3"/>')
+        fill, stroke = b.get("fill", "#FBFCFE"), b.get("stroke", "#C9D1DB")
+        out.append(f'<rect x="{b["x"]}" y="{b["y"]}" width="{b["w"]}" height="{b["h"]}" rx="{b.get("rx", 14)}" fill="{fill}" stroke="{stroke}" stroke-width="1.3"/>')
+        if b.get("caps"):   # stacked-layer style: spaced caps title across the top, optional one-line summary
+            out.append(f'<text x="{b["x"]+28}" y="{b["y"]+36}" font-size="19" font-weight="800" letter-spacing="3.5" fill="{b.get("title_color", "#1E2530")}">{esc(b["name"].upper())}</text>')
+            if b.get("desc"):
+                out.append(f'<text x="{b["x"]+28}" y="{b["y"]+60}" font-size="14" fill="{b.get("desc_color", "#4A5563")}">{esc(b["desc"])}</text>')
+            continue
         out.append(f'<text x="{b["x"]+20}" y="{b["y"]+30}" font-size="13" font-weight="700" fill="#5B6B7F">{esc(b["n"])}</text>')
         for i, part in enumerate(b["name"].split("\n")):
             out.append(f'<text x="{b["x"]+20}" y="{b["y"]+50+i*18}" font-size="15" font-weight="700" fill="#1E2530">{esc(part)}</text>')
