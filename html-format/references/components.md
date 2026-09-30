@@ -23,7 +23,8 @@ the class names.
 - [Figures](#figures) — screenshots with captions
 - [Sidenotes](#sidenotes) — margin notes beside the prose
 - [What the page does on its own](#what-the-page-does-on-its-own) — generated
-  sidebar, reading time, progress rail, heading anchors, find, link targets
+  sidebar, reading time, progress rail, heading anchors, find, search, link
+  targets
 
 ---
 
@@ -47,6 +48,7 @@ reach for a token.
 | `--why-bg`                    | `#edf2f4`             | `#292c3c` Mantle             | rationale callouts, cards, flow boxes   |
 | `--border`                    | `#d8e0e0`             | `#51576d` Surface 1          | all hairlines                           |
 | `--code-bg` / `--code-ink`    | `#eef2f2` / `#17332f` | `#292c3c` / `#99d1db` Sky    | code, chips, Q&A shells                 |
+| `--search-where`              | `#a8420a` burnt orange | `#f7c4a3` light peach       | search result titles only (paper `#9c3d0b`) |
 | `--tok-*` (nine)              | Catppuccin Latte      | Catppuccin Frappé            | syntax highlighting — see [Code](#code) |
 
 ### The three themes
@@ -326,8 +328,11 @@ interactivity. A disclosure is a bordered card with a solid header bar and a
 button in it, so "this opens" is legible before a word is read. It carries its
 own indigo token pair — `--disclose-bg` and `--disclose-ink` — which keeps it
 clear of the teal accent, the green `.win` and the amber `.warn`. That pair is
-the one sanctioned exception to the single-accent rule, and it exists because a
-control has to look like a control. Do not introduce further colours.
+one of only two sanctioned exceptions to the single-accent rule, and it exists
+because a control has to look like a control. The other is `--search-where`,
+the dark orange of a search result's section title, which has to read apart
+from the teal matched words directly under it (see **Search** below). Do not
+introduce further colours.
 
 Both tokens are defined in **all six** theme blocks. Verified contrast of the
 header text on its bar: 6.1 light, 6.5 paper, 5.3 dark — and of the pill text on
@@ -743,6 +748,45 @@ with the heading text.
 than `display: none`, so the browser's Ctrl-F still searches them; a match
 switches to that section's tab and scrolls to the hit. Browsers without support
 fall back to plain hiding, where find sees only the open section.
+
+**Search.** A search box is added to a header bar pinned to the top right: the
+script creates `.doc-topbar`, puts the search in it and moves the theme toggle
+in beside it, so the two never overlap. Results open in a dropdown under the
+box, which closes when a result is opened, on Esc or on a click elsewhere, and
+comes back when the box is focused again. Below 900px the bar drops into the
+page flow above the title rather than covering it. Never write `.doc-search`
+or `.doc-topbar` markup yourself; `check.py` reports it. It indexes the outermost text blocks of every `section.phase` —
+headings, paragraphs, list items, table rows, code blocks, cards, flow boxes,
+chips, disclosure summaries — so sections hidden by tabbed mode and blocks in
+a closed `details.disclose` are found too. Matching ignores case and accents
+and requires every word; if nothing has them all, it shows results with some
+of them and says so. Headings rank above body text.
+
+Each result shows the section's sidebar label and the nearest `h3`/`h4` above
+the match — the title, in dark orange (`--search-where`) — and a snippet with
+the matched words in the teal accent, so the two never blur together.
+`--search-where` is set in all six theme blocks (`#a8420a` light and print,
+`#9c3d0b` paper, `#f7c4a3` dark), each at 4.5:1 or better on both the dropdown
+and the highlighted row. Opening one:
+
+- unfolds any `details` around the match;
+- fires `doc:reveal` on `document` with the element as `detail` — the
+  navigation script listens for it in tabbed mode and switches tabs without a
+  jump to the top; other scripts can use the same event;
+- scrolls the match to the middle of the window and outlines it briefly;
+- paints every occurrence in that section with the CSS Custom Highlight API
+  (`::highlight(doc-search)`, `--accent-soft`), which colours text without
+  editing the DOM. Browsers without the API still get the scroll and outline.
+
+Keys: `/` or Ctrl/⌘+K to focus, ↑ ↓ to move, Enter to open, Esc to clear (a
+second Esc leaves the box). It is hidden in print and absent with scripting
+off. Put `data-search="off"` on `<html>` to leave it out of a page — only for a
+page short enough that Ctrl-F is plenty.
+
+A page built from an older copy of the template has no search. To add it, copy
+three pieces from `assets/template.html` into the page: the `/* --- Search`
+CSS block, the `doc:reveal` listener after `syncToHash(true);` in the
+navigation script, and the `// --- Search` script at the end.
 
 **Link targets.** Links to another origin open in a new tab with
 `rel="noopener"`. In-page `#` links and relative links to sibling pages stay in

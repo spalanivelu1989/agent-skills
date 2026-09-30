@@ -276,6 +276,8 @@ def check(path):
                 err(n.line, f'unknown language "{m.group(1)}" — the block will render grey; fix the name or drop the class')
         if n.has("codewrap") or n.has("copy-btn"):
             err(n.line, f".{n.classes[0]} written by hand — the script adds it; a hand-wrapped block gets no copy button")
+        if any(c.startswith("doc-search") or c == "doc-topbar" for c in n.classes):
+            err(n.line, f".{n.classes[0]} written by hand — the search box is built by the script; delete this markup (data-search=\"off\" on <html> turns search off)")
 
     # --- Tables, figures, disclosures ------------------------------------
     for n in nodes:

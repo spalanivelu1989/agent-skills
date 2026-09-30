@@ -1,6 +1,6 @@
 ---
 name: html-format
-description: Produces a standalone, self-contained HTML document in the house design system — teal accent, IBM Plex Mono typography with a proportional sidebar, a full-width layout with margin sidenotes, generated sidebar navigation, card sections, callouts, per-section reading time, a reading-progress rail, and a light/paper/dark toggle. Use this whenever the deliverable is an HTML page rather than Markdown: guides, walkthroughs, runbooks, proposals, explainers, onboarding docs, reports, FAQs, or specs. Trigger it when someone asks for a document "as HTML", "as a web page", "in the same style/format as index.html", "in our house style", "matching the other pages", or asks to convert an existing Markdown/text document into a styled HTML page. Also use it when adding a new companion page to a documentation set that already uses this system, so the new page matches the rest.
+description: Produces a standalone, self-contained HTML document in the house design system — teal accent, IBM Plex Mono typography with a proportional sidebar, a full-width layout with margin sidenotes, generated sidebar navigation, a built-in search box, card sections, callouts, per-section reading time, a reading-progress rail, and a light/paper/dark toggle. Use this whenever the deliverable is an HTML page rather than Markdown: guides, walkthroughs, runbooks, proposals, explainers, onboarding docs, reports, FAQs, or specs. Trigger it when someone asks for a document "as HTML", "as a web page", "in the same style/format as index.html", "in our house style", "matching the other pages", or asks to convert an existing Markdown/text document into a styled HTML page. Also use it when adding a new companion page to a documentation set that already uses this system, so the new page matches the rest.
 ---
 
 # House HTML document format
@@ -15,8 +15,8 @@ and match it (see step 1).
 The layout fills the window. Nothing is width-capped: prose, tables, cards,
 flow diagrams, figures and code blocks all run the full width of their section,
 so a paragraph and the table under it share an edge. In documents that use
-sidenotes, a gutter opens on the right to hold them. A progress rail is added by
-the template's own script.
+sidenotes, a gutter opens on the right to hold them. A progress rail and a
+search box are added by the template's own script.
 
 The whole design system already exists as CSS in `assets/template.html`. Your job
 is to structure the content well and reach for the right components — not to
@@ -87,6 +87,18 @@ longer costs a reference reader their search (in browsers without support, find
 sees only the open section).
 That is why the CSS keys off a `.js-tabbed` class the head script adds rather
 than off `data-nav` directly — leave that arrangement alone.
+
+Either mode also gets a **search box** in a header bar at the top right, beside
+the theme toggle, built by the script, so there is nothing to write. It stays
+pinned while the page scrolls; below 900px the bar drops into the page flow
+above the title. It searches every section — including
+ones a tabbed page is hiding and blocks inside a closed `details.disclose` —
+ignoring case and accents, and wants every word typed (falling back to "some of
+the words" when nothing has them all). Opening a result switches to its tab,
+unfolds any disclosure around it, scrolls to it and highlights every occurrence.
+`/` or Ctrl/⌘+K focuses it. It is on by default; put `data-search="off"` on
+`<html>` only for a page too short to need it. Because results show the section
+label and the nearest `h3` above the match, clear `h3`s make better results.
 
 If the document has no sections at all — a single short note — delete the whole
 `.layout` wrapper and put the content directly in `<main>` after the lede. The
@@ -231,6 +243,11 @@ open <destination>.html   # macOS
   delete the hand-written wrapper and let it do the work.
 - If the document uses `.capture` blocks, type into one, press Save, reload the
   page and confirm the text came back.
+- Press `/` and type a word from a section that is not on screen. The box
+  should list it with its section and subsection; press Enter and the page
+  should switch to that section, outline the match and highlight every
+  occurrence. Try a word inside a closed disclosure too: it should unfold.
+  `Esc` clears the search and the highlights.
 - The single Google Fonts `<link>` (two families) is the only external
   dependency, and the font stacks degrade to the system monospace and sans if it
   fails to load.
@@ -263,7 +280,9 @@ turns a wall of instructions into a checkpoint.
 
 **Let the tokens do the work.** Teal is the only accent; green, amber and the
 muted greys are semantic, not decorative. A document that introduces a fourth
-colour to be interesting stops being part of the set.
+colour to be interesting stops being part of the set. The two exceptions are
+built into the template and carry their own tokens: the disclosure's indigo
+pair, and `--search-where`, the dark orange of search result titles.
 
 **No coloured leading edges.** A box with a background — a callout, a card, a
 folded sidenote — is identified by its tint and its coloured label. Never give it
