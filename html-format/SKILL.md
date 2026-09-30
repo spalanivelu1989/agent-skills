@@ -93,7 +93,8 @@ the theme toggle, built by the script, so there is nothing to write. It stays
 pinned while the page scrolls; below 900px the bar drops into the page flow
 above the title. It searches every section — including
 ones a tabbed page is hiding and blocks inside a closed `details.disclose` —
-ignoring case and accents, and wants every word typed (falling back to "some of
+ignoring case, accents, and the spaces and hyphens inside words (so "login"
+finds "Log in"), and wants every word typed (falling back to "some of
 the words" when nothing has them all). Opening a result switches to its tab,
 unfolds any disclosure around it, scrolls to it and highlights every occurrence.
 `/` or Ctrl/⌘+K focuses it. It is on by default; put `data-search="off"` on

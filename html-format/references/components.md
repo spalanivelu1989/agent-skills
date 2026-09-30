@@ -758,9 +758,12 @@ page flow above the title rather than covering it. Never write `.doc-search`
 or `.doc-topbar` markup yourself; `check.py` reports it. It indexes the outermost text blocks of every `section.phase` —
 headings, paragraphs, list items, table rows, code blocks, cards, flow boxes,
 chips, disclosure summaries — so sections hidden by tabbed mode and blocks in
-a closed `details.disclose` are found too. Matching ignores case and accents
-and requires every word; if nothing has them all, it shows results with some
-of them and says so. Headings rank above body text.
+a closed `details.disclose` are found too. Matching ignores case and accents,
+and — for terms of three or more letters — spaces, hyphens and punctuation
+too, so "login" finds "Log in", "setup" finds "set up" and "pgrestore" finds
+`pg_restore`; marks and highlights still land on the original characters. It
+requires every word; if nothing has them all, it shows results with some of
+them and says so. Headings rank above body text.
 
 Each result shows the section's sidebar label and the nearest `h3`/`h4` above
 the match — the title, in dark orange (`--search-where`) — and a snippet with
