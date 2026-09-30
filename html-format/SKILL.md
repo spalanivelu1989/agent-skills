@@ -102,8 +102,9 @@ unfolds any disclosure around it, scrolls to it and highlights every occurrence.
 label and the nearest `h3` above the match, clear `h3`s make better results.
 
 If the document has no sections at all — a single short note — delete the whole
-`.layout` wrapper and put the content directly in `<main>` after the lede. The
-card styling of `section.phase` still works standalone.
+`.layout` wrapper and put the content directly in `<main>` after the
+`header.page-head` band. The card styling of `section.phase` still works
+standalone.
 
 ### 4. Write the content
 
@@ -299,7 +300,7 @@ the components rather than transcribing them — a converted page that is all
 
 | Markdown                                        | Becomes                                              |
 | ----------------------------------------------- | ---------------------------------------------------- |
-| `# Title` and the paragraph under it            | `h1` and `.lede`                                     |
+| `# Title` and the paragraph under it            | `h1` and `.lede`, inside `header.page-head`          |
 | `## Heading`                                    | a `section.phase` with an `id` and that `h2`         |
 | `### Heading`                                   | `h3` inside the section                              |
 | `> **Note:**`, `> **Why:**`, background prose   | `.why` with a label that says what it is             |

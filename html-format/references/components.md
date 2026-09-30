@@ -38,6 +38,7 @@ reach for a token.
 | Token                         | Light                 | Dark (Frappé)                | Use for                                 |
 | ----------------------------- | --------------------- | ---------------------------- | --------------------------------------- |
 | `--bg`                        | `#f6f8f8`             | `#303446` Base               | page background                         |
+| `--head-bg`                   | `#efefed` milky grey  | `#292c3c` Mantle             | the page header band (paper `#ebe4d6`)  |
 | `--card`                      | `#ffffff`             | `#414559` Surface 0          | section shells, sidebar, buttons        |
 | `--ink`                       | `#1c2529`             | `#c6d0f5` Text               | body text                               |
 | `--muted`                     | `#56676d`             | `#a5adce` Subtext 0          | secondary text, labels, captions        |
@@ -115,11 +116,13 @@ horizontal layout.
   Kept distinct from the body font so code blocks still read as code.
 
 Scale: `h1` 2.1rem · `h2` 1.45rem · `h3` 1.08rem · `h4` 0.98rem · body 17px ·
-`.lede` 1.12rem · small UI 0.85rem · labels/tags 0.72rem uppercase with wide
-tracking. `h1`/`h2` use `text-wrap: balance` and slight negative letter-spacing.
+`.lede` 1.12rem · code blocks 19px and inline code `calc(1em + 2px)`, so
+commands sit 2px above the text around them · small UI 0.85rem · labels/tags
+0.72rem uppercase with wide tracking. `h1`/`h2` use `text-wrap: balance` and
+slight negative letter-spacing.
 
-One `h1` per document, in `<main>` above the layout. `h2` is the section title
-inside each `section.phase`. `h3`/`h4` subdivide within a section.
+One `h1` per document, in the `header.page-head` band above the layout. `h2` is
+the section title inside each `section.phase`. `h3`/`h4` subdivide within a section.
 
 Nothing is width-capped. The page fills the window and every element — prose,
 tables, `.flow`, `.cards`, `.choice`, code blocks and figures — runs the full
@@ -131,18 +134,27 @@ and why both were removed.
 ## Page furniture
 
 ```html
-<p class="eyebrow">OPTIONAL KICKER</p>
-<h1>Document title</h1>
-<p class="lede">One or two sentences: what this is and who it is for.</p>
+<header class="page-head">
+  <p class="eyebrow">OPTIONAL KICKER</p>
+  <h1>Document title</h1>
+  <p class="lede">One or two sentences: what this is and who it is for.</p>
 
-<div class="meta-strip">
-  <span><strong>Audience</strong> — technical &amp; non-technical</span>
-  <span><strong>Owner</strong> — platform team</span>
-  <span
-    ><strong>Repo</strong> — <a href="https://example.com">org/repo</a></span
-  >
-</div>
+  <div class="meta-strip">
+    <span><strong>Audience</strong> — technical &amp; non-technical</span>
+    <span><strong>Owner</strong> — platform team</span>
+    <span
+      ><strong>Repo</strong> — <a href="https://example.com">org/repo</a></span
+    >
+  </div>
+</header>
 ```
+
+`header.page-head` wraps the eyebrow, title, lede and meta-strip in one band,
+tinted `--head-bg` and bled out to the edges of `<main>` with a hairline under
+it, so the masthead reads as apart from the sections without competing with
+them. Keep the tint subtle: a step off `--bg`, never a card or accent colour.
+Its negative margins undo `<main>`'s padding, so change the two together. The
+band works with or without a meta-strip.
 
 The meta-strip is a horizontal rule-bounded band of 2–5 framing facts. Each
 `<span>` is `<strong>Label</strong> — value`. It wraps on narrow screens. The

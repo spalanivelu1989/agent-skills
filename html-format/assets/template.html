@@ -68,6 +68,7 @@
            capture textarea, form controls. Set in every theme block. */
         color-scheme: light;
         --bg: #f6f8f8;
+        --head-bg: #efefed; /* page header band: a milky light grey */
         --card: #ffffff;
         --ink: #1c2529;
         --muted: #56676d;
@@ -103,6 +104,7 @@
         :root {
           color-scheme: dark;
           --bg: #303446; /* Base */
+          --head-bg: #292c3c; /* page header band: Mantle, a step below Base */
           --card: #414559; /* Surface 0 */
           --ink: #c6d0f5; /* Text */
           --muted: #a5adce; /* Subtext 0 */
@@ -135,6 +137,7 @@
       :root[data-theme="dark"] {
         color-scheme: dark;
         --bg: #303446; /* Base */
+        --head-bg: #292c3c; /* page header band: Mantle, a step below Base */
         --card: #414559; /* Surface 0 */
         --ink: #c6d0f5; /* Text */
         --muted: #a5adce; /* Subtext 0 */
@@ -165,6 +168,7 @@
       :root[data-theme="light"] {
         color-scheme: light;
         --bg: #f6f8f8;
+        --head-bg: #efefed; /* page header band: a milky light grey */
         --card: #ffffff;
         --ink: #1c2529;
         --muted: #56676d;
@@ -199,6 +203,7 @@
       :root[data-theme="paper"] {
         color-scheme: light;
         --bg: #f4f0e8;
+        --head-bg: #ebe4d6; /* page header band: a deeper warm paper */
         --card: #fdfbf7;
         --ink: #34312b;
         --muted: #6a6358;
@@ -236,6 +241,7 @@
         :root[data-theme] {
           color-scheme: light;
           --bg: #f6f8f8;
+          --head-bg: #efefed; /* page header band: a milky light grey */
           --card: #ffffff;
           --ink: #1c2529;
           --muted: #56676d;
@@ -442,6 +448,24 @@
         scroll-margin-top: 1.25rem;
       }
 
+      /* The page header -- eyebrow, title, lede and meta strip -- sits on its
+         own band, bled out to the edges of <main>, so it reads as a masthead
+         apart from the sections below it. The negative margins undo <main>'s
+         padding; change them together with it. */
+      .page-head {
+        background: var(--head-bg);
+        border-bottom: 1px solid var(--border);
+        margin: -2.5rem calc(-1 * clamp(1rem, 3vw, 3rem)) 2.5rem;
+        padding: 2.5rem clamp(1rem, 3vw, 3rem) 0;
+      }
+      .page-head .meta-strip {
+        border-bottom: 0;
+        margin-bottom: 0;
+      }
+      /* Without a meta strip the lede closes the band, and needs the room. */
+      .page-head > .lede:last-child {
+        margin-bottom: 1.75rem;
+      }
       .eyebrow {
         font-family: "IBM Plex Mono", monospace;
         text-transform: uppercase;
@@ -1190,7 +1214,9 @@
         border-radius: 8px;
         padding: 0.9rem 1.1rem;
         overflow-x: auto;
-        font-size: 0.83rem;
+        /* Commands read 2px larger than the 17px body text, so they stand out
+           from the prose that explains them. */
+        font-size: 19px;
         line-height: 1.55;
         margin: 0.75rem 0 1.25rem;
       }
@@ -1206,7 +1232,8 @@
         border: 1px solid var(--border);
         border-radius: 4px;
         padding: 0.06em 0.35em;
-        font-size: 0.84em;
+        /* 2px above the text around it, for the same reason as pre. */
+        font-size: calc(1em + 2px);
         color: var(--code-ink);
         overflow-wrap: anywhere;
       }
@@ -1657,21 +1684,24 @@
       <span id="themeLabel">Dark mode</span>
     </button>
     <main>
-      <!-- .eyebrow is optional — a short kicker above the title. -->
-      <p class="eyebrow">OPTIONAL KICKER</p>
-      <h1>DOCUMENT TITLE</h1>
-      <p class="lede">
-        One or two sentences stating what this document is and who it is for.
-      </p>
+      <!-- The page header: its own tinted band (.page-head, --head-bg). -->
+      <header class="page-head">
+        <!-- .eyebrow is optional — a short kicker above the title. -->
+        <p class="eyebrow">OPTIONAL KICKER</p>
+        <h1>DOCUMENT TITLE</h1>
+        <p class="lede">
+          One or two sentences stating what this document is and who it is for.
+        </p>
 
-      <!-- .meta-strip is optional — 2 to 5 facts that frame the document.
-           Same rule as the chips: no "Time — …". A duration is a guess about
-           someone else's day and goes stale first. -->
-      <div class="meta-strip">
-        <span><strong>Audience</strong> — who this is written for</span>
-        <span><strong>Needs first</strong> — what to have in hand</span>
-        <span><strong>Owner</strong> — who maintains it</span>
-      </div>
+        <!-- .meta-strip is optional — 2 to 5 facts that frame the document.
+             Same rule as the chips: no "Time — …". A duration is a guess about
+             someone else's day and goes stale first. -->
+        <div class="meta-strip">
+          <span><strong>Audience</strong> — who this is written for</span>
+          <span><strong>Needs first</strong> — what to have in hand</span>
+          <span><strong>Owner</strong> — who maintains it</span>
+        </div>
+      </header>
 
       <!-- Navigation mode lives on the <html> element at the top of this file. -->
       <div class="layout">
