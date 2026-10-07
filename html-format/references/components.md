@@ -124,6 +124,26 @@ slight negative letter-spacing.
 One `h1` per document, in the `header.page-head` band above the layout. `h2` is
 the section title inside each `section.phase`. `h3`/`h4` subdivide within a section.
 
+Subsection `h3`s are numbered `1)`, `2)`, `3)` within their section by a CSS
+counter (`counter-reset: subsection` on `section.phase`), in the accent colour.
+Only `h3`s that are direct children of the section count, and only in a section
+with two or more of them. Write the heading text alone: a hand-typed number
+renders twice, and `check.py` flags it. The number is generated content, so it
+stays out of the heading's id, its `#` link and search results.
+
+```html
+<!-- headings that already read "Step 1 · …", "Step 2 · …" -->
+<section class="phase" id="proxy" data-subsections="off">…</section>
+```
+
+`data-subsections="off"` switches the numbering off for one section, for a
+walkthrough whose headings carry their own step numbers that the prose cites.
+
+Each subsection after the first is separated from the one before by a solid
+hairline in `--border` above its `h3` (`section.phase > h3 ~ h3`). It is drawn
+whether or not the section is numbered, and it is solid so it reads apart from
+the dashed rule above a `.step-h`. Write no `<hr>` between subsections.
+
 Nothing is width-capped. The page fills the window and every element — prose,
 tables, `.flow`, `.cards`, `.choice`, code blocks and figures — runs the full
 width of its section, so a paragraph and the table beneath it share an edge.
@@ -230,6 +250,12 @@ to 2.
 - The label text also becomes the `title` tooltip and the pager button text.
 - The collapse button and its `id="sidebarToggle"` are required by the script.
   Its state persists in `localStorage`.
+- The sidebar is capped at the window's height and scrolls on its own, so a
+  document with many sections keeps every tab reachable. As the reader moves
+  through the page, the active tab is scrolled into the sidebar's view by moving
+  the sidebar alone, never the page. Do not remove the `max-height` /
+  `overflow-y` pair from `nav.sidebar`: without it, tabs below the fold of a
+  sticky sidebar cannot be reached at all.
 - Below 900px the sidebar becomes a horizontal scrolling tab strip automatically.
 - With JavaScript off there are no links to show, so the sidebar hides itself
   (`html:not(.js) nav.sidebar`) and the document reads as a plain scrolling page.

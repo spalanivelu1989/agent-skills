@@ -196,6 +196,22 @@ write `h3`s that make sense out of context, and give one an explicit `id` when
 other pages will link to it (a generated id changes when the heading text
 does).
 
+Subsections are numbered for you. In any section with two or more `h3`s, each
+one is prefixed `1)`, `2)`, `3)` by a CSS counter, so a reader can see where one
+subsection ends and the next begins. **Never type the number into the heading**
+— it would show twice, and a typed number goes wrong the first time a
+subsection is added or moved. The counter counts only `h3`s that are direct
+children of `section.phase`; one inside a card or callout is not numbered. A
+section with a single `h3` gets no number, because a lone `1)` says nothing.
+If a section's headings already carry their own numbering that the prose refers
+to ("Step 4 · Choose a password", "see step 4"), put `data-subsections="off"` on
+that section rather than stripping the steps out.
+
+Subsections are also divided by a hairline: every direct-child `h3` after the
+first draws a 1px `--border` rule above itself, in every section (including one
+with numbering switched off). Do not add `<hr>`s or borders between subsections
+by hand; the rule is already there.
+
 ### 5. Verify before you hand it over
 
 Run the checker first. It catches most of what follows without a browser:
@@ -225,6 +241,10 @@ open <destination>.html   # macOS
 - In dark mode, open print preview. The page should come out dark ink on white
   — the print block resets the palette to light.
 - Check the sidebar lists every section, in order, with the labels you expect.
+- With more sections than fit the window, scroll the sidebar itself to its
+  last tab: it scrolls on its own, independently of the page. In scroll mode,
+  scroll the page to the end and confirm the active tab stays in the sidebar's
+  view.
 - In tabbed mode, click through every sidebar tab and use the pager to the last
   section. Watch the progress rail at the top of the window advance as you go.
 - If the document uses sidenotes, widen the window past 1440px and confirm each

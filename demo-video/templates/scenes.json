@@ -1,0 +1,58 @@
+{
+  "title": "Product name — what the video shows",
+  "subtitle": "Recorded from <environment / dataset>, <date>",
+  "output": "demo-video.mp4",
+  "viewport": [1920, 1080],
+  "voice": {"kokoro": "af_heart", "say": "Daniel", "speed": 1.0},
+  "pronounce": {
+    "kokoro": [["\\bSQL\\b", "S-Q-L"]],
+    "say": [["\\bSQL\\b", "S Q L"]]
+  },
+  "mask": [],
+  "check_ignore": [],
+  "theme": {"bg": "#0f1a2b", "accent": "#1d8a7e", "accent_light": "#6fd3c4", "accent_rgb": "20,120,110"},
+  "scenes": [
+    {
+      "id": "s00_title",
+      "kind": "card",
+      "dur": 7,
+      "vo": "One sentence that says what the viewer is about to see."
+    },
+    {
+      "id": "s01_overview",
+      "kind": "app",
+      "caption": "The headline on screen — under 90 characters",
+      "screen": "Dashboard: point at the headline numbers, then scroll to the chart.",
+      "vo": "The dashboard opens on the three numbers that matter. Revenue is up twelve percent on last quarter. Below them, the trend shows where it came from.",
+      "cues": ["Revenue is up", "Below them"]
+    },
+    {
+      "id": "s02_detail",
+      "kind": "app",
+      "caption": "One item end to end",
+      "screen": "Open one record and walk its detail panel top to bottom.",
+      "vo": "Take one order. The detail panel shows who placed it, what was shipped, and why it was flagged.",
+      "cues": ["The detail panel", "why it was flagged"]
+    },
+    {
+      "id": "s99_close",
+      "kind": "card",
+      "dur": 12,
+      "vo": "The one thing the viewer should remember, said plainly."
+    }
+  ],
+  "cards": {
+    "s00_title": {
+      "kicker": "Product · feature",
+      "title": "What this video shows",
+      "sub": "One line of context",
+      "foot": "Data source · anything synthetic is labelled as synthetic"
+    },
+    "s99_close": {
+      "kicker": "What changes",
+      "title": "The takeaway",
+      "bullets": ["First point", "Second point", "Third point"],
+      "foot": "Questions? We'll take them live."
+    }
+  }
+}

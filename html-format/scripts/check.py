@@ -215,6 +215,9 @@ def check(path):
         shown = label or (h2.all_text() if h2 else "")
         if len(shown) > 60:
             warn(s.line, f"sidebar label is {len(shown)} chars — add a shorter data-nav-label")
+        for h in (c for c in s.children if c.tag == "h3" and s.attrs.get("data-subsections") != "off"):
+            if re.match(r"\s*\(?\d+[.)]\s", h.all_text()):
+                err(h.line, f'h3 starts with a typed number: "{h.all_text().strip()[:40]}" — subsections are numbered by CSS; delete it')
 
     sidebar = next((n for n in nodes if n.tag == "nav" and n.has("sidebar")), None)
     if sidebar and any(n.tag == "a" and n.has("tab") for n in sidebar.walk()):

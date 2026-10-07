@@ -399,6 +399,35 @@
         font-size: 1.08rem;
         margin: 2rem 0 0.5rem;
       }
+      /* Subsections are numbered within their section -- 1), 2), 3) -- so a
+         reader can see where one ends and the next begins. A counter, not
+         typed numbers: it renumbers itself when a subsection is added or
+         moved, and the heading text (ids, search, links) stays clean. Only
+         sections with two or more h3s are numbered; a lone "1)" says nothing.
+         data-subsections="off" on a section opts out, for one whose headings
+         already carry their own "Step 1 ·" numbering. */
+      section.phase {
+        counter-reset: subsection;
+      }
+      section.phase > h3 {
+        counter-increment: subsection;
+      }
+      section.phase:not([data-subsections="off"]):has(> h3 ~ h3) > h3::before {
+        content: counter(subsection) ") ";
+        color: var(--accent);
+        font-variant-numeric: tabular-nums;
+      }
+      /* A hairline between subsections, so the end of one is visible before
+         the next heading is read. Above every subsection h3 but the first:
+         the h2 already marks where a section starts. Solid and in --border,
+         so it stays quieter than .step-h's dashed rule and follows the theme.
+         Drawn in sections with data-subsections="off" too -- the line marks
+         a boundary, not a number. */
+      section.phase > h3 ~ h3 {
+        border-top: 1px solid var(--border);
+        padding-top: 1.75rem;
+        margin-top: 2.25rem;
+      }
       h4 {
         font-size: 0.98rem;
         margin: 1.5rem 0 0.4rem;
@@ -695,9 +724,20 @@
          proportional face here separates navigation from document content at a
          glance. Noto Sans Elbasan ships regular only, so the 600/700 weights
          below are synthesised by the browser — intentional, do not "fix". */
+      /* A long document can list more sections than fit the window. The
+         sidebar is sticky, so without its own scroll the tabs below the fold
+         could never be reached: cap it at the viewport (less the sticky
+         offset above and the same gap below) and let it scroll inside,
+         without the scroll chaining out to the page at either end. */
       nav.sidebar {
         position: sticky;
         top: 1.25rem;
+        max-height: calc(100vh - 2.5rem);
+        max-height: calc(100dvh - 2.5rem);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        scrollbar-width: thin;
+        scrollbar-gutter: stable;
         flex: none;
         width: 256px;
         background: var(--card);
@@ -849,8 +889,11 @@
         nav.sidebar {
           position: static;
           width: 100%;
+          max-height: none;
           display: flex;
           overflow-x: auto;
+          overflow-y: hidden;
+          scrollbar-gutter: auto;
           gap: 4px;
           padding: 0.6rem;
         }
@@ -1959,6 +2002,23 @@
             if (i === idx) t.setAttribute("aria-current", "page");
             else t.removeAttribute("aria-current");
           });
+          keepInView(tabs[idx]);
+        }
+
+        // The sidebar scrolls on its own when it lists more sections than fit
+        // the window, so the active tab can sit below its fold. Bring it into
+        // the sidebar's view by moving the sidebar alone: scrollIntoView would
+        // also scroll the page, fighting the reader mid-scroll.
+        function keepInView(tab) {
+          var nav = tab && tab.closest("nav.sidebar");
+          if (!nav || nav.scrollHeight <= nav.clientHeight) return;
+          var navBox = nav.getBoundingClientRect();
+          var tabBox = tab.getBoundingClientRect();
+          var pad = 8;
+          if (tabBox.top < navBox.top + pad)
+            nav.scrollTop -= navBox.top + pad - tabBox.top;
+          else if (tabBox.bottom > navBox.bottom - pad)
+            nav.scrollTop += tabBox.bottom - (navBox.bottom - pad);
         }
 
         if (mode === "tabbed") {

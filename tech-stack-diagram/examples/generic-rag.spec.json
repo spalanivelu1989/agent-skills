@@ -1,0 +1,22 @@
+{
+ "mode": "stack",
+ "title": "",
+ "width": 1400,
+ "layers": [
+  {"name": "Ingestion", "desc": "Turn raw files into clean chunks", "tone": "terracotta",
+   "items": [{"title": "Document parsing", "sub": "Docling or Marker"},
+             {"title": "Chunking", "sub": "Docling"}]},
+  {"name": "Retrieval intelligence", "desc": "Encode, store, and reason over content", "tone": "indigo",
+   "items": [{"title": "Embeddings", "sub": "BGE-M3"},
+             {"title": "Vector database", "sub": "Qdrant"},
+             {"title": "LLM", "sub": "Qwen 3 or Llama 3"}]},
+  {"name": "Application layer", "desc": "Wire it together and expose it", "tone": "teal",
+   "items": [{"title": "Orchestration", "sub": "LangGraph"},
+             {"title": "API", "sub": "FastAPI"},
+             {"title": "Frontend", "sub": "Open WebUI or Next.js"}]},
+  {"name": "Platform & ops", "desc": "Storage, monitoring, and delivery", "tone": "stone",
+   "items": [{"title": "Observability", "sub": "Langfuse"},
+             {"title": "Storage", "sub": "PostgreSQL, MinIO"},
+             {"title": "Deployment", "sub": "Docker, Coolify, Nginx"}]}
+ ]
+}
