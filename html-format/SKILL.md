@@ -270,7 +270,7 @@ open <destination>.html   # macOS
   should switch to that section, outline the match and highlight every
   occurrence. Try a word inside a closed disclosure too: it should unfold.
   `Esc` clears the search and the highlights.
-- The single Google Fonts `<link>` (two families) is the only external
+- The single Google Fonts `<link>` (three families) is the only external
   dependency, and the font stacks degrade to the system monospace and sans if it
   fails to load.
 

@@ -2,7 +2,7 @@
 
 A Claude Code skill that produces a **standalone, self-contained HTML document** in the house design system.
 
-The design uses a teal accent and IBM Plex Mono type, with a full-width layout and margin sidenotes. Every page gets a generated sidebar, a built-in search box, card sections and callouts. It also shows reading time per section and a reading-progress rail, and has a light / paper / dark toggle. The page is a single file with no build step, and it opens directly in a browser.
+The design uses a teal accent and IBM Plex Mono type (with the page title in IBM Plex Sans Condensed), with a full-width layout and margin sidenotes. Every page gets a generated sidebar, a built-in search box, card sections and callouts. It also shows reading time per section and a reading-progress rail, and has a light / paper / dark toggle. The page is a single file with no build step, and it opens directly in a browser.
 
 Use it for guides, walkthroughs, runbooks, proposals, explainers, onboarding docs, reports, FAQs and specs. Use it also to convert a Markdown document to HTML, or to add a page that matches an existing set.
 

@@ -106,6 +106,9 @@ horizontal layout.
   body copy, headings, callout labels, chips, buttons, table headers. Body is set
   at 17px / 1.65. IBM Plex Mono tops out at 700, so the handful of `800` rules in
   the CSS resolve to 700 — that is intentional, do not "fix" them.
+- **`"IBM Plex Sans Condensed", sans-serif`** (600/700) — the page title (`h1`)
+  only. A condensed sans gives the header a masthead feel and keeps long titles
+  to fewer lines; every other heading stays in IBM Plex Mono.
 - **`"Noto Sans Elbasan", sans-serif`** — the sidebar only: its heading label, the
   tab links, and the circled `.num` counters. A proportional face here separates
   navigation from content at a glance. It ships **regular weight only**, so the
