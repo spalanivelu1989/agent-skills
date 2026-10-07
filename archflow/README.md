@@ -1,302 +1,63 @@
 # ArchFlow
 
-**A Claude Code skill that turns a written architecture doc into a diagram set and an animated, playable request-flow demo.**
+A Claude Code skill that turns a written architecture doc into a set of diagrams and an **animated, playable request-flow demo**.
 
-Give it a `system-architecture.md` (or `system-diagram.md`) file and it generates three consistent artifacts, each derived from the one before it:
+Give it a `system-architecture.md` (or `system-diagram.md`) and it generates, each artifact derived from the one before:
 
-1. A **Mermaid diagram** — renders inline on GitHub
-2. Four **PlantUML diagrams** — `.puml` source + rendered `.png` each: an **architecture diagram** (the static component view), a **simplified architecture diagram** (the same architecture collapsed to 8-10 boxes, for READMEs and slides), a **UML workflow diagram** (a sequence diagram walking one realistic request through the system, phase by phase), and a **simplified workflow diagram** (the same request retold with the cast collapsed to those 8-10 boxes)
-3. An **animated live demo** — a self-contained `index.html` that plays that same request flowing through every component (▶️ play, ⏸ pause, ⏮ back, ⏭ step, a draggable timeline scrubber, a clickable activity log that jumps to any step, a click-to-open node inspector, draggable node cards — links stay attached and re-route live, so you can pull cards apart when edges overlap, then hit 💾 Save layout to keep that arrangement across reloads (unsaved drags disappear on reload); **multi-select and group drag** — ⬚ Select all (or ⌘/Ctrl+A), shift-click individual cards, or rubber-band a region by dragging the empty stage, then drag any selected card to move the whole set as one block (Esc clears); **named group boxes** — select cards and hit ▣ Group to draw a subtle titled box around them (a VPC, a team's services, on-prem vs cloud), which then follows those cards wherever you drag them; **free-text notes** — double-click any card to pin your own text under it (a latency budget, an owner, a caveat), which then moves with the card; **labelled connections** — every link can carry a short line of text saying what it moves ("HTTP POST /orders", "publishes OrderPaid"), written for you when the demo is generated and editable in the browser by double-clicking a line — and **removable connections**: click any link to inspect it and ✂ remove it, then replay — the request stops at the cut: that step is blocked, the rest of the flow is skipped as never reached, and the run ends with a "1 blocked, 2 never reached" summary instead of pretending it carried on; a ⛓ Links button reconnects everything)
+1. A **Mermaid diagram**, which renders inline on GitHub.
+2. Four **PlantUML diagrams** (`.puml` + `.png`): the architecture, a simplified 8–10 box version for READMEs and slides, a sequence diagram of one end-to-end request, and a simplified version of that sequence.
+3. A **live demo**: a self-contained `demo/index.html` that plays the same request flowing through every component. It has play, pause, step and a timeline scrubber, and you can drag, group and annotate the cards. You can also cut a link and replay to see which steps break. It works offline, with no build step and no server.
 
-No build step, no server — the demo opens directly in a browser and works offline.
+If you don't have an architecture doc yet, ArchFlow offers to explore the codebase and write one first.
 
-> **➡️ Once ArchFlow finishes, open `demo/index.html` in your browser to see the live demo.** That's the main deliverable — everything else (Mermaid, PlantUML, PNG) is supporting material.
-
----
-
-## Table of contents
-
-- [Quick start](#quick-start)
-- [Why it's useful](#why-its-useful)
-- [Prerequisites](#prerequisites)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Don't have an architecture doc yet?](#dont-have-an-architecture-doc-yet)
-- [What gets generated](#what-gets-generated)
-- [How it works](#how-it-works)
-- [Troubleshooting](#troubleshooting)
-- [Repository layout](#repository-layout)
-
----
-
-## Quick start
-
-```text
-# 1. Install (one-time)
-cp -r archflow ~/.claude/skills/archflow
-
-# 2. Run it against your architecture doc
-Using ArchFlow, generate a live demo workflow from docs/architecture/system-architecture.md
-
-# 3. Open the result — open this file in your browser
-open docs/architecture/demo/index.html
-```
-
-**Open `demo/index.html` in your browser** to see the animated request flow — that's the file that matters.
-
-No architecture doc yet? See [Don't have an architecture doc yet?](#dont-have-an-architecture-doc-yet).
-
----
-
-## Why it's useful
-
-- **Onboarding** new team members without a whiteboard session
-- **Explaining** system architecture in a way that's actually watchable, not just read
-- **Walking stakeholders** through a request end-to-end, component by component
-- **Understanding** how an unfamiliar application really works, straight from its own docs
-- **Stress-testing** a design — cut a connection in the live demo, replay, and see exactly which steps break and which are stranded downstream
-
----
-
-## Prerequisites
-
-| Requirement                                            | Needed for                      | Notes                                                                                                               |
-| ------------------------------------------------------ | ------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| Claude Code                                            | Running the skill               | This is a Claude Code skill, invoked via chat                                                                       |
-| A `system-architecture.md` or `system-diagram.md` file | Everything                      | Optional — if you don't have one, the skill offers to explore the codebase and generate it first (see below)        |
-| PlantUML + a JRE                                       | Step 3 (PNG rendering)          | Optional — the skill still produces the `.puml` source and continues without the PNG if this is missing             |
-| Node.js + npm                                          | Step 8 (verification checks)    | Optional — used for a syntax check, a data-integrity check, and (if `puppeteer` is available) a visual render check |
-| `curl`                                                 | Step 7 (vendoring JS libraries) | Ships with macOS, Linux, and Windows 10+ by default                                                                 |
-
-**You don't need to install any of these yourself first.** The skill checks what's already on your machine and, if something's missing, detects your OS (macOS / Linux / WSL / native Windows) and proposes the exact install command for it — `brew`, `apt`/`dnf`/`pacman`, or `choco`/`winget` — before asking you to confirm. Decline any of it and the skill just degrades gracefully (skips the PNG, or skips that one verification check) rather than failing.
-
-<details>
-<summary>Manual install commands, if you'd rather do it yourself first</summary>
-
-**macOS:**
+## Install
 
 ```bash
-brew install plantuml node
+cp -r archflow ~/.claude/skills/
 ```
 
-**Linux (Debian/Ubuntu):**
+Requirements: none to start. Optional: PlantUML + a JRE for the PNGs, Node.js for the verification checks, and `curl` for vendoring the JS libraries. The skill checks what is installed and proposes the install command for your OS before installing anything. If you decline, it skips that part.
 
-```bash
-sudo apt update && sudo apt install -y default-jre graphviz plantuml nodejs npm
-```
+## Use
 
-**Linux (Fedora/RHEL):**
-
-```bash
-sudo dnf install -y java-17-openjdk plantuml nodejs npm
-```
-
-**Linux (Arch):**
-
-```bash
-sudo pacman -S --noconfirm jre-openjdk plantuml nodejs npm
-```
-
-**Windows (Chocolatey):**
-
-```powershell
-choco install -y plantuml nodejs-lts
-```
-
-**Windows (winget — no reliable PlantUML package; install Java + Node, then grab plantuml.jar manually):**
-
-```powershell
-winget install -e --id OpenJS.NodeJS.LTS
-winget install -e --id EclipseAdoptium.Temurin.17.JRE
-```
-
-Then download `plantuml.jar` from https://plantuml.com/download and put a small `plantuml.bat` shim (`java -jar C:\tools\plantuml.jar %*`) on your PATH.
-
-**Windows Subsystem for Linux (WSL):** use the Debian/Ubuntu (apt) commands above — WSL behaves like Linux, not native Windows.
-
-Optional npm packages for the Step 8 checks, any platform:
-
-```bash
-npm install -g @babel/core @babel/preset-react puppeteer
-```
-
-Note: globally installed npm packages aren't on Node's default `require()` path — the skill's verification commands account for this by running with `NODE_PATH="$(npm root -g)"`.
-
-Puppeteer bundles its own Chromium (~200MB); on minimal Linux (containers, headless servers) it may also need `sudo apt install -y libnss3 libatk-bridge2.0-0 libgtk-3-0 libgbm1`.
-
-</details>
-
----
-
-## Installation
-
-Copy the skill folder into your Claude Code skills directory:
-
-```bash
-cp -r archflow ~/.claude/skills/archflow
-```
-
-That's it — no dependencies to install, no build step.
-
----
-
-## Usage
-
-Point the skill at your architecture document from within Claude Code:
+Ask Claude Code, for example:
 
 ```text
 Using ArchFlow, generate a live demo workflow from docs/architecture/system-architecture.md
 ```
 
-Claude Code will:
+Then **open `demo/index.html` in your browser**. That's the main deliverable.
 
-1. Check for prerequisites (PlantUML, Node.js, curl) and offer to install anything missing for your OS — you'll be asked to confirm before anything gets installed
-2. Read and understand your architecture doc
-3. Generate/refresh the Mermaid diagram
-4. Translate it into four PlantUML diagrams — architecture and workflow sequence, each with a simplified companion — and render the PNGs
-5. Turn the workflow scenario into the animated demo's phases and steps
-6. Build the animated demo (TSX component + standalone HTML)
-7. Run verification checks before reporting done
-
-Review the generated files (see [What gets generated](#what-gets-generated)), then **open `demo/index.html` in your browser** — this is the file you actually want to look at.
-
----
-
-## Don't have an architecture doc yet?
-
-Just run ArchFlow anyway — if you don't have a doc, the skill offers to generate one first: it explores your codebase following its bundled prompt ([`architecture-doc-prompt.md`](./architecture-doc-prompt.md)), writes `system-architecture.md`, shows you a summary of the components and the end-to-end scenario it picked so you can confirm or correct them, and then continues with the normal pipeline.
-
-Prefer to produce the doc yourself in a separate session (for example, the codebase lives somewhere else)? Paste the prompt below into a Claude Code session opened at the root of that codebase — it asks for exactly the information ArchFlow's steps consume: components, groupings, connection mechanisms, the key-connection callout, and one concrete end-to-end scenario:
+Everything is written next to the input file:
 
 ```text
-Analyze this codebase thoroughly and write a `system-architecture.md` file at the repository root. Base all claims strictly on the code you read (routes, handlers, services, schemas, configurations, and manifests). Do not invent components. Do not include Mermaid or PlantUML diagrams—use prose and tables only.
-
-Structure the document exactly as follows:
-
-## # <System Name> — System Architecture
-Provide a 2-3 sentence description of what the system does and who uses it. Use a short product-style name (e.g., "OrderHub").
-
-## Components
-List each internal deployable component (aim for 6-14). For each, provide:
-* **Name**: Max 3 words, title case.
-* **Type**: Frontend, backend API, worker, database, cache, queue, gateway, or CLI.
-* **Layer**: Grouping layer (e.g., Data, Core Services, Integration).
-* **Responsibility**: 1-2 standalone sentences describing its purpose.
-* **Tech**: Framework/language/runtime (one line).
-*(Note: Mark as **Optional** if it only runs under specific configurations).*
-
-## External dependencies
-List all third-party systems, APIs, or SaaS products. Include: Name, what it provides, whether it is **Required** or **Optional/fallback**, and one line describing the fallback behavior if it is unavailable.
-
-## Connections
-Create a markdown table of all communication edges. Be precise; do not use vague terms like "integrates".
-| From | To | Protocol | Auth | Pattern | What flows |
-|---|---|---|---|---|---|
-*(Note: Pattern must be exactly one of: request/response, fire-and-forget, queue/pub-sub [name it], polling [state who/how often], webhook/callback, or scheduled [state cron schedule].)*
-
-## The key connection
-Explain the single most critical or complex external integration in 2-4 sentences. Detail who initiates it, the auth handshake, and the mechanism.
-
-## Primary end-to-end scenario
-Provide one realistic, primary user scenario that touches the most components. Break it down into 10-20 numbered steps, grouped under 3-6 narrative phase headings (e.g., "Analyze the input").
-* Specify the acting component, the receiving component, and the connection used (must perfectly match a row in the Connections table).
-* Name any generated artifacts in **bold** (e.g., **Invoice Record**) the moment they are produced, and refer to them by that name afterward.
-* If a step is a synchronous ask-and-answer, write it as one step.
-
-## Side paths and scheduled flows
-List any audit logs, metrics, retries, or scheduled jobs in 1-2 sentences. Flag them explicitly as optional or scheduled. (Only include if they exist).
-
-## Deployment constraints
-List any strict operational requirements, such as shared volumes, mandatory broker paths, or startup sequence dependencies. (Only include if they exist).
-
-**Validation Checklist (Fix any failures before completing your response):**
-1. Every component and connection mentioned in the scenario appears precisely in the Components and Connections sections.
-2. There are zero orphaned connections in any direction.
-3. Every Connections row has a concrete Pattern.
-4. The document reflects only what the code does today—no roadmap or aspirational features.
+docs/architecture/
+├── system-diagram.md                   Mermaid
+├── system-diagram(.puml|.png)          architecture, full detail
+├── system-diagram-simple(.puml|.png)   architecture, 8–10 boxes
+├── system-workflow(.puml|.png)         request sequence, full detail
+├── system-workflow-simple(.puml|.png)  request sequence, simplified
+└── demo/
+    ├── <Name>DemoFlow.tsx / .css       React component
+    ├── index.html                      ⭐ the live demo
+    └── vendor/                         React + Babel, for offline use
 ```
 
-Then come back and run ArchFlow on the file it produces. (The prompt saves the doc at the repository root — if you keep docs elsewhere, add e.g. "save it to docs/architecture/system-architecture.md" at the end.)
-
----
-
-## What gets generated
-
-Everything is written next to your input file:
-
-```text
-docs/
-└── architecture/
-    ├── system-architecture.md   (your input)
-    ├── system-diagram.md        (Mermaid diagram)
-    ├── system-diagram.puml      (PlantUML architecture diagram — source)
-    ├── system-diagram.png       (rendered architecture diagram — full detail)
-    ├── system-diagram-simple.puml  (simplified architecture diagram — source)
-    ├── system-diagram-simple.png   ⭐ the one for a README/slide (8-10 boxes)
-    ├── system-workflow.puml     (PlantUML workflow sequence diagram — source)
-    ├── system-workflow.png      (rendered workflow diagram — full detail)
-    ├── system-workflow-simple.puml (simplified workflow diagram — source)
-    ├── system-workflow-simple.png  ⭐ the workflow for a README/slide (same cast as the simplified architecture)
-    └── demo/
-        ├── <Name>DemoFlow.tsx   (React component)
-        ├── <Name>DemoFlow.css
-        ├── index.html           ⭐ OPEN THIS — the live demo, works standalone, offline
-        └── vendor/
-            ├── react.production.min.js
-            ├── react-dom.production.min.js
-            └── babel.min.js
-```
-
-`<Name>` is a short identifier derived from your project name (e.g. `Cpi`, `Order`).
-
----
-
-## How it works
-
-Live demo workflow
-
-1. Check prerequisites (offer to install anything missing)
-2. Read & understand the architecture doc
-3. Generate Mermaid diagram
-4. Generate four PlantUML diagrams from the Mermaid diagram — architecture (components/connections), a simplified 8-10 box version of it, workflow (a sequence diagram of one end-to-end request), and a simplified version of the workflow using the same 8-10 box cast — and render all four PNGs
-5. Design the demo scenario — the workflow diagram's phases and messages become the demo's phases and steps
-6. Compute layout
-7. Generate TSX
-8. Generate standalone HTML (vendored React/Babel, works offline)
-9. Verify — syntax check, data-integrity check, optional headless render check
-10. Report — then open `demo/index.html`
-
-The artifacts are generated **in sequence, each derived from the previous one** — not independently re-derived from your original doc. This keeps them describing the exact same architecture and the exact same request scenario: same components, same edges, same external-system markings.
-
-```
-system-architecture.md  →  system-diagram.md (Mermaid)  →  system-diagram.puml (architecture)  →  system-diagram-simple.puml (simplified)  →  system-workflow.puml (workflow sequence)  →  system-workflow-simple.puml (simplified workflow)  →  demo/ (animated HTML, built from the full workflow)
-```
-
-For the full step-by-step process (prerequisite checks, layout rules, verification checks, and the hard-won lessons behind two previously-fixed bugs), see [`SKILL.md`](./SKILL.md).
-
----
+To write the architecture doc in a separate session instead, paste [`architecture-doc-prompt.md`](./architecture-doc-prompt.md) into Claude Code at the root of that codebase. Then run ArchFlow on the file it produces.
 
 ## Troubleshooting
 
-| Symptom                                                      | Cause                                                                | Fix                                                                                                                         |
-| ------------------------------------------------------------ | -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| No `system-diagram.png` / `system-workflow.png` was produced | PlantUML isn't installed                                             | Let the skill offer to install it for your OS (see [Prerequisites](#prerequisites)), or proceed without the PNGs            |
-| `demo/index.html` shows a blank page                         | Missing/broken `vendor/` files, or opened over a restrictive network | Confirm the three files exist in `demo/vendor/`; the demo is designed to work fully offline once they're present            |
-| Diagram looks crowded or components overlap in the PNG       | PlantUML's auto-layout struggled with too many packages/participants | Simplify grouping in `system-diagram.puml` (or drop lightly-touched participants from `system-workflow.puml`) and re-render |
-| Demo is missing a component you expected                     | The input doc didn't mention it                                      | ArchFlow only uses what's in your architecture doc — update the doc and re-run                                              |
-| Prerequisite install command fails (permissions, sudo)       | Package manager needs elevated rights, or isn't installed itself     | Run the proposed command yourself in a terminal with the right privileges, then re-run the skill                            |
+| Symptom | Fix |
+|---|---|
+| No PNGs produced | PlantUML isn't installed. Let the skill install it, or use the `.puml` source as is |
+| `demo/index.html` is blank | Check the three files in `demo/vendor/` exist |
+| Crowded PNG | Simplify the grouping in the `.puml` file and re-render |
+| A component is missing | ArchFlow uses only what the doc says. Update the doc and re-run |
 
----
+## Files
 
-## Repository layout
-
-```text
-archflow/
-├── README.md                       (this file)
-├── SKILL.md                        (full skill definition — read this to understand or modify the generation logic)
-├── architecture-doc-prompt.md      (ready-made prompt to generate a system-architecture.md from a codebase)
-└── templates/
-    ├── DemoFlow.template.tsx       (React demo engine + layout rules)
-    ├── DemoFlow.template.css
-    └── index.template.html         (standalone HTML shell)
-```
+| Path | What it is |
+|---|---|
+| `SKILL.md` | Full step-by-step process, layout rules and verification checks |
+| `architecture-doc-prompt.md` | Prompt that generates a `system-architecture.md` from a codebase |
+| `templates/` | React demo engine (`DemoFlow.template.tsx` / `.css`) and the standalone HTML shell |
