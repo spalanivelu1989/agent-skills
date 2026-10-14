@@ -5,8 +5,9 @@
 | Claude in Chrome says "Browser extension is not connected" | The extension isn't running or isn't signed in | Don't wait for it. The engine uses Playwright headless, which is more reliable for fixed 1920×1080 captures and records video natively. |
 | Login form submits but the URL never changes | The app redirects from the client after the API call | In `login()`, `pg.wait_for_url(...)` for the post-login URL; don't use `networkidle`. |
 | `scrollHeight` of the document is the viewport height and nothing scrolls | The page scrolls inside a container | Use `reveal()` or `wheel()`; they find the scrolling pane. `explore.py` finds the largest scroller itself. |
-| Kokoro fails with `Can't find model 'en_core_web_sm'` | spaCy's English model can't auto-install into a `uv` environment, which has no pip | Run `setup_tts.sh`; it installs the wheel directly. |
-| Kokoro import error on Python 3.13 or 3.14 | Kokoro supports Python 3.10–3.12 | `setup_tts.sh` picks python3.12, 3.11 or 3.10. On macOS, `brew install python@3.12`. |
+| Kokoro fails with `Can't find model 'en_core_web_sm'` | spaCy's English model can't auto-install into a `uv` environment, which has no pip | Run `setup_tts.py`; it installs the wheel directly. |
+| Kokoro fails with `Error processing file '/Users/runner/work/espeakng-loader/…/phontab'` | The TTS environment's path is too long for espeak-ng, which then looks in a path baked in at build time | Keep the environment at its default `~/.cache/demo-video-tts`, or set `KOKORO_ENV` to another short path and re-run `setup_tts.py`. |
+| Kokoro import error on Python 3.13 or 3.14 | Kokoro supports Python 3.10–3.12 | `setup_tts.py` has uv build the environment on Python 3.12, downloading it if needed. |
 | SAP comes out as "sap" | Kokoro reads real words as words | Add a `pronounce` rule: `S-A-P`. |
 | `check.py` reports GST → "GSD" | Whisper mishears a soft T. Kokoro's phonemes for GST are `ʤˌiˌɛstˈi`, which is right. | Add `["gst", "gsd"]` to `check_ignore`. Always confirm with the printed phonemes before ignoring. |
 | A whole scene drifts: the tooltip appears before the words | It was recorded with fixed holds, or recorded before the voice changed | Re-record that scene. `check.py` lists scenes "recorded without the current voice". |
@@ -30,3 +31,8 @@
 | After a pronunciation fix every scene is "not recorded against the current voice-over" | The voice key covers pronunciation for all scenes | Re-record the read-only scenes. For a scene that writes data, decide with the user: a new take, or `--allow-stale` if its audio did not change (the picture is sped up to fit, so check that clicks still land on their words). Finalise the voice before recording write scenes. |
 | The voice runs from one step straight into the next | Cue parts are joined with no gap | `"pauses": {"<cue>": 2.0}` on the scene. |
 | A Run button is still disabled when its cue arrives | An upload or preview is still processing | `wait_enabled()` before clicking; start the slow step on an earlier cue. |
+| A brand name is heard as other words, e.g. "Infor" → "within 4" | The name isn't in Kokoro's lexicon, so it is dropped or garbled | Check every name with misaki **before the first recording**, add `[Infor](/ˈɪnfɔɹ/)`-style rules (possessive first), then render the voice. Fixing it after recording makes every scene stale. |
+| The rendered voice is much longer than the script's timing (5:32 against 4:54) | `af_heart` at speed 1.0 speaks at about 130 wpm; scripts are timed at 150 wpm | Set `"voice": {"speed": 1.1}` in `scenes.json` (5:14 for the same script) or trim, before recording. |
+| `check.py` says "dollars" (or another unit) was not heard | Whisper writes amounts as figures ("$700,000") | Confirm the word's phonemes, then add it to `check_ignore`. |
+| Faint text shows through the caption bar | Slide footers or bottom content sit under the 92 px bar | Render the slides without footers (`references/slides.md`) or keep content above y ≈ 980. |
+| A small dot sits in the caption bar for a whole scene | The cursor was parked in the bottom-right corner | Park it on an empty part of the picture, above the caption bar. |

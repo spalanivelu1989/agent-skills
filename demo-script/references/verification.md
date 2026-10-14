@@ -52,3 +52,19 @@ Collect these into Before recording:
 ## 5. Report
 In "What I changed and why", list each correction as *draft said → app says*, with where it came
 from (file:line or the live page). Keep label fixes, behaviour fixes and wording fixes separate.
+
+## 6. Scripts without an app (slide decks, documents)
+There are no buttons to check, so the risk moves to the claims and to what is on screen.
+- **Facts:** trace every number, name and capability to a source. For a client-facing video, prefer
+  public sources (the vendor's site, docs, press releases, customer stories). Note the date checked.
+- **Internal material:** a slide built from internal training or partner notes often carries it in
+  its footer or speaker notes. Plan to render the slides without them for the video, and keep
+  internal-only facts out of the narration.
+- **Illustrative content:** a mock screen, an invented example order or a sample conversation is
+  labelled on the slide and in the narration, and listed in Before recording.
+- **Statuses that change:** availability (Limited Availability, GA, "new in 2026.04"), counts ("100+
+  agents") and prices age quickly. List them in Before recording to re-check before publishing.
+- **Customer names:** use only customers the vendor names publicly, with the figure exactly as
+  published, and the customer's real sector (a distributor is not a manufacturer).
+- **Report:** in "What I changed and why", list each claim you softened or removed and why
+  (internal only, not found publicly, contradicted by a newer source).

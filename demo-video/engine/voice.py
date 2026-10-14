@@ -2,31 +2,38 @@
 
 A scene's voice-over is split at its cue phrases (scenes.json "cues") and each
 part is spoken separately — by Kokoro-82M (kokoro_say.py, open source, runs
-locally) or macOS `say` — so the time at which every cue starts is known
+locally) or, on macOS only, `say` — so the time at which every cue starts is known
 exactly. record.py waits for those times before doing the matching screen
 action; build.py lays the same audio under the recording.
 
 Env:
-  TTS          kokoro | say      (default: kokoro if its environment exists)
+  TTS          kokoro | say      (default: kokoro if its environment exists; say is macOS-only)
   VOICE        Kokoro: af_heart (default), af_bella, am_michael, bf_emma, bm_george, …
                say: Daniel (default), Samantha, …     ""  = silent cut
   VOICE_SPEED  Kokoro pace, default 1.0
   VOICE_RATE   say words per minute, default 155
-  KOKORO_PYTHON  python of the TTS environment (default ~/.cache/demo-video-tts/bin/python)
+  KOKORO_ENV     the TTS environment setup_tts.py made (default ~/.cache/demo-video-tts)
+  KOKORO_PYTHON  its python (default <env>/bin/python, or <env>/Scripts/python.exe on Windows)
 """
 import hashlib
 import json
 import os
 import re
 import subprocess
+import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent.parent
-SPEC = json.loads((HERE / "scenes.json").read_text())
+SPEC = json.loads((HERE / "scenes.json").read_text(encoding="utf-8"))
 CACHE = HERE / "clips" / "_voice"
 
-KOKORO_PY = Path(os.environ.get("KOKORO_PYTHON", Path.home() / ".cache" / "demo-video-tts" / "bin" / "python"))
-ENGINE = os.environ.get("TTS", "kokoro" if KOKORO_PY.exists() else "say")
+if os.name == "nt":   # Windows pipes and consoles default to a legacy code page; the scripts print — and →
+    for _s in (sys.stdout, sys.stderr):
+        _s.reconfigure(encoding="utf-8", errors="replace")
+
+TTS_ENV = Path(os.environ.get("KOKORO_ENV", Path.home() / ".cache" / "demo-video-tts"))
+KOKORO_PY = Path(os.environ.get("KOKORO_PYTHON", TTS_ENV / ("Scripts/python.exe" if os.name == "nt" else "bin/python")))
+ENGINE = os.environ.get("TTS", "say" if sys.platform == "darwin" and not KOKORO_PY.exists() else "kokoro")
 VOICE = os.environ.get("VOICE", SPEC.get("voice", {}).get(ENGINE) or ("af_heart" if ENGINE == "kokoro" else "Daniel"))
 RATE = os.environ.get("VOICE_RATE", "155")
 SPEED = float(os.environ.get("VOICE_SPEED", SPEC.get("voice", {}).get("speed", 1.0)))
@@ -87,18 +94,23 @@ def synth(scene):
     key = voice_key(scene)
     wav, meta = CACHE / f"{scene['id']}-{key}.wav", CACHE / f"{scene['id']}-{key}.json"
     if wav.exists() and meta.exists():
-        m = json.loads(meta.read_text())
+        m = json.loads(meta.read_text(encoding="utf-8"))
         return wav, m["total"], m["cues"]
     todo = [(cue, text, CACHE / f"{scene['id']}-{key}-{n}.{'wav' if ENGINE == 'kokoro' else 'aiff'}")
             for n, (cue, text) in enumerate(parts(scene))]
     said = [(t, f) for _, t, f in todo if t]
     if ENGINE == "kokoro":
+        if not KOKORO_PY.exists():
+            raise RuntimeError(f"No TTS environment at {KOKORO_PY}: run tools/setup_tts.py once, "
+                               "or set KOKORO_PYTHON (or VOICE= for a silent cut)")
         job = {"voice": VOICE, "speed": SPEED, "items": [{"text": spoken(t), "out": str(f)} for t, f in said]}
         r = subprocess.run([str(KOKORO_PY), str(Path(__file__).with_name("kokoro_say.py"))],
-                           input=json.dumps(job), text=True, capture_output=True)
+                           input=json.dumps(job), capture_output=True, encoding="utf-8", errors="replace")
         if r.returncode:
             raise RuntimeError(f"Kokoro failed for {scene['id']}:\n{r.stderr[-2000:]}")
     else:
+        if sys.platform != "darwin":
+            raise RuntimeError("TTS=say needs macOS; use TTS=kokoro (run tools/setup_tts.py once)")
         for t, f in said:
             subprocess.run(["say", "-v", VOICE, "-r", RATE, "-o", str(f), spoken(t)], check=True)
     # "pauses": {"<cue>": seconds} in a scene puts that much silence before the cue is spoken,
@@ -128,7 +140,7 @@ def synth(scene):
     for f in files:
         f.unlink()
     total = secs(wav)
-    meta.write_text(json.dumps({"total": total, "cues": cues}))
+    meta.write_text(json.dumps({"total": total, "cues": cues}), encoding="utf-8")
     return wav, total, cues
 
 

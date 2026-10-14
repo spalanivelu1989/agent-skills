@@ -15,12 +15,18 @@ Everything finds elements by their visible text, so scenes survive layout
 changes better than pixel coordinates do.
 """
 import json
+import os
+import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent.parent        # the video folder: scenes.json, scenes.py, outputs
-SPEC = json.loads((HERE / "scenes.json").read_text())
+SPEC = json.loads((HERE / "scenes.json").read_text(encoding="utf-8"))
 W, H = (SPEC.get("viewport") or [1920, 1080])
 STILLS = HERE / "captures"
+
+if os.name == "nt":   # Windows pipes and consoles default to a legacy code page; the scripts print — and →
+    for _s in (sys.stdout, sys.stderr):
+        _s.reconfigure(encoding="utf-8", errors="replace")
 
 __all__ = ["HERE", "SPEC", "W", "H", "hold", "settle", "glide", "click", "wheel", "tab", "still",
            "find", "reveal", "point", "hover_text"]

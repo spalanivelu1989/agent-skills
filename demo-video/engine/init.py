@@ -7,14 +7,19 @@ edited per project, so re-running this upgrades it), and the templates
 scenes.json, scenes.py and README.md into <dir>/ only if they do not exist.
 Adds a .gitignore for the heavy outputs (clips/, pass1/, *.mp4).
 """
+import os
 import shutil
 import sys
 from pathlib import Path
 
 SKILL = Path(__file__).resolve().parent.parent
 ENGINE = ["demo.py", "record.py", "voice.py", "build.py", "check.py", "explore.py",
-          "kokoro_say.py", "tts_inspect.py", "setup_tts.sh"]
+          "kokoro_say.py", "tts_inspect.py", "setup_tts.py"]
 TEMPLATES = ["scenes.json", "scenes.py", "README.md"]
+
+if os.name == "nt":   # Windows pipes and consoles default to a legacy code page; the scripts print — and →
+    for _s in (sys.stdout, sys.stderr):
+        _s.reconfigure(encoding="utf-8", errors="replace")
 
 
 def main():
@@ -35,13 +40,13 @@ def main():
             print(f"new    {target.name}")
     gi = dest / ".gitignore"
     want = ["clips/", "pass1/", "*.mp4", "__pycache__/"]
-    have = gi.read_text().split() if gi.exists() else []
+    have = gi.read_text(encoding="utf-8").split() if gi.exists() else []
     if missing := [w for w in want if w not in have]:
-        gi.write_text("\n".join(have + missing) + "\n")
+        gi.write_text("\n".join(have + missing) + "\n", encoding="utf-8")
         print(f"gitignore +{' '.join(missing)}")
     print(f"""
 Next:
-  bash {tools}/setup_tts.sh                       # once per machine: local Kokoro voice + Whisper
+  python3 {tools}/setup_tts.py                    # once per machine: local Kokoro voice + Whisper
   edit {dest}/scenes.py  (BASE_URL, login)
   python3 {tools}/explore.py / --tabs             # first pass: stills + page text in pass1/
   edit {dest}/scenes.json (story, voice-over, cues) and scenes.py (one function per scene)

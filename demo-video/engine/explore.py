@@ -32,7 +32,7 @@ def slug(s):
 
 def capture(pg, name):
     h, ch = pg.evaluate(SCROLLER_JS)
-    (OUT / f"{name}.txt").write_text(pg.evaluate("document.body.innerText"))
+    (OUT / f"{name}.txt").write_text(pg.evaluate("document.body.innerText"), encoding="utf-8")
     y, k = 0, 0
     while True:
         pg.evaluate("y => document.querySelector('[data-cap]').scrollTo(0, y)", y)

@@ -4,7 +4,7 @@ Reads JSON on stdin and writes one 24 kHz WAV per item:
     {"voice": "af_heart", "speed": 1.0, "items": [{"text": "...", "out": "/path/a.wav"}, ...]}
 
 Setup (once):
-    bash setup_tts.sh   (in this folder)
+    python3 setup_tts.py   (in this folder)
 """
 import json
 import sys

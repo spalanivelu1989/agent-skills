@@ -9,7 +9,7 @@ Read every transcript in full. Long `.vtt` files need condensing first:
 - merge consecutive lines from the same speaker into turns;
 - keep one timestamp per turn.
 
-`.docx` converts with `textutil -convert txt -stdout file.docx` on macOS.
+`.docx` converts with `textutil -convert txt -stdout file.docx` on macOS, or `pandoc -t plain file.docx` anywhere.
 
 Write down, in this order:
 

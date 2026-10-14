@@ -1,6 +1,6 @@
 ---
 name: demo-video
-description: Produce a narrated, captioned demo or walkthrough video (MP4) of any running web app — screen recordings driven by Playwright, a natural open-source voice-over (Kokoro, local), captions, title and closing cards, with every screen action timed to the words that describe it. Starts from a finished script (e.g. a script.md with on-screen actions and narration), a brief, or meeting transcripts. Use whenever someone asks for a demo video, product or feature walkthrough, screen recording with voice-over, a video of an app's results, "record this script", or "turn this meeting / brief into a demo video" — even if they only say "record the app" or "make a video of the tool". Not for writing or refining a script on its own; that is a separate script-writing task.
+description: Produce a narrated, captioned demo or walkthrough video (MP4) of any running web app, or of a slide deck rendered to images — screen recordings driven by Playwright, a natural open-source voice-over (Kokoro, local), captions, title and closing cards, with every screen action timed to the words that describe it. Starts from a finished script (e.g. a script.md with on-screen actions and narration), a brief, or meeting transcripts. Use whenever someone asks for a demo video, product or feature walkthrough, screen recording with voice-over, a video of an app's results, "record this script", or "turn this meeting / brief into a demo video" — even if they only say "record the app" or "make a video of the tool". Not for writing or refining a script on its own; that is a separate script-writing task.
 ---
 
 # Demo video
@@ -34,15 +34,30 @@ keep its wording and order, and map it to scenes.
 - Intro and closing lines become `"card"` scenes.
 - Check every label the script names against the live app or the code; tell the user what differs.
 
+### 0c. No app: a slide deck or document
+When the screen is a deck (or any set of images), follow `references/slides.md`:
+- render each slide to a PNG at the viewport size, **without** footers that cite internal material
+  and without speaker notes; anything left near the bottom shows through the caption bar;
+- give each slide a tiny local HTML page and use `glide()` to inch-based coordinates, because a
+  slide image has no text for `point()` to find;
+- generate `scenes.json` from the script's narration column word for word, and assert every cue
+  is found in its voice-over before recording;
+- a closing `"card"` scene is a good place for the sources behind the figures.
+
 ### 1. Set up
 ```bash
 python3 ~/.claude/skills/demo-video/engine/init.py <project>/docs/demo-video   # or wherever the user wants it
-bash <dir>/tools/setup_tts.sh        # once per machine; skip if ~/.cache/demo-video-tts exists
+python3 <dir>/tools/setup_tts.py    # once per machine; skip if ~/.cache/demo-video-tts exists
 ```
 Requirements:
 - Python Playwright with Chromium in the user's normal Python (`python3 -c "import playwright"`);
 - `ffmpeg`;
-- `uv` and Python 3.10–3.12 for the voice.
+- `uv` for the voice (it fetches the Python 3.12 that Kokoro needs).
+
+On Windows, run the same commands with `py` or `python` in place of `python3`, and set
+credentials in PowerShell with `$env:DEMO_USERNAME='…'; $env:DEMO_PASSWORD='…'`. The voice
+environment is then `~\.cache\demo-video-tts\Scripts\python.exe`, and `TTS=say` is not
+available.
 
 Before installing anything missing, ask. If the project already has a video folder, create a new
 one beside it rather than re-running `init.py` over someone else's video. Get the app's URL and sign-in from the user. Put credentials in env vars or `login()`, never in `scenes.json`
@@ -84,6 +99,16 @@ Then render the narration and read the lengths:
 ```bash
 python3 <dir>/tools/voice.py
 ```
+
+**Before the first `record.py`** (a pronunciation change later makes every scene stale and forces a
+full re-record):
+- Check every brand, product and person name in the voice-overs with misaki
+  (`references/scene-authoring.md` › Pronunciation). Kokoro **silently drops** unknown words: in one
+  video "Infor" was heard as "within 4", and "Agentic" and "Inline" vanished. Add phonetic rules,
+  with possessives (`Infor's`) before the base word.
+- Compare the total with the target. `af_heart` at speed 1.0 runs at about 130 wpm, slower than a
+  script timed at 150 wpm: a 4:54 script rendered at 5:32. Set `"voice": {"speed": 1.1}` (5:14 for
+  the same script) or trim, then re-render.
 
 ### 4. Write `scenes.py`
 One function per app scene, named after its id: setup → `mark()` → `at("cue")` → action. Follow `references/scene-authoring.md`:
@@ -161,10 +186,11 @@ Voice options:
 - **Verify before claiming.** Run `check.py` and read the contact sheets before saying the video is in sync.
 
 ## Files
-- `engine/`: `init.py`, `demo.py` (scene helpers), `voice.py`, `record.py`, `build.py`, `check.py`, `explore.py`, `kokoro_say.py`, `tts_inspect.py`, `setup_tts.sh`.
+- `engine/`: `init.py`, `demo.py` (scene helpers), `voice.py`, `record.py`, `build.py`, `check.py`, `explore.py`, `kokoro_say.py`, `tts_inspect.py`, `setup_tts.py`.
 - `templates/`: starting `scenes.json`, `scenes.py`, `README.md`.
 - `references/storytelling.md`: brief → story → voice-over.
 - `references/scene-authoring.md`: cues, helpers, pronunciation, masking.
 - `references/troubleshooting.md`: known failures and fixes.
+- `references/slides.md`: videos of a slide deck or images, with no app (rendering, scene helpers, cursor, captions).
 - `examples/solvay-fitgap/`: a complete real example, a 10-scene, 6:20 video of a fit-gap analysis tool.
 - `examples/fitgap-quickstart/`: a 2:28 how-to built from the user's own script: a sign-in scene (username hidden), one long scene that uploads a file, runs, opens the log, stops and loads a past run (a write flow, approved), a pause before a step, and a field hidden with CSS.

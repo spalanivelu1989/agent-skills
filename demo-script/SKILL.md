@@ -1,6 +1,6 @@
 ---
 name: demo-script
-description: Write, refine and fact-check the script for a demo or walkthrough video of an app — turn a user's rough step-by-step walkthrough (or a feature list) into a polished, timed script.md with on-screen actions, voice-over narration and a "Before recording" checklist, every label and claim checked against the app's code or the live app. Use when someone asks to write, refine, correct, proofread, tighten or check a demo script, video script, walkthrough script or narration, or says "here are my steps for a demo video — make it a script". Produces the script only; it does not record video (the script is ready to hand to a video-recording skill or to record by hand).
+description: Write, refine and fact-check the script for a demo or walkthrough video of an app, or of a slide deck or document narrated without an app — turn a user's rough step-by-step walkthrough (or a feature list) into a polished, timed script.md with on-screen actions, voice-over narration and a "Before recording" checklist, every label and claim checked against the app's code or the live app. Use when someone asks to write, refine, correct, proofread, tighten or check a demo script, video script, walkthrough script or narration, or says "here are my steps for a demo video — make it a script". Produces the script only; it does not record video (the script is ready to hand to a video-recording skill or to record by hand).
 ---
 
 # Demo script
@@ -25,6 +25,8 @@ answers you can't infer, all in one message:
 - **Role:** which account or role will be recorded. Role decides what is on screen: tabs, sidebar
   entries and buttons often differ for Admins.
 - **Data:** what will be uploaded or entered, and whether it is real or synthetic.
+- **Source:** a running app, or a slide deck or document with no app (see *Scripts without an app*).
+- **Voice:** read by a person, or by the demo-video skill's Kokoro voice. This changes the timing (step 3).
 
 Don't ask what the code can tell you.
 
@@ -62,8 +64,15 @@ Then run the timing tool, and use its output, not your own estimate:
 ```bash
 python3 ~/.claude/skills/demo-script/tools/timing.py path/to/script.md --write
 ```
+On Windows, use `py` or `python` in place of `python3`.
 It counts the narration words, adds time for on-screen actions and pauses, rewrites the
 `(m:ss–m:ss)` times, and prints the total.
+
+**When Kokoro will read it** (the demo-video skill), time it with `--wpm 130`. Kokoro's `af_heart`
+voice at speed 1.0 is slower than the default 150 wpm. Measured on a 675-word script: 150 wpm
+predicted 4:54, the voice rendered at 5:32, and `--wpm 130` predicts 5:36. At `"speed": 1.1` the same
+voice rendered at 5:14 (`--wpm 143` predicts 5:07). Write to the target at 130 wpm, or say in the
+delivery that the video will need speed 1.1.
 
 ### 4. Deliver
 - Save the script where the user asks; otherwise use `docs/<topic>-demo-video-script.md`.
@@ -87,6 +96,24 @@ shifts. When the user asks to bring the script in line with the finished video, 
 word for word from what was recorded, and the times from the real scene lengths. Then list what
 changed.
 
+### Scripts without an app (slide decks, documents)
+When the screen is a deck rather than an app, the script is the same table, but:
+- **On screen** names the slide number and the element the cursor rests on (*Slide 6: point to
+  **Diagnose**, then **Automate***), using the slide's exact wording.
+- **Verify claims, not labels:** check every fact, name and number against its source document,
+  and for a client-facing video against *public* sources (see `references/verification.md` §6).
+- **What the viewer sees:** footers that cite internal material, speaker notes and presenter view
+  must not appear. Say in Before recording how the slides will be rendered for the video.
+- **Illustrative screens:** a recreated or mock screen is labelled on the slide *and* in the
+  narration ("Here's an illustration").
+- **Dated statuses:** availability labels (Limited Availability, GA) and "new" claims go in Before
+  recording with "re-check before publishing".
+- **Whose voice:** ask, or note, whether "we" and "us" mean the vendor or a partner. Avoid
+  first-person vendor lines ("At Infor, we…") unless the user speaks for the vendor.
+- **Names for the voice:** list the brand and product names the narration uses. Kokoro silently
+  drops words outside its lexicon (in one video "Infor" came out as "within 4"), and the video skill
+  should check them before recording.
+
 ## Rules
 - **Accuracy over polish.** A wrong label or a promise the app doesn't keep is worse than an awkward
   sentence. When you can't verify a claim, hedge it ("where available") or ask.
@@ -95,6 +122,8 @@ changed.
   or a "Deciding as" e-mail, in Before recording. Mark synthetic data as synthetic.
 - **Writes.** If a step changes data (uploads, starts a run, submits), say so in Before recording,
   together with what each take leaves behind.
+- **Client-facing claims.** Use only what the client could verify. Material from internal training
+  decks or partner notes stays out of the narration, or is clearly marked and approved by the user.
 - **The script is a file the user owns.** Don't commit or publish it without asking.
 
 ## Files

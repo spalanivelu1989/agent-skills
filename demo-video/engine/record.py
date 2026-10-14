@@ -137,7 +137,7 @@ def record(p, state, scenes, scene):
     demo.hold(pg, st["t"] + length + 0.3 - time.monotonic())
     text_dir = CLIPS / "_text"
     text_dir.mkdir(parents=True, exist_ok=True)
-    (text_dir / f"{name}.txt").write_text(pg.evaluate(INPUTS_JS))
+    (text_dir / f"{name}.txt").write_text(pg.evaluate(INPUTS_JS), encoding="utf-8")
     video = pg.video.path()
     ctx.close()
     b.close()
@@ -155,14 +155,14 @@ def main():
         if not hasattr(scenes, sid):
             sys.exit(f"scenes.py has no function {sid}() for scene {sid} in scenes.json")
     marks_file = CLIPS / "marks.json"
-    marks = json.loads(marks_file.read_text()) if marks_file.exists() else {}
+    marks = json.loads(marks_file.read_text(encoding="utf-8")) if marks_file.exists() else {}
     names = sys.argv[1:] or app_scenes
     with sync_playwright() as p:
         state = login_state(p, scenes)
         for n in names:
             print(f"recording {n} …", flush=True)
             marks[n] = record(p, state, scenes, spec[n])
-            marks_file.write_text(json.dumps(marks, indent=2))
+            marks_file.write_text(json.dumps(marks, indent=2), encoding="utf-8")
     total_late = sum(len(m.get("late", [])) for k, m in marks.items() if k in names)
     print("done" + (f" — {total_late} late cue(s); see above" if total_late else " — all cues on time"))
 

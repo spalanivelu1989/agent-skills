@@ -11,9 +11,14 @@ A row whose narration is "—" or empty is a pause or silent action: it takes th
 label, e.g. "*Pause* (2s)", or --pause seconds. Times are rounded to whole seconds.
 """
 import argparse
+import os
 import re
 import sys
 from pathlib import Path
+
+if os.name == "nt":   # Windows pipes and consoles default to a legacy code page; the scripts print — and →
+    for _s in (sys.stdout, sys.stderr):
+        _s.reconfigure(encoding="utf-8", errors="replace")
 
 TIME = re.compile(r"\((?:\s*\d+:\d{2}\s*[–-]\s*\d+:\d{2}\s*|…|\.\.\.)\)")
 
@@ -39,7 +44,7 @@ def main():
     a = ap.parse_args()
 
     path = Path(a.script)
-    lines = path.read_text().splitlines()
+    lines = path.read_text(encoding="utf-8").splitlines()
     head = next((i for i, l in enumerate(lines)
                  if l.lstrip().startswith("|") and "narration" in l.lower()), None)
     if head is None:
@@ -74,7 +79,7 @@ def main():
         print(f"  {label:<40} {n:>4} words  {mmss(s)}–{mmss(e)}")
     print(f"total {mmss(t)}  ({sum(r[1] for r in rows)} words at {a.wpm:g} wpm, +{a.action:g}s per spoken row)")
     if a.write:
-        path.write_text("\n".join(lines) + "\n")
+        path.write_text("\n".join(lines) + "\n", encoding="utf-8")
         print(f"times written to {path}")
 
 

@@ -14,7 +14,7 @@
 ## Regenerating
 
 ```bash
-bash tools/setup_tts.sh          # once per machine: local Kokoro voice + Whisper
+python3 tools/setup_tts.py       # once per machine: local Kokoro voice + Whisper
 python3 tools/voice.py           # narration + cue times (cached)
 python3 tools/record.py          # screen recordings timed to the narration; or name scenes
 python3 tools/build.py           # MP4 + script.md

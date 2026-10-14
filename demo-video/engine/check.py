@@ -82,7 +82,7 @@ STOP = {"a", "an", "the", "and", "or", "of", "to", "in", "on", "at", "is", "it",
 
 def run_tts(job):
     r = subprocess.run([str(voice.KOKORO_PY), str(Path(__file__).with_name("tts_inspect.py"))],
-                       input=json.dumps(job), text=True, capture_output=True)
+                       input=json.dumps(job), capture_output=True, encoding="utf-8", errors="replace")
     if r.returncode:
         raise RuntimeError(r.stderr[-1500:])
     return json.loads(r.stdout)
@@ -100,7 +100,7 @@ def check_narration(lines, asr):
     heard = {}
     if asr:
         if not voice.KOKORO_PY.exists():
-            lines.append("Speech-to-text skipped: the TTS environment is missing (run setup_tts.sh).\n")
+            lines.append("Speech-to-text skipped: the TTS environment is missing (run tools/setup_tts.py).\n")
         else:
             # Tell Whisper the script's names and acronyms, so it can spell what it hears; otherwise
             # an unfamiliar name is "heard" as the nearest common word whatever the voice said.
@@ -155,7 +155,7 @@ def check_narration(lines, asr):
 def check_timing(lines):
     lines.append("## 2. Timing\n")
     marks_file = CLIPS / "marks.json"
-    marks = json.loads(marks_file.read_text()) if marks_file.exists() else {}
+    marks = json.loads(marks_file.read_text(encoding="utf-8")) if marks_file.exists() else {}
     app = [s for s in SPEC["scenes"] if s.get("kind", "app") == "app"]
     marks = {s["id"]: marks.get(s["id"]) for s in app}
     late = [(k, c, d) for k, m in marks.items() if isinstance(m, dict) for c, d in m.get("late", [])]
@@ -192,14 +192,14 @@ def contact_sheets(lines):
                              f"</figcaption></figure>")
             cols = 3
             rows = (len(cells) + cols - 1) // cols
-            page = (f"<html><body style='margin:0;padding:12px;background:#111;color:#eee;font:15px -apple-system,sans-serif'>"
+            page = (f"<html><body style='margin:0;padding:12px;background:#111;color:#eee;font:15px -apple-system,'Segoe UI',sans-serif'>"
                     f"<h3 style='margin:4px 4px 10px'>{html.escape(s['id'])}</h3>"
                     f"<div style='display:grid;grid-template-columns:repeat({cols},640px);gap:10px'>{''.join(cells)}</div>"
                     "<style>figure{margin:0}img{width:640px;display:block;border:1px solid #333}"
                     "figcaption{padding:4px 2px;color:#9fd}</style></body></html>")
             pg.set_viewport_size({"width": cols * 650 + 24, "height": rows * (360 + 34) + 60})
             sheet_html = OUT_DIR / f"{s['id']}.html"          # a file page, so the frames next to it can load
-            sheet_html.write_text(page)
+            sheet_html.write_text(page, encoding="utf-8")
             pg.goto(sheet_html.as_uri())
             pg.wait_for_load_state("load")
             out = OUT_DIR / f"{s['id']}.png"
@@ -220,7 +220,7 @@ def check_media(lines):
     lines.append(f"  - {VIDEO.name}: {int(dur // 60)}:{int(dur % 60):02d}, {VIDEO.stat().st_size / 1e6:.0f} MB")
     log = subprocess.run(["ffmpeg", "-hide_banner", "-i", str(VIDEO), "-af", "silencedetect=n=-45dB:d=3",
                           "-vf", "blackdetect=d=0.2:pix_th=0.05", "-f", "null", "-"],
-                         capture_output=True, text=True).stderr
+                         capture_output=True, encoding="utf-8", errors="replace").stderr
     sil = re.findall(r"silence_start: ([\d.]+)", log)
     blk = re.findall(r"black_start:([\d.]+)", log)
     if voice.VOICE and sil:
@@ -232,14 +232,14 @@ def check_media(lines):
     masks = [re.compile(m, re.I) for m in SPEC.get("mask", [])]
     for f in sorted((CLIPS / "_text").glob("*.txt")):
         for m in masks:
-            hit = m.search(f.read_text())
+            hit = m.search(f.read_text(encoding="utf-8"))
             if hit:
                 issues += 1
                 lines.append(f"  - mask pattern still visible in {f.stem}: “{hit.group(0)}”")
     email = re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+")
     allowed = {a.lower() for a in SPEC.get("allow_emails", [])}
     for f in sorted((CLIPS / "_text").glob("*.txt")):
-        for hit in sorted({h for h in email.findall(f.read_text()) if h.lower() not in allowed}):
+        for hit in sorted({h for h in email.findall(f.read_text(encoding="utf-8")) if h.lower() not in allowed}):
             issues += 1
             lines.append(f"  - e-mail address visible in {f.stem}: “{hit}” — hide it (CSS on the field, "
                          f"or a \"mask\" pattern), or list it in \"allow_emails\" if approved")
@@ -258,7 +258,7 @@ def main():
     n += check_media(lines)
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     report = OUT_DIR / "report.md"
-    report.write_text("\n".join(lines))
+    report.write_text("\n".join(lines), encoding="utf-8")
     print("\n".join(lines))
     print(f"\n{n} issue(s) flagged · report: {report.relative_to(HERE)}")
 

@@ -29,7 +29,7 @@ Claude sets up a video folder, explores the app, writes the scenes, records and 
 
 ```bash
 python3 ~/.claude/skills/demo-video/engine/init.py docs/demo-video   # vendor the engine into a project
-bash docs/demo-video/tools/setup_tts.sh    # once per machine: local voice + Whisper
+python3 docs/demo-video/tools/setup_tts.py  # once per machine: local voice + Whisper
 python3 docs/demo-video/tools/voice.py     # narration + cue times
 python3 docs/demo-video/tools/record.py    # screen recordings (or name scenes)
 python3 docs/demo-video/tools/build.py     # MP4 + script.md

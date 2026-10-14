@@ -28,7 +28,7 @@ FPS = 30
 FADE = 0.4
 THEME = {
     "bg": "#0f1a2b", "accent": "#1d8a7e", "accent_light": "#6fd3c4", "text_dim": "#8ea0b8",
-    "caption_bg": "rgba(12,22,38,.86)", "font": "'Inter','Helvetica Neue',Helvetica,Arial,sans-serif",
+    "caption_bg": "rgba(12,22,38,.86)", "font": "'Inter','Helvetica Neue',Helvetica,'Segoe UI',Arial,sans-serif",
     **SPEC.get("theme", {}),
 }
 FONT = f"font-family:{THEME['font']};"
@@ -123,13 +123,13 @@ def segment(s, marks):
 
 def build_video():
     marks_file = CLIPS / "marks.json"
-    marks = json.loads(marks_file.read_text()) if marks_file.exists() else {}
+    marks = json.loads(marks_file.read_text(encoding="utf-8")) if marks_file.exists() else {}
     render_pngs()
     segs = [segment(s, marks) for s in SPEC["scenes"]]
     for s in SPEC["scenes"]:
         print(f"  {s['id']:22} {s['_dur']:6.1f}s" + (f"  recording x{s['_speed']:.2f}" if s["_speed"] != 1 else ""))
     lst = WORK / "concat.txt"
-    lst.write_text("".join(f"file '{p}'\n" for p in segs))
+    lst.write_text("".join(f"file '{Path(p).as_posix()}'\n" for p in segs), encoding="utf-8")
     ff("-f", "concat", "-safe", "0", "-i", str(lst), "-c", "copy", "-movflags", "+faststart", str(OUT))
 
 
@@ -167,7 +167,7 @@ Narration: {engine}. Each screen action is timed to a cue phrase in the voice-ov
 {chr(10).join(rows)}
 
 {chr(10).join(body)}"""
-    (HERE / "script.md").write_text(md)
+    (HERE / "script.md").write_text(md, encoding="utf-8")
 
 
 if __name__ == "__main__":

@@ -115,6 +115,7 @@ Put shared navigation (sign-in, opening a record) in plain functions in `scenes.
 - `check.py` prints each acronym's phonemes. A word-like reading such as `sˈæp` means a rule is needed.
 - **Unknown words are dropped silently.** Kokoro skips words outside its lexicon: company names, product names, compounds like "watchlist". `check.py` lists every one. Give a name a phonetic spelling (`[Solvay](/sˈɑlvA/)`; misaki IPA uses `A` = "ay", `I` = "eye", `O` = "oh") and split a compound into words.
 - **Rule order:** rules apply in order, and never inside a `[word](/…/)` span an earlier rule produced. Put a possessive (`Solvay's`) before the base word.
+- **Do it before the first recording.** Run the misaki check on every brand, product and person name in the voice-overs as soon as `scenes.json` is written. The voice key covers pronunciation for every scene, so a rule added after recording forces a full re-record. Verified examples: `[Infor](/ˈɪnfɔɹ/)`, `[Infor's](/ˈɪnfɔɹz/)`, `[Agentic](/Aʤˈɛntɪk/)`, and `Inline` → `In-line`.
 
 ## Caption bar
 Every app scene has a 92 px caption bar along the bottom. Keep what the narration is talking about above y ≈ 980. For example, `reveal(pg, "Flags", offset=140)` puts the section near the top of its pane, not at the bottom edge.
