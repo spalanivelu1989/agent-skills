@@ -1,0 +1,35 @@
+{
+  "title": "Episode title",
+  "artist": "Host A & Host B (AI-generated voices)",
+  "album": "Series or event name",
+  "script": "podcast-script.md",
+  "output": "podcast.mp3",
+  "out_dir": "build",
+  "speed": 1.0,
+  "turn_pause": 0.45,
+  "hosts": {
+    "MAYA": {
+      "voice": "af_heart",
+      "role": "the listener's stand-in: asks the questions the audience would ask"
+    },
+    "SAM": {
+      "voice": "am_fenrir",
+      "role": "the specialist: answers plainly, with sources"
+    }
+  },
+  "rules": [
+    [
+      "\\bERP\\b",
+      "E-R-P"
+    ],
+    [
+      "\\bGenAI\\b",
+      "Gen-A-I"
+    ],
+    [
+      "\\bValue\\+",
+      "Value Plus"
+    ]
+  ],
+  "engine": "kokoro"
+}

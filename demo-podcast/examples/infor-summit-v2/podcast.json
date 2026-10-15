@@ -1,0 +1,181 @@
+{
+  "title": "Industry AI That Works Inside Your ERP",
+  "artist": "Maya & Sam (AI-generated voices)",
+  "album": "Infor Manufacturing AI Summit",
+  "script": "podcast-script.md",
+  "output": "Infor_AI_Podcast_v2.mp3",
+  "out_dir": "build",
+  "hosts": {
+    "MAYA": {
+      "engine": "chatterbox",
+      "reference": "@heart_expressive",
+      "emotions": {
+        "neutral": {
+          "exaggeration": 0.75,
+          "cfg_weight": 0.35
+        },
+        "excited": {
+          "exaggeration": 0.9,
+          "cfg_weight": 0.3
+        },
+        "calm": {
+          "exaggeration": 0.55,
+          "cfg_weight": 0.42
+        }
+      }
+    },
+    "SAM": {
+      "engine": "kokoro",
+      "voice": "am_fenrir"
+    }
+  },
+  "rules": [
+    [
+      "\\bInfor's\\b",
+      "[Infor's](/ˈɪnfɔɹz/)"
+    ],
+    [
+      "\\bInfor\\b",
+      "[Infor](/ˈɪnfɔɹ/)"
+    ],
+    [
+      "\\b[Aa]gentic\\b",
+      "[agentic](/Aʤˈɛntɪk/)"
+    ],
+    [
+      "\\bInline\\b",
+      "In-line"
+    ],
+    [
+      "\\bBirst\\b",
+      "[Birst](/bˈɜɹst/)"
+    ],
+    [
+      "\\bLangChain\\b",
+      "[LangChain](/lˈæŋʧAn/)"
+    ],
+    [
+      "\\bPfaudler\\b",
+      "[Pfaudler](/fˈWdləɹ/)"
+    ],
+    [
+      "\\bXpress\\b",
+      "Express"
+    ],
+    [
+      "\\bOS\\b",
+      "O-S"
+    ],
+    [
+      "\\bIT\\b",
+      "I-T"
+    ],
+    [
+      "\\bforward-deployed\\b",
+      "forward deployed"
+    ],
+    [
+      "\\bpick-path\\b",
+      "pick path"
+    ],
+    [
+      "\\bCloudSuites\\b",
+      "Cloud Suites"
+    ],
+    [
+      "\\bCloudSuite\\b",
+      "Cloud Suite"
+    ],
+    [
+      "\\bValue\\+",
+      "Value Plus"
+    ],
+    [
+      "\\bGenAI\\b",
+      "Gen-A-I"
+    ],
+    [
+      "\\bERP\\b",
+      "E-R-P"
+    ],
+    [
+      "\\bobservability\\b",
+      "[observability](/əbzˌɜɹvəbˈɪləTi/)"
+    ]
+  ],
+  "engine": "hybrid",
+  "speed": 1.0,
+  "rules_chatterbox": [
+    [
+      "\\bInfor's\\b",
+      "In-for's"
+    ],
+    [
+      "\\bInfor\\b",
+      "In-for"
+    ],
+    [
+      "\\bPfaudler\\b",
+      "Fowdler"
+    ],
+    [
+      "\\bBirst\\b",
+      "Burst"
+    ],
+    [
+      "\\bLangChain\\b",
+      "Lang Chain"
+    ],
+    [
+      "\\bGenAI\\b",
+      "Gen A I"
+    ],
+    [
+      "\\bERP\\b",
+      "E R P"
+    ],
+    [
+      "\\bXpress\\b",
+      "Express"
+    ],
+    [
+      "\\bValue\\+",
+      "Value Plus"
+    ],
+    [
+      "\\bCloudSuites\\b",
+      "Cloud Suites"
+    ],
+    [
+      "\\bCloudSuite\\b",
+      "Cloud Suite"
+    ],
+    [
+      "\\bOS\\b",
+      "O S"
+    ],
+    [
+      "\\bR-P-A\\b",
+      "R P A"
+    ],
+    [
+      "\\bC-F-O\\b",
+      "C F O"
+    ],
+    [
+      "\\bC-I-O\\b",
+      "C I O"
+    ],
+    [
+      "\\bL-N\\b",
+      "L N"
+    ]
+  ],
+  "gaps": {
+    "default": 0.32,
+    "after_question": 0.2,
+    "overlap": -0.25,
+    "chapter": 0.8
+  },
+  "seed": 11
+}

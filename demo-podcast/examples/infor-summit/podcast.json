@@ -1,0 +1,94 @@
+{
+  "title": "Industry AI That Works Inside Your ERP",
+  "artist": "Maya & Sam (AI-generated voices)",
+  "album": "Infor Manufacturing AI Summit",
+  "script": "podcast-script.md",
+  "output": "Infor_AI_Podcast.mp3",
+  "out_dir": "build",
+  "speed": 0.95,
+  "turn_pause": 0.45,
+  "hosts": {
+    "MAYA": {
+      "voice": "af_heart",
+      "role": "operations-minded host; asks what a plant or ops leader would ask"
+    },
+    "SAM": {
+      "voice": "am_michael",
+      "role": "Infor AI specialist; answers plainly from published sources"
+    }
+  },
+  "rules": [
+    [
+      "\\bInfor's\\b",
+      "[Infor's](/ˈɪnfɔɹz/)"
+    ],
+    [
+      "\\bInfor\\b",
+      "[Infor](/ˈɪnfɔɹ/)"
+    ],
+    [
+      "\\b[Aa]gentic\\b",
+      "[agentic](/Aʤˈɛntɪk/)"
+    ],
+    [
+      "\\bInline\\b",
+      "In-line"
+    ],
+    [
+      "\\bBirst\\b",
+      "[Birst](/bˈɜɹst/)"
+    ],
+    [
+      "\\bLangChain\\b",
+      "[LangChain](/lˈæŋʧAn/)"
+    ],
+    [
+      "\\bPfaudler\\b",
+      "[Pfaudler](/fˈWdləɹ/)"
+    ],
+    [
+      "\\bXpress\\b",
+      "Express"
+    ],
+    [
+      "\\bOS\\b",
+      "O-S"
+    ],
+    [
+      "\\bIT\\b",
+      "I-T"
+    ],
+    [
+      "\\bforward-deployed\\b",
+      "forward deployed"
+    ],
+    [
+      "\\bpick-path\\b",
+      "pick path"
+    ],
+    [
+      "\\bCloudSuites\\b",
+      "Cloud Suites"
+    ],
+    [
+      "\\bCloudSuite\\b",
+      "Cloud Suite"
+    ],
+    [
+      "\\bValue\\+",
+      "Value Plus"
+    ],
+    [
+      "\\bGenAI\\b",
+      "Gen-A-I"
+    ],
+    [
+      "\\bERP\\b",
+      "E-R-P"
+    ],
+    [
+      "\\bobservability\\b",
+      "[observability](/əbzˌɜɹvəbˈɪləTi/)"
+    ]
+  ]
+}
