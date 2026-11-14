@@ -8,7 +8,8 @@ description: The house writing voice for anything Claude writes in prose — exp
 Write the way a good science magazine explains a hard idea to a curious reader who is smart but not a
 specialist. The reader should never feel lost and never feel talked down to. Every paragraph answers
 the question the previous one raised, so the piece pulls the reader forward rather than piling facts
-on them.
+on them. The test is simple: a reader new to the topic gets to the end without once opening a search
+tab to look something up.
 
 `references/examples.md` has before-and-after rewrites on technical topics. Read it before your first
 long piece in a session.
@@ -35,12 +36,19 @@ A long piece moves through these stages in order. Short pieces compress them, bu
 1. **The hook — big world, small origin.** Open with something the reader already knows is large
    (a system everyone uses, a cost everyone feels), then collapse it onto one small, specific
    starting point: a person, a moment, a bug, a single design decision. "All of that traces back,
-   in some sense, to …"
+   in some sense, to …" If the subject is news (a launch, a release, a new standard), the milestone
+   itself can be the hook: the dates, the versions, what has just changed. Follow it at once with
+   one plain sentence saying what the thing is ("Simply put, …").
 2. **The scene.** A very short sentence that fixes time and place ("It was a Friday release.").
    Then one or two human details: who was there, what they knew, what they doubted.
 3. **The problem, and why it's hard.** Say why the naive approach can't work, and why, in one line
    ("You can't write a rule for it, because there isn't one."). Then say what people tried before and
    name the exact reason it fell short: the bottleneck, not just "it was slow".
+   Many hard problems are really trade-offs, and those deserve a set shape. Name both sides in one
+   sentence ("you either give the agent a few capabilities, or you fill its memory with
+   instructions it mostly won't need"). Then take each earlier fix in turn: say which side it
+   fixed, and name the catch that brought the other side back ("The catch is that …"). Now the
+   turn lands as the thing that removes the trade-off, not as one more option on the pile.
 4. **The turn.** "So she tried something different." The insight, in the words of the person who had
    it if you have them. Keep it brief; its weight comes from the setup.
 5. **The stakes.** Why the insight mattered: it scaled, others adopted it, it unlocked what came next.
@@ -63,6 +71,58 @@ A long piece moves through these stages in order. Short pieces compress them, bu
 12. **The close.** Return to the running example one last time, answer what can be answered, and end
     on a short, resonant, slightly wry sentence that widens the frame. No summary recap, no "In
     conclusion".
+
+### A second arc: explaining a new thing
+
+Sometimes the subject is a launch, a standard, a tool or a design, and there's no origin story to
+tell. Then use this shorter shape instead. Each stage is a section in a long doc, or a paragraph in
+a short one.
+
+1. **What it is.** The context or milestone, then one plain sentence that defines the thing.
+2. **Why it exists.** The trade-off it removes, and the earlier fixes that each solved only half
+   of it (see stage 3 above).
+3. **How it works.** The mechanism, with every prerequisite explained along the way, and an
+   "In practice, …" sentence after each technical stretch.
+4. **What changed on the way.** What the first design got wrong, and why the final one looks the
+   way it does. Use the real words of the people who built it, if you have them.
+5. **What's next.** The new problem this solution exposes. This is where a stretched analogy
+   (below) often earns its place.
+
+## Leave the reader nothing to look up
+
+These moves are what make a piece self-contained for a beginner.
+
+**Explain each prerequisite by what it does, at the moment it's needed.** If the explanation leans
+on an idea the reader may not know, spend two or three sentences on it right there. Describe the
+steps, then give the name. Not "skills use progressive disclosure", but "the agent first reads only
+each skill's name and a one-line description, and opens the full instructions only after it has
+picked one. This is called progressive disclosure."
+
+**Spell out every acronym the first time it appears, and translate formal names.** After an
+official term, add a plain restatement: "a specification enhancement proposal (SEP) … Simply put,
+servers can now hand out the tools and the instructions for using them together."
+
+**Turn mechanism back into consequence.** After a stretch of technical detail (method names,
+formats, steps), add one sentence that starts "In practice, …" or "What this means is …" and says
+what changes for a person: "In practice, when one team publishes a skill, every connected agent can
+use it, and nobody has to reinstall anything."
+
+**Make scale tangible with a sum.** Don't write "this gets expensive at scale". Do the arithmetic,
+and show the assumption: "If each entry takes 20 tokens, a few thousand entries come to tens of
+thousands of tokens before any work has started."
+
+**Stretch one analogy across neighbouring ideas.** When two or three ideas are easy to confuse,
+put them in the same picture as successive stages, and bold the word that differs. Picture a
+library. With no catalogue you'd read every book; progressive **disclosure** gives you a catalogue
+to skim; progressive **discovery** is asking the librarian. This is the one exception to "one image
+per concept".
+
+**Let each paragraph's first sentence carry its claim.** A reader who skims only first sentences
+should still follow the argument.
+
+**Use lists for parallel parts.** When something has a handful of parallel parts (the methods of an
+API, the files in a package), list them: the name in code, then one line on what it returns or does.
+Anything with a *because* in it still goes in a paragraph.
 
 ## Sentence-level craft
 
@@ -116,6 +176,8 @@ opening, and not more than two or three times.
 - Prose paragraphs of 3–6 sentences. Don't use bullet lists for anything that has a "because" in it.
 - Few or no headings in pieces under ~800 words; let the transitions do that job. Longer docs may use
   plain, questioning or descriptive section titles ("Why the cache went stale"), not labels ("Overview").
+  The best titles are the questions the reader is asking at that point: "Why serve it this way?",
+  "How it works", "What comes next".
 - Spaced em dashes for asides — like this — but no more than about one per paragraph.
 - Bold and italics rarely; italics for a word used as a word (*stale*) or for light emphasis.
 - Tables, code blocks and lists are welcome where the content is truly tabular, code or a sequence of
@@ -140,3 +202,9 @@ opening, and not more than two or three times.
 5. Is every claim hedged exactly as much as it should be, and every number specific?
 6. Does it end on a short sentence that widens the frame, not a recap?
 7. Is every fact, name, date and quote real?
+8. Could a beginner finish it without searching for anything? Is every prerequisite explained by
+   what it does, and every acronym spelled out?
+9. If the problem is a trade-off, are both sides named, and does each earlier fix come with its
+   catch?
+10. Is every stretch of mechanism followed by an "In practice" sentence, and is every claim about
+    scale backed by a sum?

@@ -1,0 +1,900 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Personal Data in SAP ERP: Problem, Solution Requirements and Strategy</title>
+<style>
+  @page {
+    size: A4;
+    margin: 22mm 22mm 24mm;
+    @bottom-center { content: counter(page); font-family: Charter, Georgia, serif; font-size: 9pt; color: #555; }
+    @top-right { content: "Personal Data in SAP ERP · Tarento internal research paper"; font-family: "Helvetica Neue", Arial, sans-serif; font-size: 7.5pt; color: #888; }
+  }
+  @page :first { @bottom-center { content: none; } @top-right { content: none; } }
+  body { font-family: Charter, Georgia, serif; font-size: 10.6pt; line-height: 1.52; color: #1a1a1a; text-align: justify; hyphens: auto; }
+  h1, h2, h3, h4, .sans { font-family: "Helvetica Neue", Arial, sans-serif; text-align: left; }
+  h2 { font-size: 14pt; margin: 22pt 0 6pt; color: #10304a; break-after: avoid; }
+  h2.newpage { break-before: page; margin-top: 0; }
+  h3 { font-size: 11.2pt; margin: 14pt 0 4pt; color: #10304a; break-after: avoid; }
+  h4 { font-size: 10pt; margin: 10pt 0 3pt; break-after: avoid; }
+  p { margin: 0 0 7pt; orphans: 3; widows: 3; }
+  ul, ol { margin: 0 0 8pt; padding-left: 18pt; }
+  li { margin-bottom: 3pt; }
+  code { font-family: Menlo, monospace; font-size: 8.6pt; background: #f2f4f6; padding: 0 2pt; border-radius: 2pt; }
+  .cite { font-size: 8.8pt; color: #10304a; white-space: nowrap; }
+  .ev { font-family: "Helvetica Neue", Arial, sans-serif; font-size: 7pt; font-weight: 700; letter-spacing: .03em; color: #fff; background: #5d6d7e; border-radius: 2pt; padding: 0 2.5pt; vertical-align: 1pt; white-space: nowrap; }
+  .ev.v { background: #1e7a46; } .ev.a { background: #7a5a1e; } .ev.c { background: #8a3b3b; } .ev.s { background: #3b5a8a; } .ev.e { background: #5d4a7a; }
+
+  /* Title page */
+  .titlepage { height: 245mm; display: flex; flex-direction: column; }
+  .tp-kicker { font-family: "Helvetica Neue", Arial, sans-serif; font-size: 8.5pt; letter-spacing: .18em; text-transform: uppercase; color: #5d6d7e; margin-top: 28mm; }
+  .tp-title { font-family: "Helvetica Neue", Arial, sans-serif; font-size: 25pt; line-height: 1.15; font-weight: 700; color: #10304a; margin: 8pt 0 10pt; text-align: left; }
+  .tp-sub { font-size: 13pt; color: #333; text-align: left; margin-bottom: 18pt; }
+  .tp-rule { border: 0; border-top: 2pt solid #10304a; width: 40mm; margin: 0 0 16pt; }
+  .tp-meta { font-family: "Helvetica Neue", Arial, sans-serif; font-size: 9pt; color: #333; line-height: 1.7; }
+  .tp-meta b { display: inline-block; width: 32mm; color: #5d6d7e; font-weight: 600; }
+  .tp-foot { margin-top: auto; font-family: "Helvetica Neue", Arial, sans-serif; font-size: 8pt; color: #666; border-top: .5pt solid #bbb; padding-top: 6pt; text-align: left; }
+
+  .abstract { border-top: .8pt solid #10304a; border-bottom: .8pt solid #10304a; padding: 8pt 0; margin: 0 0 10pt; }
+  .abstract h4 { margin-top: 0; text-transform: uppercase; letter-spacing: .1em; font-size: 8.5pt; color: #10304a; }
+  .kw { font-size: 9pt; color: #444; }
+
+  .toc { columns: 1; font-family: "Helvetica Neue", Arial, sans-serif; font-size: 9.6pt; }
+  .toc div { margin: 2pt 0; }
+  .toc .l2 { padding-left: 14pt; color: #444; font-size: 9pt; }
+
+  table { border-collapse: collapse; width: 100%; font-size: 8.7pt; line-height: 1.38; margin: 4pt 0 4pt; text-align: left; break-inside: auto; }
+  thead { display: table-header-group; }
+  tr { break-inside: avoid; }
+  th { font-family: "Helvetica Neue", Arial, sans-serif; font-size: 7.8pt; text-transform: uppercase; letter-spacing: .05em; color: #10304a; border-top: 1pt solid #10304a; border-bottom: .6pt solid #10304a; padding: 4pt 5pt; vertical-align: bottom; }
+  td { border-bottom: .4pt solid #cfd6dd; padding: 4pt 5pt; vertical-align: top; }
+  tbody tr:last-child td { border-bottom: 1pt solid #10304a; }
+  .cap { font-family: "Helvetica Neue", Arial, sans-serif; font-size: 8.4pt; color: #333; margin: 10pt 0 2pt; text-align: left; break-after: avoid; }
+  .cap b { color: #10304a; }
+  .note { font-size: 8.2pt; color: #555; margin: 2pt 0 10pt; text-align: left; }
+
+  .box { border: .7pt solid #9fb3c6; background: #f3f7fa; padding: 7pt 10pt; margin: 9pt 0 11pt; break-inside: avoid; }
+  .box h4 { margin-top: 0; color: #10304a; font-size: 9.3pt; text-transform: uppercase; letter-spacing: .06em; }
+  .box p:last-child, .box ul:last-child, .box ol:last-child { margin-bottom: 0; }
+
+  .fig { margin: 10pt 0 6pt; break-inside: avoid; }
+  .chain { display: flex; gap: 0; align-items: stretch; font-family: "Helvetica Neue", Arial, sans-serif; font-size: 8.3pt; text-align: left; }
+  .chain .st { flex: 1; border: .8pt solid #10304a; padding: 6pt 7pt; background: #f3f7fa; }
+  .chain .st b { display: block; color: #10304a; font-size: 9pt; margin-bottom: 2pt; }
+  .chain .ar { display: flex; align-items: center; padding: 0 4pt; color: #10304a; font-size: 13pt; }
+  .layers { font-family: "Helvetica Neue", Arial, sans-serif; font-size: 8.4pt; text-align: left; }
+  .layers .ly { display: flex; border: .8pt solid #10304a; margin-bottom: -0.8pt; }
+  .layers .ly .n { width: 30mm; background: #10304a; color: #fff; padding: 5pt 7pt; font-weight: 700; }
+  .layers .ly .d { flex: 1; padding: 5pt 8pt; background: #f8fafb; }
+  .layers .gov { border: .8pt dashed #10304a; padding: 5pt 8pt; margin-top: 5pt; background: #fff; }
+
+  .refs { font-size: 8.6pt; line-height: 1.4; text-align: left; }
+  .refs h3 { font-size: 9.5pt; margin-top: 10pt; }
+  .refs ol { padding-left: 22pt; }
+  .refs li { margin-bottom: 3pt; break-inside: avoid; }
+  .refs .u { font-family: Menlo, monospace; font-size: 7.2pt; color: #3b5a8a; word-break: break-all; }
+  .gloss td:first-child { font-weight: 700; width: 30mm; }
+  .small { font-size: 9pt; }
+</style>
+</head>
+<body>
+
+<!-- ================================================================ TITLE PAGE -->
+<section class="titlepage">
+  <div class="tp-kicker">Research paper · GDPR · SAP ERP · Data governance</div>
+  <div class="tp-title">Finding, Classifying and Remediating Personal Data in SAP ERP</div>
+  <div class="tp-sub">The problem, the solution it requires, and a strategy for Tarento to take it forward in the European market</div>
+  <hr class="tp-rule">
+  <div class="tp-meta">
+    <div><b>Organisation</b>Tarento: SAP and data-privacy practice</div>
+    <div><b>Document type</b>Internal research paper; reference baseline for future decisions</div>
+    <div><b>Version</b>1.0</div>
+    <div><b>Date</b>22 October 2026</div>
+    <div><b>Evidence base</b>Two Tarento workbooks (read in full, unmodified), three named web resources and 50 further external sources (see References)</div>
+    <div><b>Classification</b>Internal</div>
+  </div>
+  <div class="tp-foot">This paper is market and technical analysis. It is not legal advice. Market sizes for the SAP-specific segment are the author's estimates from stated assumptions, not measured data. Every factual claim carries a numbered reference and, where it matters, an evidence grade (Section 3.3).</div>
+</section>
+
+<!-- ================================================================ BUSINESS GUIDE -->
+<div style="font-size:10.1pt; line-height:1.46">
+<h2 style="margin-top:0">A guide for business readers</h2>
+<p class="note" style="font-size:9.5pt; margin-bottom:10pt">Read this first if you don't work in IT or data protection. It covers the whole argument in plain English, without technical terms, in about ten minutes. The rest of the paper is the detailed evidence behind it.</p>
+
+<h3>The problem in one picture</h3>
+<p>Imagine a company's customer list. One line says <em>Nordbutik AB</em>, which is a business. The next line says <em>Anna Svensson</em>, a private person who buys from the company on account. To the computer system they look identical: both are just "customer name". But under European privacy law only Anna's line is <em>personal data</em>, information about a living person. That gives the company duties towards her that it doesn't have towards Nordbutik.</p>
+<p>Now multiply that by twenty years of records, held in tens of thousands of separate lists inside the company's main business software. In most large European firms, that software is <b>SAP</b>, the system that runs finance, sales, purchasing and HR. Nobody can easily say where all the Annas are.</p>
+
+<h3>Why the company has to know</h3>
+<p>Europe's privacy law, the <b>GDPR</b>, gives people rights and puts obligations on companies. Four of them matter most here:</p>
+<ul>
+  <li><b>Show me my data.</b> Anyone can ask a company for everything it holds about them, and the company normally has a month to answer.</li>
+  <li><b>Delete my data.</b> People can ask to be erased once the company no longer needs their data.</li>
+  <li><b>Don't keep it forever.</b> A company must delete personal data when it's no longer needed, even if nobody asks.</li>
+  <li><b>Keep a record.</b> A company must document what personal data it holds and why.</li>
+</ul>
+<p>Every one of these assumes the company knows where the data is. Fines can reach 4% of global annual revenue. One German property company was fined €14.5 million because its old archive system couldn't delete tenants' data (a court later cut the fine to €0.9 million but upheld the breach).</p>
+
+<h3>Why now</h3>
+<ul>
+  <li><b>Regulators are checking.</b> In 2025, data-protection regulators across Europe ran a joint campaign on whether companies can actually delete data. Several say it will shape their 2026 inspections.</li>
+  <li><b>Thousands of companies are changing systems.</b> SAP is retiring its older software, <b>ECC</b>, from 2027. Customers must move to the new version, <b>S/4HANA</b>. Moving systems is like moving house: you have to decide what goes in the boxes. Old customer data that should have been deleted shouldn't be carried into the new system.</li>
+</ul>
+
+<h3>What a solution has to do</h3>
+<p>Solving this takes four steps, and each one depends on the one before:</p>
+<table>
+  <thead><tr><th style="width:18%">Step</th><th style="width:44%">In plain English</th><th>Is it already solved?</th></tr></thead>
+  <tbody>
+    <tr><td>1. Find</td><td>Which of the system's lists <em>could</em> hold personal data?</td><td>Largely, yes. Several vendors do it, and some give it away free.</td></tr>
+    <tr><td>2. Label</td><td>Which records <em>actually</em> are about a person, and how sensitive are they? (Anna, not Nordbutik.)</td><td>Rarely. This is the gap.</td></tr>
+    <tr><td>3. Document</td><td>Write it down in the form regulators expect.</td><td>Partly; privacy software exists, but it doesn't understand SAP.</td></tr>
+    <tr><td>4. Fix</td><td>Delete what shouldn't be kept, and lock away what must be kept for tax law, without breaking the accounts.</td><td>Done as consulting projects. <b>This is where customers spend money.</b></td></tr>
+  </tbody>
+</table>
+
+<h3>What Tarento already has</h3>
+<p>Tarento owns a scanning tool called <b>DEEPSCAN</b>. It runs inside a customer's SAP system and can find every place a given person's name appears. It's a real head start, but it has limits:</p>
+<ul>
+  <li>It works only on the old SAP system, not the new one customers are moving to.</li>
+  <li>It looks mainly for names, not e-mails, phone numbers or bank details.</li>
+  <li>It misses the main customer-name field, which is exactly where Anna sits.</li>
+  <li>It can find data, but it can't tell a person from a company (step 2).</li>
+  <li>It has no published customers or prices.</li>
+</ul>
+<p>Tarento also has a ready-made template for the privacy risk assessment regulators expect. It was originally written for a client, though, so Tarento needs permission before reusing it.</p>
+
+<h3>How big is the opportunity?</h3>
+<table>
+  <thead><tr><th style="width:36%">Measure</th><th style="width:22%">Estimate</th><th>What it means</th></tr></thead>
+  <tbody>
+    <tr><td>All European privacy software and services</td><td>US$1.5–4 bn a year</td><td>The whole category. Most of it has nothing to do with SAP.</td></tr>
+    <tr><td>The SAP-specific slice Tarento could serve</td><td>≈€200 m a year (range €70–450 m)</td><td>About 5,000 European companies spending ≈€40k a year each, mostly on clean-up projects.</td></tr>
+    <tr><td>What Tarento could realistically win by year 4</td><td>€1.5–2.5 m a year</td><td>20–30 clients, mainly in the Nordics. A solid niche practice, not a large software business.</td></tr>
+  </tbody>
+</table>
+<p class="note">These are estimates built on stated assumptions (Section 8); no public figure exists for this niche.</p>
+
+<h3>Who pays</h3>
+<p>The <b>data protection officer</b>, the person responsible for privacy, usually wants this work but has a small budget (around US$375k a year at the median, and flat). The real budget sits with the <b>IT department and the system-migration programme</b>. So the most natural sale is a privacy clean-up attached to a migration the customer is already paying for.</p>
+
+<h3>The competition in one line each</h3>
+<ul>
+  <li><b>SAP itself</b> provides the tools to delete data, but not to find it in older or customised systems.</li>
+  <li><b>Specialist vendors</b> (e.g. Silwood, EPI-USE) find the likely places, often free, as a way to sell other services.</li>
+  <li><b>Big privacy platforms</b> (e.g. Microsoft, OneTrust, BigID) manage privacy programmes but don't understand SAP well.</li>
+  <li><b>Almost nobody</b> publicly offers to label the actual records <em>and</em> carry out the clean-up. That's the opening.</li>
+</ul>
+
+<h3>The recommendation</h3>
+<div class="box">
+  <p><b>Go ahead, carefully.</b> Don't try to sell DEEPSCAN as a software product, because basic scanning is being given away. Use it as Tarento's door-opener into paid consulting work:</p>
+  <ol>
+    <li>A fixed-price <b>health check</b> (€15–40k, 2–4 weeks) showing a customer where their personal data really is.</li>
+    <li>Follow-on <b>clean-up projects</b>: deleting and locking away old data. This is where most of the revenue is.</li>
+    <li>A <b>migration add-on</b> that leaves unneeded personal data behind when the customer moves to the new SAP system.</li>
+  </ol>
+  <p>Start with Nordic clients in retail, utilities and manufacturing, where Tarento already has relationships.</p>
+</div>
+
+<h3>Test before investing</h3>
+<p>The open question isn't whether the technology can be built. It's whether customers will pay. So the plan is to spend little and learn fast:</p>
+<table>
+  <thead><tr><th style="width:18%">When</th><th style="width:46%">Do</th><th>Learn</th></tr></thead>
+  <tbody>
+    <tr><td>Month 1</td><td>Fix the obvious gaps in what we have; get permission for the template; book interviews.</td><td>Can we explain the offer in one sentence?</td></tr>
+    <tr><td>Month 2</td><td>Interview 15–20 Nordic SAP customers: privacy officers and IT/migration managers.</td><td>Who buys, and what would they pay?</td></tr>
+    <tr><td>Months 3–6</td><td>Run two paid pilots with friendly clients.</td><td><b>After seeing the results, do they pay us to fix it?</b></td></tr>
+  </tbody>
+</table>
+<p><b>The decision rule:</b> if at least one pilot turns into a paid clean-up project, invest in rebuilding the tool properly. If customers only want the free scan, stop there; it's a feature competitors already give away.</p>
+
+<h3>How to read the rest of this paper</h3>
+<table>
+  <thead><tr><th style="width:40%">If you want…</th><th>Read</th></tr></thead>
+  <tbody>
+    <tr><td>The short version</td><td>This guide, then the Executive summary and Section 14 (Conclusions)</td></tr>
+    <tr><td>The business case</td><td>Sections 5 (competitors), 7 (demand), 8 (market size), 10 (target customers), 11 (risks), 12 (plan)</td></tr>
+    <tr><td>The technical detail (safe to skip)</td><td>Sections 2.2–2.4, 4.2, 6 and 9.2–9.3; Appendix C</td></tr>
+    <tr><td>Any unfamiliar term</td><td>Appendix A (Glossary)</td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- ================================================================ ABSTRACT + TOC -->
+<div class="abstract" style="break-before:page">
+  <h4>Abstract</h4>
+  <p>The General Data Protection Regulation (GDPR) obliges every organisation to know what personal data it holds, to keep it no longer than necessary, and to find and delete it on request. In most large European enterprises, the system holding the largest volume of structured personal data is SAP ERP, which has tens of thousands of tables, thousands of company-specific custom tables, and personal data spread through free text, change logs and archives. This paper examines why locating personal data in SAP is hard, what existing tools do and do not solve, and what a complete solution needs. It assesses Tarento's existing assets (the DEEPSCAN scanner, its metadata workbook and a DPIA template) against those requirements, and estimates the market.</p>
+  <p>The central finding is that <em>discovery</em>, meaning knowing which fields could hold personal data, is largely commoditised and often given away. The value lies in <em>classification at the level of actual data values</em> (telling a private person from a company in the same field) and in <em>remediation</em> (retention, blocking, deletion and minimisation, often during the ECC-to-S/4HANA migration). The serviceable European market for SAP personal-data discovery, classification and remediation is estimated at €70–450 million a year (central case about €200 million). A realistic Tarento share is €1.5–2.5 million a year by year four. The paper recommends a services-led offering with DEEPSCAN as its accelerator, gated by customer interviews and two paid pilots over roughly six months.</p>
+  <p class="kw"><b>Keywords:</b> GDPR; SAP ECC; SAP S/4HANA; personal data discovery; data classification; storage limitation; right to erasure; SAP ILM; data protection impact assessment; data governance; market sizing.</p>
+</div>
+
+<h4 class="sans" style="margin-top:12pt">Contents</h4>
+<div class="toc">
+  <div>A guide for business readers (preceding pages)</div>
+  <div>Executive summary</div>
+  <div>1 &nbsp;Introduction</div>
+  <div>2 &nbsp;Background: GDPR obligations and SAP data architecture</div>
+  <div>3 &nbsp;Method, evidence grading and limitations</div>
+  <div>4 &nbsp;The problem: why personal data in SAP is hard to govern</div>
+  <div>5 &nbsp;Existing approaches and the competitive landscape</div>
+  <div>6 &nbsp;Tarento's current assets: a technical assessment</div>
+  <div>7 &nbsp;Demand, buyers and willingness to pay</div>
+  <div>8 &nbsp;Market size and commercial viability</div>
+  <div>9 &nbsp;What a complete solution requires</div>
+  <div>10 Target segments and go-to-market</div>
+  <div>11 Risks</div>
+  <div>12 Roadmap, validation plan and decision gates</div>
+  <div>13 Discussion and open questions</div>
+  <div>14 Conclusions and recommendations</div>
+  <div>References</div>
+  <div>Appendix A: Glossary · Appendix B: GDPR articles in scope · Appendix C: Workbook statistics</div>
+</div>
+
+<!-- ================================================================ EXEC SUMMARY -->
+<h2 class="newpage">Executive summary</h2>
+
+<p><b>The problem.</b> GDPR gives individuals the right to see their data (Article 15) and to have it erased (Article 17). It also requires organisations to keep personal data no longer than necessary (Article 5(1)(e)), to record what they process (Article 30) and to assess high-risk processing in advance (Article 35) <span class="cite">[1]</span>. Every one of these duties presumes the organisation knows <em>where</em> each person's data sits. In SAP ERP it usually doesn't. A typical system has around 90,000 tables and more than 900,000 fields <span class="ev c">VENDOR</span> <span class="cite">[19]</span>, plus custom "Z" tables, free-text notes, change logs and archives. Standard field names say nothing about whether a given row describes a person.</p>
+
+<p><b>Why it matters now.</b> Three forces converge in 2026–2028. Regulators made erasure and retention the subject of their 2025 coordinated enforcement action, with 32 authorities and 764 organisations taking part <span class="ev v">VERIFIED</span> <span class="cite">[2]</span>. Failure to delete old data from legacy systems has been fined: Deutsche Wohnen received €14.5m in 2019, reduced by a Berlin court in 2026 to €0.9m with the breach upheld <span class="cite">[3, 4]</span>. And SAP ECC loses mainstream maintenance in 2027 <span class="cite">[8]</span>, while an estimated 61% of roughly 35,000 ECC customers had not licensed S/4HANA by end-2024 <span class="ev a">ANALYST</span> <span class="cite">[10]</span>. Each migration forces a decision about which historical personal data to carry forward.</p>
+
+<p><b>What the market already offers.</b> Most tools work on <em>metadata</em>, the dictionary definitions of fields, and stop there. Silwood's Safyr "does not search through text data" <span class="cite">[20]</span>; Microsoft Purview's SAP connectors do not classify <span class="cite">[29]</span>; SAP's own Information Steward leaves mainstream maintenance on 31 December 2026 <span class="cite">[14]</span>. Discovery is frequently free, as a door-opener for masking or migration projects <span class="cite">[21, 24]</span>.</p>
+
+<p><b>The solution required.</b> A complete answer has four linked steps: <em>find</em> (discovery), <em>label</em> (value-level classification), <em>document</em> (inventory, records of processing, DPIA) and <em>fix</em> (retention, blocking, deletion, minimisation via SAP ILM and migration). This paper proposes a five-layer framework (Section 9) that adds continuous governance on top.</p>
+
+<p><b>Tarento's position.</b> Tarento has a working in-SAP scanner (DEEPSCAN), a curated list of 2,554 name-type data elements mapped to 13,420 fields in 9,626 tables, and a nine-sheet DPIA template. But the scanner is ECC-only, covers names (and per the website e-mail), omits the main customer and supplier name field (<code>NAME1</code>), does not classify, and has no public references <span class="cite">[47, 50]</span>.</p>
+
+<p><b>Market.</b> The serviceable European market is estimated at €70–450m a year, central case about €200m <span class="ev e">ESTIMATE</span>. Most of it is remediation services, not discovery software. A base-case Tarento share is €1.5–2.5m a year by year four.</p>
+
+<div class="box">
+  <h4>Recommendation</h4>
+  <p><b>Go, conditionally.</b> Build an SAP personal-data services line with DEEPSCAN as its accelerator rather than a standalone software product. Start with Nordic SAP ECC customers in retail and consumer goods, utilities and manufacturing that have an S/4HANA decision due in 2026–2028. Spend only on 15–20 customer interviews, two paid pilots and the minimum rebuild needed to run them. Commit to a full product only if at least one pilot converts to paid remediation and interviews confirm a buyer with budget.</p>
+</div>
+
+<!-- ================================================================ 1 INTRODUCTION -->
+<h2 class="newpage">1 &nbsp;Introduction</h2>
+
+<h3>1.1 Context</h3>
+<p>SAP ERP runs the finance, purchasing, sales, logistics and often human-resources processes of a large share of Europe's major companies. EMEA accounted for 46% of SAP's revenue in fiscal 2025 <span class="cite">[7]</span>. Because ERP systems record every customer, supplier, employee and contact person a business deals with, they are among the largest stores of structured personal data in any enterprise. They are also among the oldest: many ECC systems hold fifteen to twenty-five years of transactions, and their schemas have been extended with company-specific tables throughout that time.</p>
+<p>GDPR, in force since 25 May 2018, did not change SAP. It changed what organisations must be able to say about the data inside it. That gap between legal expectation and technical reality is the subject of this paper.</p>
+
+<h3>1.2 Problem statement</h3>
+<p>Organisations running SAP ERP generally cannot produce, at reasonable cost, a reliable inventory of which tables, fields and records contain personal data, of what category, about whom, and for what purpose. Without that inventory they cannot reliably answer access and erasure requests, enforce retention periods, complete records of processing or DPIAs, or decide which personal data to migrate to S/4HANA.</p>
+
+<h3>1.3 Research questions</h3>
+<ol>
+  <li>Why is personal data in SAP ERP hard to locate and classify, and what exactly makes metadata-only approaches insufficient?</li>
+  <li>What do existing products and services cover, and where are the gaps?</li>
+  <li>What capabilities must a complete solution have, from discovery through remediation and ongoing governance?</li>
+  <li>How well do Tarento's existing assets meet those requirements?</li>
+  <li>Is there demonstrated demand and willingness to pay, from whom, and of what size?</li>
+  <li>What should Tarento do next, and how should it decide whether to invest further?</li>
+</ol>
+
+<h3>1.4 Scope</h3>
+<p>In scope: SAP ECC 6.0 and SAP S/4HANA (on-premise and private cloud), customers in the EU, EEA and UK, personal data under GDPR Articles 4, 9 and 10, and both software and services business models. Out of scope: SAP SuccessFactors, Ariba and other cloud applications (except where they affect competitors), non-SAP ERP systems, and legal interpretation of specific national retention laws. The paper does not evaluate DEEPSCAN by running it; its assessment rests on the tool's published description and on the metadata workbook that drives it.</p>
+
+<h3>1.5 Structure of the paper</h3>
+<p>Section 2 sets out the legal and technical background. Section 3 explains the method and how evidence is graded. Section 4 analyses the problem in depth, using one running example. Sections 5 to 8 cover the competitive landscape, Tarento's assets, demand and market size. Section 9 specifies what a complete solution requires. Sections 10 to 12 cover go-to-market, risks and a gated roadmap. Sections 13 and 14 discuss limitations and conclude.</p>
+
+<!-- ================================================================ 2 BACKGROUND -->
+<h2>2 &nbsp;Background: GDPR obligations and SAP data architecture</h2>
+
+<h3>2.1 What GDPR requires of an ERP system</h3>
+<p>GDPR defines personal data as any information relating to an identified or identifiable natural person (Article 4(1)) <span class="cite">[1]</span>. A name is personal data; so is a user ID, an employee number or a customer number linked to an individual. A company's name is not, unless it identifies a person, as with a sole trader trading under their own name. Table 1 lists the obligations that bear most directly on data held in SAP.</p>
+
+<p class="cap"><b>Table 1.</b> GDPR obligations that depend on knowing where personal data sits <span class="cite">[1]</span></p>
+<table>
+  <thead><tr><th style="width:22%">Article</th><th style="width:38%">Obligation</th><th>Implication for SAP</th></tr></thead>
+  <tbody>
+    <tr><td>Art. 5(1)(c) Data minimisation</td><td>Collect and keep only what is necessary.</td><td>Unused personal fields and historic records should not be carried into S/4HANA.</td></tr>
+    <tr><td>Art. 5(1)(e) Storage limitation</td><td>Keep data in identifiable form no longer than necessary.</td><td>Requires retention rules per data type, and the ability to block and delete.</td></tr>
+    <tr><td>Art. 9, Art. 10</td><td>Special-category and criminal-offence data need a specific legal basis and stronger protection.</td><td>HR data (health, union membership), and notes in free text, must be identified separately.</td></tr>
+    <tr><td>Art. 15 Right of access</td><td>Provide a copy of all personal data held on a person, normally within one month.</td><td>Every table and text holding that person must be searchable.</td></tr>
+    <tr><td>Art. 17 Right to erasure</td><td>Erase data without undue delay when no longer needed, subject to legal retention duties.</td><td>Delete what is not legally required; block what must be kept (e.g. accounting records).</td></tr>
+    <tr><td>Art. 25 Privacy by design and default</td><td>Build data protection into systems and processes.</td><td>Retention and deletion should be automated, not ad hoc.</td></tr>
+    <tr><td>Art. 30 Records of processing</td><td>Maintain a register of processing activities, data categories and retention.</td><td>Needs a field-level map from SAP objects to purposes.</td></tr>
+    <tr><td>Art. 32 Security</td><td>Appropriate technical and organisational measures.</td><td>Masking of personal data in non-production copies; access logging.</td></tr>
+    <tr><td>Art. 35 DPIA</td><td>Assess high-risk processing before it starts.</td><td>A scan of what personal data a system holds is the natural input to a DPIA.</td></tr>
+    <tr><td>Art. 83 Fines</td><td>Up to €20m or 4% of worldwide annual turnover, whichever is higher.</td><td>Sets the scale of regulatory exposure.</td></tr>
+  </tbody>
+</table>
+
+<p>Two of these pull in opposite directions. Commercial and tax law in every EU member state require invoices and accounting records to be kept for years, so an erasure request cannot simply delete a customer who has unpaid or recently paid invoices. The correct response is often to <em>block</em> the data, which means hiding it from everyday use while keeping it for auditors, and to delete it automatically when the retention period ends. That distinction between blocking and deletion runs through everything that follows.</p>
+
+<h3>2.2 How SAP stores data</h3>
+<p>SAP ERP stores business data in relational database tables. Its <em>data dictionary</em> (DDIC) describes them: table <code>DD02L</code> lists tables, <code>DD03L</code> lists every field of every table, and <code>DD04T</code> holds the texts of <em>data elements</em>, the reusable field definitions shared across tables. For example, data element <code>NAME1_GP</code> ("Name 1") types the name field in the customer master (<code>KNA1-NAME1</code>) and the supplier master (<code>LFA1-NAME1</code>), while <code>AD_NAME1</code> types the central address table (<code>ADRC-NAME1</code>).</p>
+<p>Beyond these standard, or <em>transparent</em>, tables, personal data also lives in places a dictionary search does not reach directly:</p>
+<ul>
+  <li><b>Custom tables.</b> Tables built by the customer, with names beginning <code>Z</code> or <code>Y</code>, often named in the local language. No vendor list knows about them in advance.</li>
+  <li><b>Cluster and pool tables.</b> Older storage formats that pack several logical records into one, used for instance for HR payroll results (<code>PCL2</code>).</li>
+  <li><b>Long texts.</b> Free-text notes on documents and master records, stored in <code>STXH</code>/<code>STXL</code> in a compressed format.</li>
+  <li><b>Change documents.</b> Logs of previous field values (<code>CDHDR</code>/<code>CDPOS</code>), which preserve old addresses and names after the master record is corrected.</li>
+  <li><b>Archives.</b> Data moved out of the live database by SAP's archiving framework but still retrievable, and still subject to GDPR.</li>
+  <li><b>Non-production copies.</b> Test, training and development systems refreshed from production, which carry the same personal data unless masked.</li>
+</ul>
+
+<h3>2.3 ECC, S/4HANA and the migration wave</h3>
+<p>SAP ECC, the previous ERP generation, receives mainstream maintenance until the end of 2027, with optional extended maintenance to 2030 <span class="cite">[8]</span> and a paid transition option to 2033 <span class="cite">[9]</span>. S/4HANA, its successor, is maintained to at least 2040 <span class="cite">[8]</span>. Gartner estimates about 35,000 ECC customers worldwide, of whom roughly 61% had not licensed S/4HANA by the end of 2024 <span class="ev a">ANALYST</span> <span class="cite">[10, 11]</span>. In a 2025 survey of UK and Irish SAP users, 79% described data management as a challenge in the move <span class="ev s">SURVEY</span> <span class="cite">[13]</span>.</p>
+<p>S/4HANA changes the personal-data landscape in three relevant ways. Customers and suppliers become <em>business partners</em> (table <code>BUT000</code>), which carry an explicit category: person, organisation or group. SAP's newer data models carry <code>@PersonalData</code> annotations that mark fields as personal <span class="cite">[17]</span>. And SAP offers Data Privacy Integration services on its cloud platform <span class="cite">[16]</span>. These help for SAP-delivered objects, but they do not cover data still on ECC, custom tables, or free text.</p>
+
+<h3>2.4 SAP's own privacy tooling</h3>
+<p>SAP provides <b>Information Lifecycle Management (ILM)</b> for retention rules, blocking and destruction; <b>Read Access Logging</b> for recording who viewed sensitive fields; and <b>UI masking</b> for hiding values on screen. Licensing for ILM in a GDPR-only context is disputed in practitioner sources <span class="cite">[18]</span>. Crucially, ILM acts only on data objects someone has already identified and assigned a retention rule. It is an execution engine, not a discovery tool. SAP's older data-quality product, <b>Information Steward</b>, was positioned for GDPR use after 2017, but its current introduction page does not mention privacy <span class="cite">[15]</span> and its mainstream maintenance ends on 31 December 2026 <span class="cite">[14]</span>.</p>
+
+<!-- ================================================================ 3 METHOD -->
+<h2 class="newpage">3 &nbsp;Method, evidence grading and limitations</h2>
+
+<h3>3.1 Sources</h3>
+<p>The study combined three kinds of evidence:</p>
+<ol>
+  <li><b>Primary internal artefacts.</b> Two Tarento workbooks, read in full and left unmodified (checksums were verified before and after): <code>GDPR_NameAttr_DataElements_Tables_List.xlsx</code> (3 sheets, 37,710 rows) <span class="cite">[50]</span> and <code>Tarento_DPIA_Questionnaire.xlsx</code> (9 sheets, including hidden columns and comments) <span class="cite">[51]</span>.</li>
+  <li><b>Named web resources.</b> Tarento's DEEPSCAN page <span class="cite">[47]</span>, Silwood's Safyr compliance page <span class="cite">[19]</span> and SAP's Information Steward introduction <span class="cite">[15]</span>.</li>
+  <li><b>Secondary research.</b> About 50 further sources: the regulation itself, regulator and court publications, SAP filings and support notes, user-group surveys, analyst market reports, vendor documentation, public price data and public tenders (see References).</li>
+</ol>
+
+<h3>3.2 Analytical approach</h3>
+<p>The workbooks were profiled programmatically: tag counts, coverage of known personal-data fields, distribution of field types, and naming patterns in custom tables. Competitors were compared on four attributes: SAP coverage, whether they read data values or only metadata, published pricing, and remediation capability. The market was sized top-down from analyst reports for context (TAM) and bottom-up from customer counts and spend assumptions for the serviceable segment (SAM and SOM). Every assumption is stated next to the number it produces.</p>
+
+<h3>3.3 Evidence grades</h3>
+<p>Claims that carry weight in the argument are graded inline:</p>
+<table>
+  <thead><tr><th style="width:22%">Grade</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td><span class="ev v">VERIFIED</span></td><td>From the regulation, a regulator, a court, an official SAP document or an audited filing, read directly.</td></tr>
+    <tr><td><span class="ev a">ANALYST</span></td><td>A market-research or analyst estimate. These vary widely by definition and method.</td></tr>
+    <tr><td><span class="ev c">VENDOR</span></td><td>A seller's statement about its own product, pricing or customers.</td></tr>
+    <tr><td><span class="ev s">SURVEY</span></td><td>Self-reported data from user groups or professional associations.</td></tr>
+    <tr><td><span class="ev e">ESTIMATE</span></td><td>This paper's own reasoning or calculation, with assumptions shown.</td></tr>
+  </tbody>
+</table>
+
+<h3>3.4 Limitations</h3>
+<ul>
+  <li>DEEPSCAN was not run or tested. Its capabilities are taken from its published description <span class="cite">[47]</span> and the workbook that feeds it <span class="cite">[50]</span>.</li>
+  <li>The SAP Help link as originally supplied (<code>…/infostew/…</code>) returned "Page not found"; the corrected path (<code>…/infosteward/…</code>) was read <span class="cite">[15]</span>.</li>
+  <li>Several secondary pages could not be opened directly: SAP Store and partner pages (HTTP 403), SAP's Q2 2026 statement (403), Vendr's BigID page and Informatica's SAP help page (404 at time of access), and paywalled Forrester and IAPP member reports. Figures from those sources were seen only in search or press summaries and are marked as secondary.</li>
+  <li>No direct search was run on the EU tender database (TED), so the absence of a matching tender is not conclusive.</li>
+  <li>No public source gives the number of SAP ERP customers in Europe, or the market for SAP-specific personal-data work. Sections 8.2 and 8.3 are therefore estimates.</li>
+  <li>No primary customer research (interviews or surveys) has been carried out yet. Section 12 proposes it as the first step.</li>
+</ul>
+
+<!-- ================================================================ 4 PROBLEM -->
+<h2 class="newpage">4 &nbsp;The problem: why personal data in SAP is hard to govern</h2>
+
+<h3>4.1 A running example</h3>
+<p>Consider two consecutive rows in the SAP customer master, table <code>KNA1</code>. In field <code>NAME1</code>, the first holds <em>Nordbutik AB</em>, a company. The second holds <em>Anna Svensson</em>, a sole trader who buys spare parts on account. (Both are hypothetical.) The field, its data element and its dictionary description are identical: "Name 1". Under GDPR, only the second row is personal data.</p>
+<p>This pair captures the core difficulty. Any tool that reasons from the dictionary alone has to treat <code>KNA1-NAME1</code> as either personal or not personal for all rows. Tag it "personal" and every business customer floods the inventory; tag it "not personal" and every private customer disappears from it. Tarento's own workbook made the second choice: <code>NAME1_GP</code> and <code>AD_NAME1</code> are untagged, so <code>KNA1-NAME1</code>, <code>LFA1-NAME1</code> and <code>ADRC-NAME1</code> never reach its list of tables to scan <span class="cite">[50]</span>. The rest of this paper keeps returning to these two rows, because the question of who can tell them apart cheaply and at scale is, in miniature, the business question.</p>
+
+<h3>4.2 Four sources of difficulty</h3>
+<h4>(a) Scale</h4>
+<p>Silwood reports roughly 90,000 tables and more than 900,000 fields in an SAP ERP system, and a social-security-type identifier present in more than 900 tables <span class="ev c">VENDOR</span> <span class="cite">[19, 20]</span>. Tarento's workbook shows the same pattern from the other side. Starting from SAP's own dictionary, 21,737 data elements mention "name" in some form, and the 2,554 accepted as describing a person are used in 13,420 fields across 9,626 tables <span class="cite">[50]</span>. Manual review at that scale is not feasible.</p>
+
+<h4>(b) Semantics: metadata does not determine content</h4>
+<p>The <code>NAME1</code> example is one instance of a general problem. The same field can hold personal or non-personal data depending on the row; generic fields such as "Text", "Reference" or "Contact" can hold anything; and a correctly named field can be empty in a given system. Only the values themselves settle the question.</p>
+
+<h4>(c) Customisation</h4>
+<p>Custom Z tables are where standard lists fail. In Tarento's workbook, all 36 custom tables have Swedish names, for example <code>ZGRAVERING_NAMN</code> with a field <code>ANVANDARE</code> ("user") <span class="cite">[50]</span>. That indicates the extract came from one customer's system and would not carry over to another. Tarento's own web page acknowledges that badly named custom fields are "a gap of course" <span class="cite">[47]</span>.</p>
+
+<h4>(d) Hidden stores and legal tension</h4>
+<p>Long texts, change documents, cluster tables, archives and non-production copies all hold personal data that a transparent-table search misses (Section 2.2). Even once the data is found, it cannot simply be deleted: accounting records must be kept for statutory periods, so the system must distinguish data to delete, data to block, and data to keep. Getting that wrong either breaks financial integrity or leaves unlawful data in place.</p>
+
+<h3>4.3 The value chain: find, label, document, fix</h3>
+<p>Every GDPR obligation in Table 1 depends on the same chain of work (Figure 1). Each step depends on the one before. ILM cannot delete what has not been found, and a DPIA cannot assess risks in data nobody has labelled.</p>
+
+<div class="fig">
+  <div class="chain">
+    <div class="st"><b>1 · Find</b>Discovery. Which tables and fields could hold personal data, including Z tables, texts, logs and archives?</div>
+    <div class="ar">→</div>
+    <div class="st"><b>2 · Label</b>Classification. Is it personal in this system? What category (ordinary, Art. 9, Art. 10)? Whose data? For what purpose?</div>
+    <div class="ar">→</div>
+    <div class="st"><b>3 · Document</b>Inventory, records of processing (Art. 30) and DPIA (Art. 35): evidence for the DPO and the regulator.</div>
+    <div class="ar">→</div>
+    <div class="st"><b>4 · Fix</b>Remediation. Retention rules, blocking and deletion (ILM), masking, minimisation during migration.</div>
+  </div>
+  <p class="cap"><b>Figure 1.</b> The personal-data value chain in SAP. Market pricing evidence (Section 7) concentrates in step 4.</p>
+</div>
+
+<h3>4.4 Evidence that the problem is current</h3>
+<p>Three strands of evidence show that this is a live problem rather than a 2018 one.</p>
+<p><b>Regulatory focus.</b> The European Data Protection Board's 2025 coordinated enforcement action examined the right to erasure. 32 supervisory authorities and 764 organisations took part, and the report found missing erasure procedures and "difficulty setting retention periods". Several authorities, including the French, Portuguese and Swedish ones, say the findings will shape their 2026 inspections <span class="ev v">VERIFIED</span> <span class="cite">[2]</span>.</p>
+<p><b>Enforcement against legacy storage.</b> In 2019 the Berlin authority fined Deutsche Wohnen €14.5m because its archive system could not delete tenant data that was no longer needed <span class="cite">[3]</span>. In June 2026 the Berlin Regional Court upheld the breach but reduced the fine to €900,000 <span class="ev v">VERIFIED</span> <span class="cite">[4]</span>. Across all cases, GDPR fines totalled about €1.2bn in 2025 and €7.1bn since 2018 <span class="cite">[5]</span>. The CMS Enforcement Tracker counts 3,062 fines worth about €6.1bn, with "insufficient compliance with general data processing principles", which includes storage limitation, the second most-fined category <span class="cite">[6]</span>.</p>
+<p><b>Migration as a forcing event.</b> Every ECC-to-S/4HANA migration must decide which historical data to move. Personal data that is past its retention period should not be migrated at all, and moving it into a new system arguably compounds the storage-limitation problem <span class="ev e">ESTIMATE</span>.</p>
+
+<div class="box">
+  <h4>Problem in one paragraph</h4>
+  <p>Organisations must be able to find, classify and delete personal data, and regulators are now actively checking that they can. In SAP the data is spread across tens of thousands of tables, custom tables and hidden stores, and the field definitions cannot tell a person from a company. Finding <em>where personal data could be</em> is solved well enough; knowing <em>where it actually is</em>, and then removing it safely without breaking accounting records, is not.</p>
+</div>
+
+<!-- ================================================================ 5 COMPETITION -->
+<h2 class="newpage">5 &nbsp;Existing approaches and the competitive landscape</h2>
+
+<h3>5.1 A taxonomy of approaches</h3>
+<p>Existing offerings fall into four groups:</p>
+<ol>
+  <li><b>SAP-native tooling.</b> Information Steward, ILM and blocking, Data Privacy Integration and Business Data Cloud annotations. These are authoritative for SAP-delivered objects but weak on ECC custom content, and in Information Steward's case near end of mainstream maintenance.</li>
+  <li><b>SAP metadata specialists.</b> Silwood Safyr, which reads SAP's dictionary in depth and feeds catalogues such as Collibra, Informatica and erwin <span class="cite">[19, 22]</span>.</li>
+  <li><b>SAP data-management and masking vendors.</b> EPI-USE Labs, Natuvion, Libelle, SNP, Delphix and others, who discover personal data mainly in order to mask or transform it <span class="cite">[23–28]</span>.</li>
+  <li><b>Cross-platform privacy and catalogue platforms.</b> Microsoft Purview, BigID, OneTrust, Securiti, IBM Guardium, Collibra and Atlan. These own the privacy programme or catalogue, but have little SAP application context <span class="cite">[29–33]</span>.</li>
+</ol>
+
+<h3>5.2 Comparison</h3>
+<p class="cap"><b>Table 2.</b> Competitive landscape (grades: claims are vendor statements unless marked)</p>
+<table>
+  <thead><tr><th style="width:17%">Product / group</th><th style="width:15%">SAP coverage</th><th style="width:15%">Reads values?</th><th style="width:16%">Pricing</th><th>Strengths and weaknesses</th></tr></thead>
+  <tbody>
+    <tr><td>SAP Information Steward</td><td>ECC, S/4 via Data Services</td><td>Profiles data</td><td>Not public</td><td>Native, but mainstream maintenance ends 31 Dec 2026 <span class="ev v">VERIFIED</span> <span class="cite">[14]</span>; the current intro page does not mention privacy <span class="cite">[15]</span>.</td></tr>
+    <tr><td>SAP ILM, blocking, RAL, UI masking</td><td>ECC, S/4</td><td>No (execution, not discovery)</td><td>Licensing disputed <span class="cite">[18]</span></td><td>The official way to block and delete, but it needs a personal-data map as input. A complement, not a competitor.</td></tr>
+    <tr><td>SAP Data Privacy Integration; BDC annotations</td><td>S/4 Cloud; SAP data products</td><td>No (annotations)</td><td>Subscription</td><td>Built into SAP's roadmap; does not cover ECC or unannotated Z tables <span class="cite">[16, 17]</span> <span class="ev e">ESTIMATE</span>.</td></tr>
+    <tr><td>Silwood Safyr</td><td>ECC, S/4, BW, other ERPs</td><td>No: metadata only</td><td>Not public; GDPR pack free to existing customers <span class="cite">[21]</span></td><td>Deep SAP metadata and catalogue partnerships; "does not search through text data" <span class="cite">[20]</span>; cannot separate the two <code>NAME1</code> rows.</td></tr>
+    <tr><td>EPI-USE Labs</td><td>ECC, S/4 (ABAP add-on)</td><td>Checks population; masks</td><td>Assessment without licence fee <span class="cite">[24]</span></td><td>Access-request and erasure tooling; large installed base <span class="cite">[23]</span>. Discovery is a dictionary search delivered as a service.</td></tr>
+    <tr><td>Natuvion, Libelle, SNP, Delphix</td><td>ECC, S/4</td><td>For masking</td><td>Not public</td><td>Strong in test-data anonymisation and ILM projects, mainly in DACH. SNP is now owned by Carlyle <span class="ev v">VERIFIED</span> <span class="cite">[25–28]</span>.</td></tr>
+    <tr><td>Microsoft Purview</td><td>ECC, S/4 connectors</td><td>No classification for SAP <span class="ev v">VERIFIED</span> <span class="cite">[29]</span></td><td>Usage-metered</td><td>Already licensed by many customers; metadata only.</td></tr>
+    <tr><td>BigID</td><td>S/4, HANA (claimed)</td><td>Yes (claimed)</td><td>Median ≈US$75k/yr (secondary) <span class="cite">[46]</span></td><td>Analyst-recognised leader; depth on ECC custom tables undocumented <span class="cite">[30]</span>.</td></tr>
+    <tr><td>OneTrust, Securiti, IBM Guardium</td><td>HANA database level</td><td>Yes, at the database layer</td><td>Medians ≈US$10.5k and ≈US$42k/yr <span class="cite">[44, 45]</span></td><td>Own the privacy programme (RoPA, DSAR, DPIA) but lack SAP application semantics <span class="cite">[31–33]</span>.</td></tr>
+    <tr><td>Collibra, Atlan, Informatica</td><td>ECC, S/4 metadata</td><td>Mostly no</td><td>Not public</td><td>Enterprise catalogues; often buy SAP depth from Safyr.</td></tr>
+    <tr><td>Tarento DEEPSCAN</td><td>ECC, CRM; S/4 "future scope"</td><td>Searches values for one person; does not classify</td><td>Not public</td><td>Runs inside SAP with no infrastructure and covers Z tables; names (and e-mail) only; no references <span class="cite">[47]</span>.</td></tr>
+  </tbody>
+</table>
+
+<h3>5.3 The gap</h3>
+<p>No vendor reviewed publicly documents <em>value-level classification</em> across custom Z tables, payroll cluster tables, long texts, change documents and archives, combined with delivery of the resulting remediation. This is an absence of evidence, not proof of a gap; competitors may do more than they publish, and the pilots in Section 12 should test it. But it is consistent with the pattern in Table 2: metadata specialists stop at the dictionary, privacy platforms stop at the database layer without SAP meaning, and SAP-native tools cover SAP's own objects.</p>
+<p>Two positions are therefore open to a new entrant. The weak one is "another discovery tool", competing with free offers and with platforms customers already own. The defensible one is <b>"find it, prove it, fix it" for SAP</b>: a value-aware scanner that separates Nordbutik's row from Anna's, reaches custom and hidden stores, writes its output straight into a DPIA, records of processing and ILM retention rules, and is backed by consultants who carry out the deletion, ideally inside an S/4HANA migration. Under that position, the catalogue and privacy platforms become channels rather than rivals.</p>
+
+<!-- ================================================================ 6 TARENTO ASSETS -->
+<h2 class="newpage">6 &nbsp;Tarento's current assets: a technical assessment</h2>
+
+<h3>6.1 The name-field workbook (DEEPSCAN's metadata store)</h3>
+<p>The workbook was created in September 2018 and last edited in October 2026. Its columns correspond to SAP dictionary tables: <code>ROLLNAME</code> and <code>DDTEXT</code> from <code>DD04T</code>, and <code>TABNAME</code>, <code>FIELDNAME</code>, <code>KEYFLAG</code> and <code>DOMNAME</code> from <code>DD03L</code> <span class="cite">[50]</span>. Tarento's web page describes exactly this method: filter <code>DD04T</code> by keyword, then find the tables using the matching data elements <span class="cite">[47]</span>. The workbook is therefore, by inference, DEEPSCAN's "GDPR metadata repository" or a direct ancestor of it.</p>
+
+<p class="cap"><b>Table 3.</b> Contents of the name-field workbook <span class="cite">[50]</span></p>
+<table>
+  <thead><tr><th style="width:26%">Sheet</th><th style="width:20%">Rows</th><th>Content</th></tr></thead>
+  <tbody>
+    <tr><td>Entire Name Text – Data Element</td><td>21,737 data elements</td><td>Every data element whose name or description mentions "name". Tags: Yellow 2,554 (a person's or user's name); Mustard 195 (borderline); Not Used 45 (obsolete); Red 2 (inactive); 18,941 untagged.</td></tr>
+    <tr><td>Name</td><td>2,554</td><td>Exactly the Yellow set: the approved list. Most frequent: "User Name" (86), "First Name" (31).</td></tr>
+    <tr><td>Tables_Data_elements</td><td>13,420 fields in 9,626 tables</td><td>Every field typed with an approved data element, e.g. HR infotypes (<code>PA0002</code>), business partner (<code>BUT000</code>), addresses (<code>ADRP</code>), and 36 custom Z tables.</td></tr>
+  </tbody>
+</table>
+
+<p>The workbook demonstrates a repeatable method for reducing SAP's twenty-thousand-odd name-like definitions to a curated list and then to the tables that need checking. The Mustard and Not Used tags show that human judgement was applied. The detailed profile, however, reveals five weaknesses:</p>
+<ol>
+  <li><b>The most important name fields are missing.</b> <code>NAME1_GP</code> and <code>AD_NAME1</code> are untagged, so the main name of every customer, supplier and address is excluded (Section 4.1).</li>
+  <li><b>87% of fields are user IDs.</b> 11,674 of the 13,420 fields are 12-character SAP user IDs such as <code>ERNAM</code> ("created by") and <code>AENAM</code> ("changed by"). These are personal data about employees, but low-risk. Only about 1,900 fields in about 1,120 tables hold an actual personal name.</li>
+  <li><b>Names only.</b> There is no e-mail (<code>AD_SMTPADR</code>), birth date (<code>GBDAT</code>), bank or IBAN, tax number, telephone or street address.</li>
+  <li><b>Single-system custom tables.</b> The 36 Z tables are Swedish-named and evidently come from one customer's system.</li>
+  <li><b>No traceability.</b> The tables sheet does not record each field's data element, so a reviewer cannot see why a field was included.</li>
+</ol>
+
+<h3>6.2 The DPIA questionnaire</h3>
+<p>The second workbook is a nine-sheet DPIA template <span class="cite">[51]</span>. It contains 14 weighted screening questions, where a score of 2 or more triggers a full DPIA; sheets on context, principles, a personal-data category checklist, data-subject rights and security; and a 13-row privacy risk register graded Yes, Partial or No. Two parts are directly reusable. Its category checklist, from ordinary identifiers to Article 9 special categories, is a ready-made classification taxonomy. And its screening and risk sheets are the natural destination for scan results: "these tables hold these categories, therefore these risks apply".</p>
+<p><b>Constraint on reuse.</b> Every question names Husqvarna Group rather than Tarento; the submission route is marked "to be clarified"; the Next Steps sheet is a placeholder; and all screening answers are "No". It should be treated as a client-derived template. Tarento needs to confirm it has the right to reuse it, then de-brand and complete it before it goes into any offering.</p>
+
+<h3>6.3 DEEPSCAN as described</h3>
+<p>According to Tarento's web page <span class="ev c">VENDOR</span> <span class="cite">[47]</span>, DEEPSCAN is an ABAP report run from transaction <code>SE38</code> inside the customer's SAP system, needing "no extra servers". The user selects an attribute, for example a user ID or name, and enters a value. The tool lists every standard and Z table containing that value, with row counts, field names and primary keys; results can be exported and the run can be scheduled in the background. The page is unusually candid about its limits: free-text fields are not covered; badly named custom fields are "a gap of course"; special categories are "beyond the purview of the tool"; only transparent tables and character fields are scanned; and S/4HANA and HR are "future scope". No customers, prices or version dates are published.</p>
+
+<p class="cap"><b>Table 4.</b> DEEPSCAN against the requirements of a complete solution</p>
+<table>
+  <thead><tr><th style="width:24%">Capability</th><th style="width:28%">DEEPSCAN today</th><th>Gap to close</th></tr></thead>
+  <tbody>
+    <tr><td>Metadata map of personal-data fields</td><td>Names only; ECC-era, about 2018</td><td>E-mail, phone, address, birth date, bank and tax IDs, national IDs (e.g. Swedish <em>personnummer</em>), special categories; include <code>NAME1</code>.</td></tr>
+    <tr><td>Value search for one person</td><td>Yes, for transparent tables and character fields</td><td>Cluster tables (<code>PCL2</code>), long texts (<code>STXL</code>), change documents (<code>CDHDR</code>/<code>CDPOS</code>), archives.</td></tr>
+    <tr><td>Value-level classification</td><td>No</td><td>Sampling and pattern rules; the person-or-company test for <code>NAME1</code>.</td></tr>
+    <tr><td>S/4HANA</td><td>"Future scope"</td><td>Business-partner model, <code>@PersonalData</code> annotations, HANA.</td></tr>
+    <tr><td>Output to privacy tools</td><td>Local file export</td><td>RoPA (Art. 30), DPIA, OneTrust, Collibra or Purview import.</td></tr>
+    <tr><td>Remediation delivery</td><td>Not evidenced publicly</td><td>ILM retention, blocking and deletion, masking, migration minimisation.</td></tr>
+    <tr><td>Trust and packaging</td><td>Loose SE38 report</td><td>SAP-certified add-on, registered namespace, security review, read-only design.</td></tr>
+  </tbody>
+</table>
+
+<p><b>Assessment.</b> DEEPSCAN is a sound foundation: it runs where the data is, it covers custom tables, and the metadata method behind it is careful. As it stands, however, it is a search feature for one person at a time on an older platform, not a classification or governance product. Its most valuable future role is as the accelerator inside a service, not as the thing sold.</p>
+
+<!-- ================================================================ 7 DEMAND -->
+<h2 class="newpage">7 &nbsp;Demand, buyers and willingness to pay</h2>
+
+<h3>7.1 Obligation is not the same as budget</h3>
+<p>A legal obligation creates a need, but not necessarily a budget. Table 5 sets the evidence for demand against the evidence for spending.</p>
+
+<p class="cap"><b>Table 5.</b> Evidence on demand and willingness to pay</p>
+<table>
+  <thead><tr><th style="width:36%">Evidence</th><th style="width:44%">What it shows</th><th>Grade</th></tr></thead>
+  <tbody>
+    <tr><td>EDPB coordinated action on erasure, report Feb 2026 <span class="cite">[2]</span></td><td>Regulators are testing deletion and retention; a 2026 inspection theme.</td><td><span class="ev v">VERIFIED</span></td></tr>
+    <tr><td>Deutsche Wohnen: €14.5m (2019), reduced to €0.9m (2026) <span class="cite">[3, 4]</span></td><td>Inability to delete from legacy storage is fineable, though courts may reduce amounts.</td><td><span class="ev v">VERIFIED</span></td></tr>
+    <tr><td>CMS Enforcement Tracker 2026: 3,062 fines, ≈€6.1bn <span class="cite">[6]</span></td><td>General processing principles are the second most-fined category.</td><td>Compilation</td></tr>
+    <tr><td>UKISUG/Syniti 2025: 79% find data management a challenge in the S/4 move <span class="cite">[13]</span></td><td>The budget event is migration, not GDPR on its own.</td><td><span class="ev s">SURVEY</span></td></tr>
+    <tr><td>DSAG Investment Report 2026: "legal requirements" a challenge for 59%; GDPR not named <span class="cite">[12]</span></td><td>Compliance is on the SAP agenda, but not as a GDPR line item.</td><td><span class="ev s">SURVEY</span></td></tr>
+    <tr><td>BVG Berlin tender, "Integration ILM in SAP S4/HANA" (2025) <span class="cite">[43]</span></td><td>Buyers procure SAP retention and deletion services; value not published.</td><td><span class="ev v">VERIFIED</span></td></tr>
+    <tr><td>UK G-Cloud 14 rate card for SAP archiving and data management <span class="cite">[42]</span></td><td>£30k (3 months) to £600k (24 months) per programme.</td><td>Price list</td></tr>
+    <tr><td>Free discovery: Silwood starter pack; EPI-USE five-day assessment <span class="cite">[21, 24]</span></td><td>Discovery is used as a loss-leader for masking, catalogues or projects.</td><td><span class="ev c">VENDOR</span></td></tr>
+    <tr><td>IAPP 2024: median privacy budget US$375k, flat for three years; 26% say funding is sufficient <span class="cite">[40]</span></td><td>The privacy office alone cannot fund SAP projects; IT or migration budgets must.</td><td><span class="ev s">SURVEY</span> (secondary)</td></tr>
+  </tbody>
+</table>
+
+<p>Read together, the evidence supports a specific conclusion. Organisations will pay to <em>fix</em> personal data in SAP (deletion, retention, minimisation), and they pay most readily when the fix rides on a project already funded, typically a migration. The evidence that they will pay a separate recurring fee merely to <em>find</em> it is weak. That is an inference from the free offers and the absence of published discovery prices, not a measured fact <span class="ev e">ESTIMATE</span>.</p>
+
+<h3>7.2 Who buys</h3>
+<table>
+  <thead><tr><th style="width:24%">Role</th><th>Interest and buying power</th></tr></thead>
+  <tbody>
+    <tr><td>Data Protection Officer / privacy lead</td><td>Sponsors and specifies the work; owns RoPA and DPIAs. Usually a small budget. IAPP found privacy teams the main decision input for data-mapping tools <span class="cite">[41]</span>.</td></tr>
+    <tr><td>SAP Centre of Excellence / CIO</td><td>Owns the system, the migration budget and the risk of touching production. Where the money sits <span class="ev e">ESTIMATE</span> <span class="cite">[12, 13]</span>.</td></tr>
+    <tr><td>CISO</td><td>Where sensitive data sits; masking of non-production copies; logging needed under NIS2 and DORA.</td></tr>
+    <tr><td>Migration programme lead</td><td>Wants less data to move, selective data transition and clean carve-outs. Often the fastest buyer.</td></tr>
+  </tbody>
+</table>
+<p class="note">No survey splits SAP privacy purchases by role; this buyer map is a hypothesis for the interviews in Section 12.</p>
+
+<!-- ================================================================ 8 MARKET -->
+<h2 class="newpage">8 &nbsp;Market size and commercial viability</h2>
+
+<h3>8.1 Broad market (TAM)</h3>
+<p>Analyst estimates of the privacy-management software market for 2025 differ by up to a factor of four, from about US$1.2bn (a QYResearch summary seen via search) to US$5.4bn (Fortune Business Insights), with growth rates from 4% to 42% a year <span class="ev a">ANALYST</span> <span class="cite">[34, 36, 37, 52]</span>. The differences come from definitions, such as whether consent and cookie tools count, and from extrapolating fast growth from small bases. Fortune Business Insights is the only source found with a European split: US$1.98bn in 2026 <span class="cite">[34]</span>. Global GDPR-services estimates range from US$3.6bn to US$5.4bn for 2025 <span class="cite">[38, 39]</span>; assuming Europe is 30–40% gives about US$1.1–2.2bn.</p>
+<p><b>Broad European TAM: roughly US$1.5–4bn a year</b> across software and services <span class="ev e">ESTIMATE</span>. This is context for scale, not a target: most of it is consent management, request portals and programme software unrelated to SAP.</p>
+
+<h3>8.2 SAP-focused market (SAM): bottom-up</h3>
+<p class="cap"><b>Table 6.</b> Serviceable addressable market, bottom-up <span class="ev e">ESTIMATE</span></p>
+<table>
+  <thead><tr><th style="width:38%">Step</th><th style="width:22%">Value</th><th>Basis</th></tr></thead>
+  <tbody>
+    <tr><td>A · SAP ERP (ECC + S/4HANA) customers in Europe</td><td>12,000–16,000</td><td>Assumption. ≈35,000 ECC customers globally <span class="cite">[10]</span>; EMEA 46% of SAP revenue <span class="cite">[7]</span>. No European count was found.</td></tr>
+    <tr><td>B · Share with enough complexity and a trigger within 5 years (migration, audit, incident)</td><td>30–40% → 3,600–6,400 accounts</td><td>Assumption. ≈61% of ECC customers still to move <span class="cite">[10]</span>; many small installations have little custom code.</td></tr>
+    <tr><td>C · Annual spend per account on SAP personal-data discovery, classification and remediation</td><td>€20k–€70k</td><td>Assumption. Software €10–30k a year plus services €40–150k spread over ≈4 years; G-Cloud anchor £30k–£600k <span class="cite">[42]</span>.</td></tr>
+    <tr><td><b>SAM = B × C</b></td><td><b>€70m–€450m a year; central ≈€200m</b> (5,000 × €40k)</td><td>The wide range reflects real uncertainty.</td></tr>
+  </tbody>
+</table>
+<p>Discovery and classification software alone would be a small slice, perhaps €20–60m a year (5,000 accounts × €4–12k), and that slice faces free alternatives. Most of the SAM is remediation services.</p>
+
+<h3>8.3 Obtainable share (SOM)</h3>
+<p class="cap"><b>Table 7.</b> Tarento revenue scenarios, year 4 <span class="ev e">ESTIMATE</span></p>
+<table>
+  <thead><tr><th style="width:12%">Scenario</th><th style="width:14%">Accounts</th><th style="width:16%">Annual revenue</th><th>Assumptions</th></tr></thead>
+  <tbody>
+    <tr><td>Low</td><td>8–10</td><td>≈€0.5m</td><td>Nordics only; mostly health checks; little follow-on remediation.</td></tr>
+    <tr><td>Base</td><td>20–30</td><td>€1.5–2.5m</td><td>Nordic base of ≈1,000–1,500 SAP ERP accounts (8–10% of Europe); 40% of health checks lead to remediation; 10–15 subscriptions.</td></tr>
+    <tr><td>High</td><td>40–60</td><td>€4–6m</td><td>Adds DACH or UK through one integrator or catalogue partner; becomes the standard privacy work package in migration bids.</td></tr>
+  </tbody>
+</table>
+<p><b>Viability.</b> The base case is about 1% of the central SAM, plausible for a niche specialist. It would make a useful practice line and a door-opener to S/4HANA work, but not a standalone software business. Payback depends on remediation follow-on: if customers buy the health check but not the fix, the case falls to the low scenario, which would not justify a full product rebuild.</p>
+
+<!-- ================================================================ 9 SOLUTION -->
+<h2 class="newpage">9 &nbsp;What a complete solution requires</h2>
+
+<p>The preceding sections establish what is missing. This section specifies, independently of any vendor, what a complete solution for personal data in SAP must contain. It is the reference against which Tarento's (or anyone's) offering should be measured.</p>
+
+<h3>9.1 A five-layer framework</h3>
+<div class="fig">
+  <div class="layers">
+    <div class="ly"><div class="n">L1 Discover</div><div class="d">Metadata map of candidate personal-data fields across standard, custom (Z/Y), cluster, long-text, change-document and archive stores, on both ECC and S/4HANA.</div></div>
+    <div class="ly"><div class="n">L2 Classify</div><div class="d">Value-level sampling and rules decide whether each field, and where needed each row, holds personal data; assign category (ordinary, Art. 9, Art. 10), data-subject type (customer, supplier contact, employee) and sensitivity.</div></div>
+    <div class="ly"><div class="n">L3 Document</div><div class="d">Inventory linked to purposes and legal bases; generated RoPA entries (Art. 30); DPIA inputs (Art. 35); exports to privacy platforms and catalogues.</div></div>
+    <div class="ly"><div class="n">L4 Remediate</div><div class="d">Retention rules and residence times in ILM; blocking of data under legal hold; deletion and archive clean-up; masking of non-production copies; minimisation in S/4HANA migration.</div></div>
+    <div class="ly"><div class="n">L5 Sustain</div><div class="d">Scheduled rescans; change control for new fields and Z tables; DSAR and erasure handling; evidence for audits; KPIs.</div></div>
+    <div class="gov"><b>Cross-cutting governance:</b> ownership (DPO, data owners, SAP CoE), policies, retention schedule, risk acceptance, security of the tooling itself (read-only, certified, logged).</div>
+  </div>
+  <p class="cap"><b>Figure 2.</b> Proposed reference framework for SAP personal-data governance (this paper).</p>
+</div>
+
+<h3>9.2 Functional requirements</h3>
+<table>
+  <thead><tr><th style="width:8%">ID</th><th style="width:12%">Layer</th><th>Requirement</th></tr></thead>
+  <tbody>
+    <tr><td>F1</td><td>Discover</td><td>Cover ECC and S/4HANA, including the business-partner model and <code>@PersonalData</code> annotations where present.</td></tr>
+    <tr><td>F2</td><td>Discover</td><td>Attribute packs beyond names: e-mail, phone, postal address, birth date, bank/IBAN, tax IDs, national IDs (e.g. Swedish <em>personnummer</em>, Norwegian <em>fødselsnummer</em>, Finnish <em>henkilötunnus</em>), and special-category indicators.</td></tr>
+    <tr><td>F3</td><td>Discover</td><td>Reach custom tables, cluster tables, long texts, change documents and archives.</td></tr>
+    <tr><td>F4</td><td>Classify</td><td>Sample values and apply pattern and checksum rules (e.g. IBAN check digits, national-ID formats).</td></tr>
+    <tr><td>F5</td><td>Classify</td><td>Solve the person-or-company problem for shared fields such as <code>NAME1</code>, combining signals: legal-form suffixes (AB, AS, Oy, GmbH, Ltd), SAP indicators (e.g. the natural-person flag on the customer and supplier master; partner category in <code>BUT000</code>), form of address, and linked contact data. Report a confidence level, not a binary answer.</td></tr>
+    <tr><td>F6</td><td>Classify</td><td>Down-weight low-risk system fields (user IDs such as <code>ERNAM</code>) so they do not drown the results.</td></tr>
+    <tr><td>F7</td><td>Document</td><td>Produce a field-level inventory with traceability (why each field was included) and generate RoPA and DPIA drafts.</td></tr>
+    <tr><td>F8</td><td>Document</td><td>Export to OneTrust, Collibra, Purview or a CSV/JSON standard.</td></tr>
+    <tr><td>F9</td><td>Remediate</td><td>Translate the inventory into ILM retention objects, residence times and blocking rules; respect statutory accounting retention.</td></tr>
+    <tr><td>F10</td><td>Remediate</td><td>Support selective data transition: flag personal data that should not be migrated.</td></tr>
+    <tr><td>F11</td><td>Sustain</td><td>Rescan on a schedule and on transport of new objects; show changes since the last scan.</td></tr>
+  </tbody>
+</table>
+
+<h3>9.3 Non-functional requirements</h3>
+<ul>
+  <li><b>Safety in production:</b> read-only by default; resource-limited background execution; no data leaves the system unless explicitly exported.</li>
+  <li><b>Trust:</b> SAP-certified add-on with a registered namespace; independent security review; a data-processing agreement, since the tooling processes personal data.</li>
+  <li><b>Honesty about coverage:</b> results state what was scanned, what was not, and confidence. A tool should never claim an inventory is "complete"; doing so creates liability when it is wrong.</li>
+  <li><b>Portability:</b> rule packs built from a clean reference SAP system, not from one customer's extract.</li>
+</ul>
+
+<h3>9.4 Governance operating model</h3>
+<p>Technology alone does not satisfy GDPR; someone must own decisions about purposes and retention. Table 8 proposes a minimal division of responsibilities for a customer engagement.</p>
+<p class="cap"><b>Table 8.</b> Responsibilities (R = responsible, A = accountable, C = consulted, I = informed)</p>
+<table>
+  <thead><tr><th style="width:34%">Activity</th><th>DPO</th><th>Business data owner</th><th>SAP CoE</th><th>Legal / finance</th><th>Service provider</th></tr></thead>
+  <tbody>
+    <tr><td>Scope and approve the scan</td><td>A</td><td>C</td><td>R</td><td>I</td><td>C</td></tr>
+    <tr><td>Run discovery and classification</td><td>I</td><td>I</td><td>C</td><td>I</td><td>R/A</td></tr>
+    <tr><td>Confirm classification results</td><td>A</td><td>R</td><td>C</td><td>I</td><td>C</td></tr>
+    <tr><td>Set retention periods</td><td>C</td><td>R</td><td>I</td><td>A</td><td>C</td></tr>
+    <tr><td>Configure ILM, blocking and deletion</td><td>I</td><td>C</td><td>A</td><td>C</td><td>R</td></tr>
+    <tr><td>Maintain RoPA and DPIA</td><td>A/R</td><td>C</td><td>C</td><td>C</td><td>C</td></tr>
+    <tr><td>Handle access and erasure requests</td><td>A</td><td>C</td><td>R</td><td>C</td><td>C</td></tr>
+  </tbody>
+</table>
+
+<h3>9.5 The offering that follows</h3>
+<p class="cap"><b>Table 9.</b> Proposed offering portfolio. Prices are assumptions to test <span class="ev e">ESTIMATE</span></p>
+<table>
+  <thead><tr><th style="width:22%">Component</th><th style="width:12%">Layer</th><th style="width:20%">Indicative price</th><th>Role</th></tr></thead>
+  <tbody>
+    <tr><td>SAP Personal Data Health Check</td><td>L1–L3</td><td>€15–40k fixed, 2–4 weeks</td><td>Entry offer. Must beat free five-day assessments on depth: values, Z tables, classified inventory, DPIA draft.</td></tr>
+    <tr><td>DEEPSCAN subscription</td><td>L1–L2, L5</td><td>€10–30k per production system per year</td><td>Recurring revenue; rescans and updated rule packs.</td></tr>
+    <tr><td>Inventory, RoPA and DPIA</td><td>L3</td><td>€20–80k</td><td>Uses the DPIA template once de-branded.</td></tr>
+    <tr><td>Remediation</td><td>L4</td><td>Project; G-Cloud anchor £30k–£600k <span class="cite">[42]</span></td><td>ILM, blocking and deletion, masking, archive clean-up. Where most of the money is.</td></tr>
+    <tr><td>Migration minimisation add-on</td><td>L4</td><td>5–10% uplift on the data-migration work package</td><td>Fastest route to budget; also reduces data volume to migrate.</td></tr>
+    <tr><td>Managed privacy service</td><td>L5</td><td>€2–6k per month</td><td>Quarterly rescans, DSAR support, DPIA upkeep.</td></tr>
+    <tr><td>Partner and OEM</td><td>L3</td><td>Negotiated</td><td>Feed SAP context into OneTrust, Collibra or Purview; pair with a masking vendor.</td></tr>
+  </tbody>
+</table>
+
+<h3>9.6 Investment needed</h3>
+<ul>
+  <li><b>Product rebuild:</b> about 3–5 engineers for 6–9 months <span class="ev e">ESTIMATE</span>, covering F1–F8 and certification.</li>
+  <li><b>Delivery bench:</b> ILM, archiving and SAP data-migration consultants, plus privacy-law expertise in-house or through a law-firm partner.</li>
+  <li><b>Credentials:</b> Tarento's visible SAP status is a Nordic value-added reseller for SAP Business ByDesign <span class="cite">[49]</span>; ECC and S/4HANA depth needs to be demonstrated through references.</li>
+  <li><b>Sales cycle:</b> about 1–3 months for a health check and 6–12 months for remediation <span class="ev e">ESTIMATE</span>.</li>
+</ul>
+
+<!-- ================================================================ 10 GTM -->
+<h2 class="newpage">10 &nbsp;Target segments and go-to-market</h2>
+
+<h3>10.1 Industries</h3>
+<p>No public source gives SAP adoption or personal-data intensity by sector in Europe. Table 10 combines the evidence that exists (fine statistics, DSAG respondent mix, Tarento's footprint) with judgement, marked as such.</p>
+<p class="cap"><b>Table 10.</b> Industry prioritisation. "Likelihood" = likelihood of buying from Tarento within 2–3 years <span class="ev e">ESTIMATE</span></p>
+<table>
+  <thead><tr><th style="width:17%">Industry</th><th style="width:15%">SAP ERP adoption</th><th style="width:20%">Personal data in SAP</th><th style="width:16%">Budget and urgency</th><th style="width:11%">Likelihood</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>Retail and consumer goods</td><td>High</td><td>Customers (B2C, loyalty, service), staff</td><td>Medium; migration-driven</td><td>High</td><td>Matches Tarento's existing Nordic retail clients; <code>NAME1</code> holds many private individuals.</td></tr>
+    <tr><td>Utilities and energy</td><td>High (IS-U)</td><td>Very high: every household is a business partner</td><td>High; regulated, retention-heavy</td><td>High</td><td>Among the highest average fines <span class="cite">[6]</span>; retention-heavy, so ILM work is common.</td></tr>
+    <tr><td>Manufacturing and engineering</td><td>Very high (largest DSAG segment, 12%)</td><td>Mainly HR, dealers, service technicians</td><td>Medium</td><td>Medium–high</td><td>Largest number of SAP customers <span class="cite">[12]</span>; HR in SAP and decades of Z tables.</td></tr>
+    <tr><td>Insurance</td><td>Medium</td><td>High, incl. health data</td><td>High budgets, long cycles</td><td>Medium</td><td>Strict vendor-risk processes; strong incumbents.</td></tr>
+    <tr><td>Banking</td><td>Medium (finance, HR)</td><td>High</td><td>High; DORA-driven</td><td>Low–medium</td><td>High procurement and security bar for a small vendor.</td></tr>
+    <tr><td>Telecoms</td><td>Medium</td><td>High in billing; SAP mostly finance and HR</td><td>High</td><td>Low–medium</td><td>Personal data mostly lives outside SAP.</td></tr>
+    <tr><td>Healthcare</td><td>Medium in hospitals</td><td>Very high (Art. 9)</td><td>Public, slow</td><td>Low</td><td>Special categories outside DEEPSCAN's stated scope.</td></tr>
+    <tr><td>Public sector</td><td>High in DACH (9% of DSAG)</td><td>High</td><td>Tender-driven</td><td>Low near-term</td><td>Tenders exist <span class="cite">[43]</span> but need local presence and references.</td></tr>
+  </tbody>
+</table>
+
+<h3>10.2 Geography: Nordics first</h3>
+<p>Tarento reports headquarters in Stockholm, offices in Finland and Norway, and more than 700 staff <span class="ev c">VENDOR</span> <span class="cite">[48]</span>. Running a privacy tool inside a customer's production SAP requires trust, references and local-language competence (Swedish table names, Nordic national-ID formats), all of which favour the home region. DACH is the largest SAP market, but it is also home to the strongest specialists (Natuvion, SNP, Libelle). A second wave into DACH or the UK should go through a systems-integrator or catalogue partner once two referenceable pilots exist.</p>
+
+<h3>10.3 Channels and positioning</h3>
+<ul>
+  <li><b>Lead with the outcome, not the scan:</b> "a defensible map of personal data in your SAP system, and a plan to delete what you shouldn't keep, before you migrate."</li>
+  <li><b>Attach to migration programmes</b> as a privacy and minimisation work package.</li>
+  <li><b>Partner with privacy platforms</b> (OneTrust, Collibra, Purview) by exporting SAP context into them.</li>
+  <li><b>Sell retention and deletion on ECC too,</b> so revenue does not depend on migration timing.</li>
+</ul>
+
+<!-- ================================================================ 11 RISKS -->
+<h2>11 &nbsp;Risks</h2>
+<p class="cap"><b>Table 11.</b> Principal risks and mitigations</p>
+<table>
+  <thead><tr><th style="width:20%">Risk</th><th style="width:38%">Why it matters</th><th>Mitigation</th></tr></thead>
+  <tbody>
+    <tr><td>Commoditised discovery</td><td>Free and bundled alternatives cap software prices.</td><td>Sell the outcome (classified inventory, DPIA, deletion), not the scan.</td></tr>
+    <tr><td>SAP closes the gap</td><td>BDC annotations and Data Privacy Integration already tag SAP-delivered objects.</td><td>Focus on what SAP does not annotate: ECC, Z tables, free text, history.</td></tr>
+    <tr><td>Credibility outside the Nordics</td><td>Small brand; visible partner status only for ByDesign.</td><td>Nordic references first; partner for DACH and UK.</td></tr>
+    <tr><td>Liability for missed data</td><td>An inventory presented as complete that misses Anna's row creates legal exposure.</td><td>Report coverage and confidence; clear contractual terms.</td></tr>
+    <tr><td>Production access</td><td>Customers hesitate to run unknown code on live personal data.</td><td>Certification, read-only design, security review, runs inside SAP.</td></tr>
+    <tr><td>Demand timing</td><td>Migrations delayed toward 2030–2033 delay revenue.</td><td>Offer ECC retention and deletion independent of migration.</td></tr>
+    <tr><td>Reuse rights</td><td>DPIA template is client-branded; scan data came from one customer's system.</td><td>Confirm IP rights; de-brand; rebuild rule packs from a clean reference system.</td></tr>
+  </tbody>
+</table>
+
+<!-- ================================================================ 12 ROADMAP -->
+<h2 class="newpage">12 &nbsp;Roadmap, validation plan and decision gates</h2>
+
+<p>The largest open question is commercial, not technical: after a customer sees where their personal data sits, do they pay to fix it? The roadmap is therefore built around answering that question cheaply before committing to a full rebuild.</p>
+
+<h3>12.1 Phased plan</h3>
+<table>
+  <thead><tr><th style="width:16%">Phase</th><th style="width:42%">Activities</th><th>Exit criterion</th></tr></thead>
+  <tbody>
+    <tr><td>0 · Groundwork<br>(days 1–30)</td><td>Confirm reuse rights for the DPIA template and de-brand it; add <code>NAME1_GP</code>/<code>AD_NAME1</code> and an e-mail/phone pack to the workbook; write the interview guide; draft the health-check offer.</td><td>Offer explainable in one sentence; 15+ interviews booked.</td></tr>
+    <tr><td>1 · Listen<br>(days 31–60)</td><td>15–20 interviews with Nordic SAP customers, split between DPOs and SAP/migration owners.</td><td>A named buyer type with budget; price points tested.</td></tr>
+    <tr><td>2 · Prove<br>(days 61–180)</td><td>Two or three paid pilots of 8–12 weeks; minimum rebuild only (S/4 support, extra attribute packs, value sampling for <code>NAME1</code>).</td><td><b>Gate:</b> at least one pilot converts to paid remediation.</td></tr>
+    <tr><td>3 · Build<br>(months 7–15)</td><td>Full product rebuild (F1–F11), SAP certification, partner integrations; productise the services.</td><td>Repeatable delivery; 5+ references.</td></tr>
+    <tr><td>4 · Expand<br>(month 15+)</td><td>DACH/UK via partner; managed service.</td><td>Base-case trajectory (Table 7).</td></tr>
+  </tbody>
+</table>
+
+<h3>12.2 Interview questions</h3>
+<ol>
+  <li>Has an access or erasure request, an audit or a DPIA ever stalled because nobody could say where a person's data sits in SAP? <i>(Tests experienced pain, not legal theory.)</i></li>
+  <li>Who paid the last time you did SAP data-privacy work: the privacy budget, IT, or a migration programme? How much? <i>(Finds the real buyer and a real price.)</i></li>
+  <li>What do you use today: Safyr, Purview, EPI-USE, a spreadsheet, a consultant? What did it miss? <i>(Tests the value-level gap.)</i></li>
+  <li>Would you buy a fixed-price health check at €15–40k? Keep a yearly subscription for rescans? <i>(Tests the price points.)</i></li>
+  <li>Is data minimisation part of your S/4HANA plan, and who decides what old personal data is left behind? <i>(Tests the migration route to budget.)</i></li>
+</ol>
+
+<h3>12.3 Pilot success metrics</h3>
+<ul>
+  <li>Personal-data fields and tables found versus a dictionary-only baseline (e.g. Safyr or a keyword search), including Z tables.</li>
+  <li>Precision and recall of person-or-company classification on <code>NAME1</code>-type fields, against a hand-labelled sample.</li>
+  <li>Time from scan to a usable RoPA extract and DPIA draft.</li>
+  <li>Whether the customer commissions remediation: <b>the key commercial signal</b>.</li>
+  <li>Security and performance acceptance of running the tool in production.</li>
+</ul>
+
+<div class="box">
+  <h4>Decision rule</h4>
+  <p>Invest in Phase 3 only if (a) at least one pilot converts to paid remediation and (b) interviews identify a buyer with budget. If customers want only the scan, keep DEEPSCAN as an internal accelerator and stop product investment: in that case it is a feature that competitors already give away.</p>
+</div>
+
+<!-- ================================================================ 13 DISCUSSION -->
+<h2>13 &nbsp;Discussion and open questions</h2>
+<p><b>What the evidence shows.</b> The legal pressure is real and current; the technical problem is genuine and well defined; competitors cluster at metadata discovery and masking; and observable spending concentrates on remediation and migration.</p>
+<p><b>What remains uncertain.</b> First, the size of the SAP-specific market: no public figure exists, and the bottom-up estimate rests on assumptions about customer counts and spend that could each be off by half. Second, whether competitors already offer value-level classification privately; their silence in public documentation is suggestive, not conclusive. Third, the pace of SAP's own tooling: if Business Data Cloud annotations and Data Privacy Integration extend to ECC and custom content, part of the gap closes. Fourth, the extent to which reduced fines on appeal, as in Deutsche Wohnen, temper buyers' sense of urgency.</p>
+<p><b>A cautious view.</b> A sceptic would argue that GDPR has been in force for eight years, that most large SAP customers have already "done GDPR" with SAP ILM and a consultancy, and that what remains is a long tail of small projects. The 2025 EDPB findings on missing erasure procedures argue against the first half of that view; the absence of published prices for SAP discovery is consistent with the second. The interviews in Section 12 are designed to settle it.</p>
+<p><b>The author's judgement.</b> The strongest argument for proceeding is not the size of the market but the fit: Tarento already has a scanner that runs where the data is, a method for curating SAP metadata, a DPIA template and a Nordic customer base. The strongest argument for caution is that none of these, on their own, is something customers have shown they will pay for.</p>
+
+<!-- ================================================================ 14 CONCLUSIONS -->
+<h2>14 &nbsp;Conclusions and recommendations</h2>
+<ol>
+  <li><b>The problem is precise.</b> SAP's field definitions cannot tell a private person from a company in the same field, and much personal data lives outside standard tables. Organisations must nonetheless find, classify and delete it, and regulators are checking.</li>
+  <li><b>Discovery is commoditised; classification and remediation are not.</b> Value is in reading the data itself and in delivering the deletion safely.</li>
+  <li><b>A complete solution has five layers</b>: discover, classify, document, remediate and sustain, with governance across all of them (Section 9).</li>
+  <li><b>Tarento's assets are a credible start but not a product.</b> DEEPSCAN needs S/4HANA support, more attribute types, value-level classification, access to hidden stores, integrations and certification.</li>
+  <li><b>The market is a niche, not a moonshot:</b> SAM about €200m a year in Europe; Tarento base case €1.5–2.5m by year four.</li>
+  <li><b>Recommendation:</b> pursue a services-led SAP privacy offering with DEEPSCAN as accelerator; Nordic ECC customers in retail, utilities and manufacturing first; gate investment on interviews and paid pilots as set out in Section 12.</li>
+</ol>
+<p>Return, finally, to the two rows in <code>KNA1</code>. Every tool on the market can find the field that holds Nordbutik AB and Anna Svensson. Few can say which row is the person, and fewer still will then delete her outdated record without breaking the accounting history. If Tarento can do all three in one engagement, it has a business; if it can only find the field, it has a feature that others already give away.</p>
+
+<!-- ================================================================ REFERENCES -->
+<h2 class="newpage">References</h2>
+<div class="refs">
+<p class="small">Web sources accessed October 2026. "Secondary" indicates figures seen only through search or press summaries.</p>
+<h3>Legislation</h3>
+<ol start="1">
+  <li>European Parliament and Council. <i>Regulation (EU) 2016/679 (General Data Protection Regulation).</i> Official Journal of the European Union, L 119, 4 May 2016. <span class="u">https://eur-lex.europa.eu/eli/reg/2016/679/oj</span></li>
+</ol>
+<h3>Regulators, enforcement and courts</h3>
+<ol start="2">
+  <li>European Data Protection Board. <i>Coordinated Enforcement Framework 2025: Report on the implementation of the right to erasure.</i> February 2026. <span class="u">https://www.edpb.europa.eu/system/files/2026-02/edpb_cef-report_2025_right-to-erasure_en.pdf</span></li>
+  <li>European Data Protection Board. <i>Berlin Commissioner for Data Protection imposes fine on real estate company.</i> National news, 2019. <span class="u">https://www.edpb.europa.eu/news/national-news/2019/berlin-commissioner-data-protection-imposes-fine-real-estate-company_es</span></li>
+  <li>Legal Tribune Online (LTO). <i>LG Berlin I reduziert DSGVO-Bußgeld gegen Deutsche Wohnen</i> (526 OWiG LG 1/20). 2026. <span class="u">https://www.lto.de/recht/nachrichten/n/lg-berlin-i-526owiglg120-dsgvo-verstoss-deutsche-wohnen-bussgeld-reduziert</span></li>
+  <li>DLA Piper. <i>GDPR Fines and Data Breach Survey.</i> January 2026. <span class="u">https://blogs.dlapiper.com/advocatus/files/2026/01/dla-piper-gdpr-fines-and-data-breach-survey-2026.pdf</span></li>
+  <li>CMS. <i>GDPR Enforcement Tracker Report 2026: Numbers and figures.</i> <span class="u">https://cms.law/int/publication/gdpr-enforcement-tracker-report/numbers-and-figures</span></li>
+</ol>
+<h3>SAP: company, lifecycle and products</h3>
+<ol start="7">
+  <li>SAP SE. <i>Annual Report on Form 20-F for fiscal year 2025.</i> U.S. SEC filing. <span class="u">https://www.sec.gov/Archives/edgar/data/1000184/000110465926020058/sap-20251231x20f.htm</span></li>
+  <li>SAP News. <i>SAP S/4HANA maintenance until 2040: clarity and choice for SAP Business Suite 7.</i> February 2020. <span class="u">https://news.sap.com/2020/02/sap-s4hana-maintenance-2040-clarity-choice-sap-business-suite-7/</span></li>
+  <li>SAPinsider. <i>SAP provides details on ERP transition option.</i> <span class="u">https://sapinsider.org/analyst-insights/sap-provides-details-on-erp-transition-option/</span></li>
+  <li>The Register. <i>Gartner on SAP ECC customers and the 2030 maintenance deadline.</i> 12 February 2025. <span class="u">https://www.theregister.com/2025/02/12/gartner_sap_maintenance_2030/</span></li>
+  <li>CIO.com. Coverage of Gartner ECC migration estimates. <span class="u">https://www.cio.com/article/4000543/</span></li>
+  <li>DSAG (German-speaking SAP User Group). <i>DSAG Investment Report 2026.</i> <span class="u">https://impulsant.dsag.de/formate/pressemeldung/dsag-investment-report-2026-companies-are-investing-more-selectively-ai-is-becoming-established-cloud-computing-is-being-put-to-the-test/</span></li>
+  <li>UK &amp; Ireland SAP User Group (UKISUG) with Syniti. <i>Data migration and management for SAP businesses.</i> 2025. <span class="u">https://www.sapusers.org/resource/research-paper---data-migration-and-management-for-sap-businesses.html</span></li>
+  <li>SAP. <i>Knowledge Base Article 3789470: SAP Information Steward maintenance.</i> <span class="u">https://userapps.support.sap.com/sap/support/knowledge/en/3789470</span></li>
+  <li>SAP Help Portal. <i>SAP Information Steward: Introduction.</i> <span class="u">https://help.sap.com/docs/SUPPORT_CONTENT/infosteward/3361406006.html</span></li>
+  <li>SAP. <i>SAP Data Privacy Integration.</i> <span class="u">https://www.sap.com/products/technology-platform/data-privacy-integration.html</span></li>
+  <li>Databricks Documentation. <i>SAP Business Data Cloud: semantic metadata (incl. personal-data annotations).</i> <span class="u">https://docs.databricks.com/aws/en/delta-sharing/sap-bdc/semantic-metadata</span></li>
+  <li>Proceed Group. <i>How is SAP ILM licensed?</i> <span class="u">https://proceedgroup.com/faqs/how-is-sap-ilm-licenced</span></li>
+</ol>
+<h3>Competitors and adjacent vendors</h3>
+<ol start="19">
+  <li>Silwood Technology. <i>Safyr and data compliance.</i> <span class="u">https://www.silwoodtechnology.com/safyr-and-data-compliance</span></li>
+  <li>E3 Magazine. <i>GDPR data in SAP: interview with Nick Porter, Silwood.</i> <span class="u">https://e3zine.com/gdrp-data-nick-porter-silwood</span></li>
+  <li>DBTA. <i>Silwood Technology rolls out SAP starter pack for GDPR compliance.</i> <span class="u">https://www.dbta.com/Editorial/News-Flashes/Silwood-Technology-Rolls-Out-SAP-Starter-Pack-for-GDPR-Compliance-121479.aspx</span></li>
+  <li>Bloor Research. <i>Silwood Safyr.</i> <span class="u">https://www.bloorresearch.com/solutions/silwood-safyr/</span></li>
+  <li>EPI-USE Labs. <i>Data Privacy Suite / GDPR compliance suite.</i> <span class="u">https://www.epiuselabs.com/gdpr-compliance-suite</span></li>
+  <li>EPI-USE Labs. <i>SAP Data Privacy Assessment Service.</i> <span class="u">https://epiuselabs.com/sap-data-privacy-assessment-service</span></li>
+  <li>Natuvion. <i>Test Data Anonymization (TDA).</i> <span class="u">https://natuvion.com/tda</span></li>
+  <li>Libelle. <i>Libelle DataMasking (summary).</i> SAPinsider, 2025. <span class="u">https://sapinsider.org/wp-content/uploads/2025/04/Summary-Libelle-DataMasking-EN.pdf</span></li>
+  <li>Delphix (Perforce). <i>SAP compliance.</i> Product documentation. <span class="u">https://help.delphix.com/eh/current/content/sap_compliance.htm</span></li>
+  <li>MAinsights. <i>Carlyle closes acquisition of SNP Schneider-Neureither &amp; Partner SE.</i> <span class="u">https://www.mainsights.io/ma-news/carlyle-closes-acquisition-of-snp-schneider-neureither-amp-partner-se</span></li>
+  <li>Microsoft Learn. <i>Microsoft Purview Data Map: supported data sources.</i> <span class="u">https://learn.microsoft.com/en-us/purview/data-map-data-sources</span></li>
+  <li>BigID. <i>Prioritizing customer and employee data protection (SAP).</i> <span class="u">https://bigid.com/blog/prioritizing-customer-and-employee-data-protection/</span></li>
+  <li>OneTrust. <i>SAP HANA integration.</i> <span class="u">https://www.onetrust.com/integrations/sap-hana/</span></li>
+  <li>Securiti. <i>SAP HANA connector.</i> <span class="u">https://securiti.ai/connectors/sap-hana</span></li>
+  <li>IBM. <i>Guardium supported platforms: discovery and classification.</i> <span class="u">https://www.ibm.com/support/pages/guardium-supported-platforms-discovery-and-classification</span></li>
+</ol>
+<h3>Market size, spend and pricing</h3>
+<ol start="34">
+  <li>Fortune Business Insights. <i>Data Privacy Software Market.</i> <span class="u">https://www.fortunebusinessinsights.com/data-privacy-software-market-105420</span></li>
+  <li>Fortune Business Insights. <i>Data Classification Market.</i> <span class="u">https://www.fortunebusinessinsights.com/data-classification-market-118553</span></li>
+  <li>P&amp;S Intelligence. <i>Privacy Management Software Market Report.</i> <span class="u">https://www.psmarketresearch.com/market-analysis/privacy-management-software-market-report</span></li>
+  <li>MarketsandMarkets. <i>Privacy Management Software Market.</i> <span class="u">https://www.marketsandmarkets.com/Market-Reports/privacy-management-software-market-15965500.html</span></li>
+  <li>IMARC Group. <i>GDPR Services Market.</i> <span class="u">https://www.imarcgroup.com/gdpr-services-market</span></li>
+  <li>ResearchAndMarkets. <i>GDPR Services Market.</i> <span class="u">https://www.researchandmarkets.com/report/gdpr-services</span></li>
+  <li>IAPP. <i>Privacy Governance Report 2024</i> (secondary summary via AIGL). <span class="u">https://www.aigl.blog/privacy-governance-report-2024/</span></li>
+  <li>IAPP. <i>How privacy tech is bought and deployed.</i> <span class="u">https://iapp.org/resources/article/how-privacy-tech-is-bought-and-deployed</span></li>
+  <li>UK Digital Marketplace. <i>G-Cloud 14 pricing document: SAP archiving and data management.</i> <span class="u">https://assets.applytosupply.digitalmarketplace.service.gov.uk/g-cloud-14/documents/706753/250760061755956-pricing-document-2022-05-10-1607.pdf</span></li>
+  <li>Publications Office of the EU (TED). <i>BVG: Integration ILM in SAP S4/HANA</i> (procurement notice, 2025). <span class="u">https://op.europa.eu/en/web/public-procurement/procurement-details/-/procurement/a697bc3f-3bc7-427a-a906-9e055b56b1ac</span></li>
+  <li>Vendr. <i>OneTrust pricing data.</i> <span class="u">https://www.vendr.com/marketplace/onetrust</span></li>
+  <li>Vendr. <i>Securiti pricing data.</i> <span class="u">https://www.vendr.com/marketplace/securiti-ai</span></li>
+  <li>Vendr. <i>BigID pricing data</i> (page returned 404 at access; figure secondary). <span class="u">https://www.vendr.com/marketplace/bigid</span></li>
+</ol>
+<h3>Tarento</h3>
+<ol start="47">
+  <li>Tarento. <i>DEEPSCAN – GDPR.</i> <span class="u">https://www.tarento.com/gdpr/</span></li>
+  <li>Tarento. <i>Tarento: 15 years of global enterprise growth.</i> <span class="u">https://www.tarento.com/news/tarento-15-years-global-enterprise-growth/</span></li>
+  <li>Tarento. <i>Tarento is now an SAP value-added reseller in the Nordics.</i> <span class="u">https://www.tarento.com/news/tarento-is-now-a-sap-value-added-reseller-in-the-nordics/</span></li>
+  <li>Tarento (internal). <i>GDPR_NameAttr_DataElements_Tables_List.xlsx.</i> Workbook, 3 sheets; created Sept 2018, last edited Oct 2026. SHA-256 745501432bf7…705f5773.</li>
+  <li>Tarento (internal, client-derived). <i>Tarento_DPIA_Questionnaire.xlsx.</i> Workbook, 9 sheets.</li>
+</ol>
+<h3>Other</h3>
+<ol start="52">
+  <li>QYResearch. Privacy management software market estimate, 2025 (seen via search summary only; source page not opened).</li>
+  <li>gdpr.eu. <i>Complete guide to GDPR compliance</i> (background reading). <span class="u">https://gdpr.eu/</span></li>
+  <li>Information Commissioner's Office (UK). <i>Guide to the UK GDPR</i> (background reading). <span class="u">https://ico.org.uk/</span></li>
+  <li>SAP Learning. Free S/4HANA overview courses (background reading). <span class="u">https://learning.sap.com/</span></li>
+</ol>
+</div>
+
+<!-- ================================================================ APPENDICES -->
+<h2 class="newpage">Appendix A: Glossary</h2>
+<table class="gloss">
+  <thead><tr><th>Term</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td>ABAP / SE38</td><td>SAP's programming language; SE38 is the transaction used to run an ABAP report. DEEPSCAN runs this way.</td></tr>
+    <tr><td>Blocking</td><td>Restricting personal data from everyday use while it must still be retained for legal reasons; only authorised roles (e.g. auditors) can see it.</td></tr>
+    <tr><td>Business partner</td><td>S/4HANA's unified master-data object for customers, suppliers and contacts (table <code>BUT000</code>), with an explicit category of person, organisation or group.</td></tr>
+    <tr><td>Change documents</td><td>SAP's log of previous field values (<code>CDHDR</code>/<code>CDPOS</code>); retains old names and addresses.</td></tr>
+    <tr><td>Classification</td><td>Deciding whether data is personal, of what category, about whom, and how sensitive.</td></tr>
+    <tr><td>Cluster table</td><td>Legacy SAP storage that packs several logical records into one (e.g. payroll in <code>PCL2</code>).</td></tr>
+    <tr><td>Controller / processor</td><td>The controller decides why and how personal data is used; the processor acts on its instructions (Art. 4, 28).</td></tr>
+    <tr><td>Data dictionary (DDIC)</td><td>SAP's catalogue of tables (<code>DD02L</code>), fields (<code>DD03L</code>) and data elements (<code>DD04T</code>).</td></tr>
+    <tr><td>Data element</td><td>A reusable SAP field definition shared by many tables (e.g. <code>NAME1_GP</code>).</td></tr>
+    <tr><td>DEEPSCAN</td><td>Tarento's in-SAP ABAP scanner for locating a person's data.</td></tr>
+    <tr><td>Discovery</td><td>Finding which tables and fields could hold personal data.</td></tr>
+    <tr><td>DPIA</td><td>Data Protection Impact Assessment, a structured risk review before high-risk processing (Art. 35).</td></tr>
+    <tr><td>DPO</td><td>Data Protection Officer: oversees GDPR compliance within an organisation.</td></tr>
+    <tr><td>DSAR</td><td>Data Subject Access Request: a person's request to see their data (Art. 15).</td></tr>
+    <tr><td>ECC / S/4HANA</td><td>SAP's previous ERP generation (mainstream maintenance to 2027) and its successor.</td></tr>
+    <tr><td>EDPB</td><td>European Data Protection Board: the body of EU data-protection regulators.</td></tr>
+    <tr><td>ILM</td><td>SAP Information Lifecycle Management: retention rules, blocking and destruction of data.</td></tr>
+    <tr><td>Long text</td><td>Free-text notes attached to SAP objects (<code>STXH</code>/<code>STXL</code>).</td></tr>
+    <tr><td>Masking</td><td>Replacing real values with realistic fake ones, typically in test systems.</td></tr>
+    <tr><td>Metadata vs. values</td><td>Metadata describes data (field name "Name 1"); values are the contents ("Anna Svensson").</td></tr>
+    <tr><td>Remediation</td><td>Fixing what was found: retention, blocking, deletion, masking, minimisation.</td></tr>
+    <tr><td>RoPA</td><td>Record of Processing Activities (Art. 30).</td></tr>
+    <tr><td>Selective data transition</td><td>Migrating to S/4HANA while carrying over only chosen data.</td></tr>
+    <tr><td>Special-category data</td><td>Health, ethnicity, religion, union membership, biometrics, etc. (Art. 9).</td></tr>
+    <tr><td>TAM / SAM / SOM</td><td>Total, serviceable and obtainable market.</td></tr>
+    <tr><td>Z table</td><td>A customer-built custom table (name starts with Z or Y).</td></tr>
+  </tbody>
+</table>
+
+<h2>Appendix B: GDPR articles in scope</h2>
+<table>
+  <thead><tr><th style="width:16%">Article</th><th>Subject</th></tr></thead>
+  <tbody>
+    <tr><td>4(1)</td><td>Definition of personal data</td></tr>
+    <tr><td>5(1)(c), (e)</td><td>Data minimisation; storage limitation</td></tr>
+    <tr><td>9, 10</td><td>Special categories; criminal convictions and offences</td></tr>
+    <tr><td>15, 17</td><td>Right of access; right to erasure</td></tr>
+    <tr><td>25</td><td>Data protection by design and by default</td></tr>
+    <tr><td>28</td><td>Processors (relevant when a service provider scans customer systems)</td></tr>
+    <tr><td>30</td><td>Records of processing activities</td></tr>
+    <tr><td>32</td><td>Security of processing</td></tr>
+    <tr><td>35</td><td>Data protection impact assessment</td></tr>
+    <tr><td>83</td><td>Administrative fines</td></tr>
+  </tbody>
+</table>
+<p class="note">Source: Regulation (EU) 2016/679 <span class="cite">[1]</span>.</p>
+
+<h2>Appendix C: Workbook statistics</h2>
+<table>
+  <thead><tr><th style="width:55%">Measure</th><th>Value</th></tr></thead>
+  <tbody>
+    <tr><td>Data elements mentioning "name"</td><td>21,737</td></tr>
+    <tr><td>Tagged Yellow (approved) / Mustard / Not Used / Red</td><td>2,554 / 195 / 45 / 2</td></tr>
+    <tr><td>Untagged</td><td>18,941</td></tr>
+    <tr><td>Fields and tables using approved data elements</td><td>13,420 fields in 9,626 tables</td></tr>
+    <tr><td>Of which 12-character user-ID fields</td><td>11,674 (87%)</td></tr>
+    <tr><td>Fields holding an actual personal name (approx.)</td><td>≈1,900 fields in ≈1,120 tables</td></tr>
+    <tr><td>Custom Z tables (all Swedish-named)</td><td>36</td></tr>
+    <tr><td>Key data elements not tagged</td><td><code>NAME1_GP</code>, <code>AD_NAME1</code></td></tr>
+    <tr><td>Attribute types absent</td><td>E-mail, birth date, bank/IBAN, tax ID, phone, street address</td></tr>
+  </tbody>
+</table>
+<p class="note">Source: <span class="cite">[50]</span>, profiled programmatically; the workbook was not modified.</p>
+
+</body>
+</html>

@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{{Short title of the paper}}</title>
+<style>
+  @page {
+    size: A4;
+    margin: 22mm 22mm 24mm;
+    @bottom-center { content: counter(page); font-family: Charter, Georgia, serif; font-size: 9pt; color: #555; }
+    @top-right { content: "{{Running header · e.g. Short title · Organisation internal research paper}}"; font-family: "Helvetica Neue", Arial, sans-serif; font-size: 7.5pt; color: #888; }
+  }
+  @page :first { @bottom-center { content: none; } @top-right { content: none; } }
+  body { font-family: Charter, Georgia, serif; font-size: 10.6pt; line-height: 1.52; color: #1a1a1a; text-align: justify; hyphens: auto; }
+  h1, h2, h3, h4, .sans { font-family: "Helvetica Neue", Arial, sans-serif; text-align: left; }
+  h2 { font-size: 14pt; margin: 22pt 0 6pt; color: #10304a; break-after: avoid; }
+  h2.newpage { break-before: page; margin-top: 0; }
+  h3 { font-size: 11.2pt; margin: 14pt 0 4pt; color: #10304a; break-after: avoid; }
+  h4 { font-size: 10pt; margin: 10pt 0 3pt; break-after: avoid; }
+  p { margin: 0 0 7pt; orphans: 3; widows: 3; }
+  ul, ol { margin: 0 0 8pt; padding-left: 18pt; }
+  li { margin-bottom: 3pt; }
+  code { font-family: Menlo, monospace; font-size: 8.6pt; background: #f2f4f6; padding: 0 2pt; border-radius: 2pt; }
+  .cite { font-size: 8.8pt; color: #10304a; white-space: nowrap; }
+  .ev { font-family: "Helvetica Neue", Arial, sans-serif; font-size: 7pt; font-weight: 700; letter-spacing: .03em; color: #fff; background: #5d6d7e; border-radius: 2pt; padding: 0 2.5pt; vertical-align: 1pt; white-space: nowrap; }
+  .ev.v { background: #1e7a46; } .ev.a { background: #7a5a1e; } .ev.c { background: #8a3b3b; } .ev.s { background: #3b5a8a; } .ev.e { background: #5d4a7a; }
+
+  /* Title page */
+  .titlepage { height: 245mm; display: flex; flex-direction: column; }
+  .tp-kicker { font-family: "Helvetica Neue", Arial, sans-serif; font-size: 8.5pt; letter-spacing: .18em; text-transform: uppercase; color: #5d6d7e; margin-top: 28mm; }
+  .tp-title { font-family: "Helvetica Neue", Arial, sans-serif; font-size: 25pt; line-height: 1.15; font-weight: 700; color: #10304a; margin: 8pt 0 10pt; text-align: left; }
+  .tp-sub { font-size: 13pt; color: #333; text-align: left; margin-bottom: 18pt; }
+  .tp-rule { border: 0; border-top: 2pt solid #10304a; width: 40mm; margin: 0 0 16pt; }
+  .tp-meta { font-family: "Helvetica Neue", Arial, sans-serif; font-size: 9pt; color: #333; line-height: 1.7; }
+  .tp-meta b { display: inline-block; width: 32mm; color: #5d6d7e; font-weight: 600; }
+  .tp-foot { margin-top: auto; font-family: "Helvetica Neue", Arial, sans-serif; font-size: 8pt; color: #666; border-top: .5pt solid #bbb; padding-top: 6pt; text-align: left; }
+
+  /* Business readers' guide: slightly tighter so it fits on 2-3 pages */
+  .guide { font-size: 10.1pt; line-height: 1.46; break-after: page; }
+  .guide h2 { margin-top: 0; }
+  .guide .lede { font-size: 9.5pt; color: #555; margin-bottom: 10pt; text-align: left; }
+
+  .abstract { border-top: .8pt solid #10304a; border-bottom: .8pt solid #10304a; padding: 8pt 0; margin: 0 0 10pt; }
+  .abstract h4 { margin-top: 0; text-transform: uppercase; letter-spacing: .1em; font-size: 8.5pt; color: #10304a; }
+  .kw { font-size: 9pt; color: #444; }
+
+  .toc { columns: 1; font-family: "Helvetica Neue", Arial, sans-serif; font-size: 9.6pt; }
+  .toc div { margin: 2pt 0; }
+  .toc .l2 { padding-left: 14pt; color: #444; font-size: 9pt; }
+  .toc-head { margin-top: 12pt; }
+
+  table { border-collapse: collapse; width: 100%; font-size: 8.7pt; line-height: 1.38; margin: 4pt 0 4pt; text-align: left; break-inside: auto; }
+  thead { display: table-header-group; }
+  tr { break-inside: avoid; }
+  th { font-family: "Helvetica Neue", Arial, sans-serif; font-size: 7.8pt; text-transform: uppercase; letter-spacing: .05em; color: #10304a; border-top: 1pt solid #10304a; border-bottom: .6pt solid #10304a; padding: 4pt 5pt; vertical-align: bottom; }
+  td { border-bottom: .4pt solid #cfd6dd; padding: 4pt 5pt; vertical-align: top; }
+  tbody tr:last-child td { border-bottom: 1pt solid #10304a; }
+  .cap { font-family: "Helvetica Neue", Arial, sans-serif; font-size: 8.4pt; color: #333; margin: 10pt 0 2pt; text-align: left; break-after: avoid; }
+  .cap b { color: #10304a; }
+  .note { font-size: 8.2pt; color: #555; margin: 2pt 0 10pt; text-align: left; }
+
+  .box { border: .7pt solid #9fb3c6; background: #f3f7fa; padding: 7pt 10pt; margin: 9pt 0 11pt; break-inside: avoid; }
+  .box h4 { margin-top: 0; color: #10304a; font-size: 9.3pt; text-transform: uppercase; letter-spacing: .06em; }
+  .box p:last-child, .box ul:last-child, .box ol:last-child { margin-bottom: 0; }
+
+  .fig { margin: 10pt 0 6pt; break-inside: avoid; }
+  .chain { display: flex; gap: 0; align-items: stretch; font-family: "Helvetica Neue", Arial, sans-serif; font-size: 8.3pt; text-align: left; }
+  .chain .st { flex: 1; border: .8pt solid #10304a; padding: 6pt 7pt; background: #f3f7fa; }
+  .chain .st b { display: block; color: #10304a; font-size: 9pt; margin-bottom: 2pt; }
+  .chain .ar { display: flex; align-items: center; padding: 0 4pt; color: #10304a; font-size: 13pt; }
+  .layers { font-family: "Helvetica Neue", Arial, sans-serif; font-size: 8.4pt; text-align: left; }
+  .layers .ly { display: flex; border: .8pt solid #10304a; margin-bottom: -0.8pt; }
+  .layers .ly .n { width: 30mm; background: #10304a; color: #fff; padding: 5pt 7pt; font-weight: 700; }
+  .layers .ly .d { flex: 1; padding: 5pt 8pt; background: #f8fafb; }
+  .layers .gov { border: .8pt dashed #10304a; padding: 5pt 8pt; margin-top: 5pt; background: #fff; }
+
+  .refs { font-size: 8.6pt; line-height: 1.4; text-align: left; }
+  .refs h3 { font-size: 9.5pt; margin-top: 10pt; }
+  .refs ol { padding-left: 22pt; }
+  .refs li { margin-bottom: 3pt; break-inside: avoid; }
+  .refs .u { font-family: Menlo, monospace; font-size: 7.2pt; color: #3b5a8a; word-break: break-all; }
+  .gloss td:first-child { font-weight: 700; width: 30mm; }
+  .small { font-size: 9pt; }
+</style>
+</head>
+<body>
+<!--
+  research-paper skill template. Replace every {{...}} placeholder; render.py reports any left over.
+  Component reference (all styling already exists; don't write new CSS):
+    citation        <span class="cite">[3]</span>  or  [3, 7–9]   (numbers = position in References)
+    evidence grade  <span class="ev v">VERIFIED</span> .ev.a ANALYST · .ev.c VENDOR · .ev.s SURVEY · .ev.e ESTIMATE
+    table caption   <p class="cap"><b>Table n.</b> Caption <span class="cite">[n]</span></p>  directly above <table>
+    figure caption  <p class="cap"><b>Figure n.</b> Caption</p>  inside <div class="fig">, below the figure
+    note under table <p class="note">…</p>
+    verdict box     <div class="box"><h4>Title</h4><p>…</p></div>   (one per major part; 3–4 in the paper)
+    step chain      <div class="chain"><div class="st"><b>1 · Step</b>text</div><div class="ar">→</div>…</div>
+    layer stack     <div class="layers"><div class="ly"><div class="n">L1 Name</div><div class="d">text</div></div>…<div class="gov">…</div></div>
+    new page        <h2 class="newpage">…</h2>
+-->
+
+<!-- ================================================================ TITLE PAGE -->
+<section class="titlepage">
+  <div class="tp-kicker">Research paper · {{Topic}} · {{Topic}} · {{Topic}}</div>
+  <div class="tp-title">{{Title: what the paper finds, classifies or decides}}</div>
+  <div class="tp-sub">{{Subtitle: the problem, the solution it requires, and a strategy for taking it forward}}</div>
+  <hr class="tp-rule">
+  <div class="tp-meta">
+    <div><b>Organisation</b>{{Organisation and practice}}</div>
+    <div><b>Document type</b>{{e.g. Internal research paper; reference baseline for future decisions}}</div>
+    <div><b>Version</b>1.0</div>
+    <div><b>Date</b>{{Date}}</div>
+    <div><b>Evidence base</b>{{What was read: internal files (read in full, unmodified), named web resources, N further sources}}</div>
+    <div><b>Classification</b>{{Internal}}</div>
+  </div>
+  <div class="tp-foot">{{Disclaimer: what kind of analysis this is and is not (e.g. not legal advice); which figures are estimates; that every factual claim carries a numbered reference and, where it matters, an evidence grade (Section 3.3).}}</div>
+</section>
+
+<!-- ================================================================ BUSINESS GUIDE -->
+<div class="guide">
+<h2>A guide for business readers</h2>
+<p class="lede">{{Who should read this first, what it covers, and how long it takes (about ten minutes). The rest of the paper is the detailed evidence behind it.}}</p>
+
+<p>{{Narrative opening, 80–120 words (writing-guide §5): a large, familiar stake narrowed to one concrete moment where the running example happens to a named role. Present tense, one human detail, ends on the question the paper answers. Real, or labelled "(The scenario is illustrative.)"}}</p>
+
+<h3>The problem in one picture</h3>
+<p>{{The running example, told with no jargon.}}</p>
+
+<h3>{{Why it matters / why now}}</h3>
+<p>{{…}}</p>
+
+<h3>{{What a solution has to do}}</h3>
+<p>{{…}}</p>
+
+<h3>{{What we already have}}</h3>
+<p>{{…}}</p>
+
+<h3>{{How big the opportunity is}}</h3>
+<p>{{…}}</p>
+
+<h3>{{The recommendation}}</h3>
+<p>{{…}}</p>
+
+<h3>Test before investing</h3>
+<table>
+  <thead><tr><th style="width:18%">When</th><th style="width:46%">Do</th><th>Learn</th></tr></thead>
+  <tbody>
+    <tr><td>{{Month 1}}</td><td>{{…}}</td><td>{{…}}</td></tr>
+  </tbody>
+</table>
+<p><b>The decision rule:</b> {{if X happens, invest further; if Y, stop.}}</p>
+
+<h3>How to read the rest of this paper</h3>
+<table>
+  <thead><tr><th style="width:40%">If you want…</th><th>Read</th></tr></thead>
+  <tbody>
+    <tr><td>The short version</td><td>This guide, then the Executive summary and Section {{n}} (Conclusions)</td></tr>
+    <tr><td>The business case</td><td>Sections {{…}}</td></tr>
+    <tr><td>The technical detail (safe to skip)</td><td>Sections {{…}}</td></tr>
+    <tr><td>Any unfamiliar term</td><td>Appendix A (Glossary)</td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- ================================================================ ABSTRACT + TOC -->
+<div class="abstract">
+  <h4>Abstract</h4>
+  <p>{{Paragraph 1: the obligation or pressure, the setting, and what the paper examines.}}</p>
+  <p>{{Paragraph 2: the central finding, the key numbers with their ranges, and the recommendation.}}</p>
+  <p class="kw"><b>Keywords:</b> {{eight to twelve keywords separated by semicolons}}.</p>
+</div>
+
+<h4 class="sans toc-head">Contents</h4>
+<div class="toc">
+  <div>A guide for business readers (preceding pages)</div>
+  <div>Executive summary</div>
+  <div>1 &nbsp;Introduction</div>
+  <div>2 &nbsp;Background: {{…}}</div>
+  <div>3 &nbsp;Method, evidence grading and limitations</div>
+  <div>4 &nbsp;The problem: {{…}}</div>
+  <div>5 &nbsp;Existing approaches and {{the gap}}</div>
+  <div>6 &nbsp;{{Our current assets: an assessment}}</div>
+  <div>7 &nbsp;{{Demand, buyers and willingness to pay}}</div>
+  <div>8 &nbsp;{{Market size and commercial viability}}</div>
+  <div>9 &nbsp;What a complete solution requires</div>
+  <div>10 {{Target segments and go-to-market}}</div>
+  <div>11 Risks</div>
+  <div>12 Roadmap, validation plan and decision gates</div>
+  <div>13 Discussion and open questions</div>
+  <div>14 Conclusions and recommendations</div>
+  <div>References</div>
+  <div>Appendix A: Glossary · Appendix B: {{…}}</div>
+</div>
+
+<!-- ================================================================ EXEC SUMMARY -->
+<h2 class="newpage">Executive summary</h2>
+<p><b>The problem.</b> {{…}}</p>
+<p><b>Why it matters now.</b> {{…}}</p>
+<p><b>What already exists.</b> {{…}}</p>
+<p><b>The solution required.</b> {{…}}</p>
+<p><b>Our position.</b> {{…}}</p>
+<p><b>The opportunity.</b> {{…}}</p>
+<div class="box">
+  <h4>Recommendation</h4>
+  <p>{{The recommendation, and the evidence that would change it.}}</p>
+</div>
+
+<!-- ================================================================ 1 -->
+<h2 class="newpage">1 &nbsp;Introduction</h2>
+<h3>1.1 Context</h3>
+<p>{{…}}</p>
+<h3>1.2 Problem statement</h3>
+<p>{{One paragraph, precise enough to be wrong.}}</p>
+<h3>1.3 Research questions</h3>
+<ol>
+  <li>{{Why is the problem hard?}}</li>
+  <li>{{What do existing approaches cover, and where are the gaps?}}</li>
+  <li>{{What must a complete solution do?}}</li>
+  <li>{{How well do our current assets meet that?}}</li>
+  <li>{{Is there demand and willingness to pay, from whom, of what size?}}</li>
+  <li>{{What should we do next, and how do we decide whether to invest further?}}</li>
+</ol>
+<h3>1.4 Scope</h3>
+<p>{{In scope: … Out of scope: … What was not tested.}}</p>
+<h3>1.5 Structure of the paper</h3>
+<p>{{One sentence per group of sections.}}</p>
+
+<!-- ================================================================ 2 -->
+<h2>2 &nbsp;Background: {{…}}</h2>
+<h3>2.1 {{…}}</h3>
+<p>{{…}}</p>
+<p class="cap"><b>Table 1.</b> {{Caption}} <span class="cite">[1]</span></p>
+<table>
+  <thead><tr><th style="width:22%">{{Col}}</th><th>{{Col}}</th><th>{{Col}}</th></tr></thead>
+  <tbody>
+    <tr><td>{{…}}</td><td>{{…}}</td><td>{{…}}</td></tr>
+  </tbody>
+</table>
+
+<!-- ================================================================ 3 -->
+<h2 class="newpage">3 &nbsp;Method, evidence grading and limitations</h2>
+<h3>3.1 Sources</h3>
+<ol>
+  <li><b>Primary internal artefacts.</b> {{…}}</li>
+  <li><b>Named resources.</b> {{…}}</li>
+  <li><b>Secondary research.</b> {{…}}</li>
+</ol>
+<h3>3.2 Analytical approach</h3>
+<p>{{How each kind of evidence was analysed; "every assumption is stated next to the number it produces".}}</p>
+<h3>3.3 Evidence grades</h3>
+<p>Claims that carry weight in the argument are graded inline:</p>
+<table>
+  <thead><tr><th style="width:22%">Grade</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td><span class="ev v">VERIFIED</span></td><td>From the primary source itself (law, regulator, court, official vendor document, audited filing), read directly.</td></tr>
+    <tr><td><span class="ev a">ANALYST</span></td><td>A market-research or analyst estimate. These vary widely by definition and method.</td></tr>
+    <tr><td><span class="ev c">VENDOR</span></td><td>A seller's statement about its own product, pricing or customers.</td></tr>
+    <tr><td><span class="ev s">SURVEY</span></td><td>Self-reported data from user groups or professional associations.</td></tr>
+    <tr><td><span class="ev e">ESTIMATE</span></td><td>This paper's own reasoning or calculation, with assumptions shown.</td></tr>
+  </tbody>
+</table>
+<h3>3.4 Limitations</h3>
+<ul>
+  <li>{{What was not tested or run.}}</li>
+  <li>{{Which sources could not be opened, and how figures seen only second-hand are marked.}}</li>
+  <li>{{Where no public figure exists, so the paper estimates.}}</li>
+  <li>{{What primary research has not been done yet.}}</li>
+</ul>
+
+<!-- ================================================================ 4 -->
+<h2 class="newpage">4 &nbsp;The problem: {{…}}</h2>
+<h3>4.1 A running example</h3>
+<p>{{The minimal pair: two cases that differ by one fact and need different answers. End with why it captures the business question, and say the paper will keep returning to it.}}</p>
+<h3>4.2 {{Sources of difficulty}}</h3>
+<p>{{…}}</p>
+<h3>4.3 {{The value chain}}</h3>
+<div class="fig">
+  <div class="chain">
+    <div class="st"><b>1 · {{Step}}</b>{{…}}</div>
+    <div class="ar">→</div>
+    <div class="st"><b>2 · {{Step}}</b>{{…}}</div>
+    <div class="ar">→</div>
+    <div class="st"><b>3 · {{Step}}</b>{{…}}</div>
+    <div class="ar">→</div>
+    <div class="st"><b>4 · {{Step}}</b>{{…}}</div>
+  </div>
+  <p class="cap"><b>Figure 1.</b> {{Caption, ending with where the value concentrates.}}</p>
+</div>
+<h3>4.4 Evidence that the problem is current</h3>
+<p>{{…}}</p>
+<div class="box">
+  <h4>Problem in one paragraph</h4>
+  <p>{{…}}</p>
+</div>
+
+<!-- ================================================================ 5 -->
+<h2 class="newpage">5 &nbsp;Existing approaches and {{the gap}}</h2>
+<h3>5.1 A taxonomy of approaches</h3>
+<p>{{…}}</p>
+<h3>5.2 Comparison</h3>
+<p class="cap"><b>Table 2.</b> {{Competitive landscape}}</p>
+<table>
+  <thead><tr><th>{{Offering}}</th><th>{{Coverage}}</th><th>{{Approach}}</th><th>{{Pricing}}</th><th>{{Remediation}}</th></tr></thead>
+  <tbody>
+    <tr><td>{{…}}</td><td>{{…}}</td><td>{{…}}</td><td>{{…}}</td><td>{{…}}</td></tr>
+  </tbody>
+</table>
+<h3>5.3 The gap</h3>
+<p>{{What no one publicly does. Say plainly that this is an absence of evidence, not proof, and how the plan will test it. Then name the weak position and the defensible one, using the running example.}}</p>
+
+<!-- ================================================================ 6–8 -->
+<h2 class="newpage">6 &nbsp;{{Our current assets: an assessment}}</h2>
+<p>{{Assess assets against the requirements, not in isolation.}}</p>
+
+<h2 class="newpage">7 &nbsp;{{Demand, buyers and willingness to pay}}</h2>
+<h3>7.1 {{Obligation is not the same as budget}}</h3>
+<p>{{…}}</p>
+<h3>7.2 Who buys</h3>
+<p>{{…}}</p>
+
+<h2 class="newpage">8 &nbsp;{{Market size and commercial viability}}</h2>
+<h3>8.1 Broad market (TAM)</h3>
+<p>{{Top-down, from analyst reports, with the spread between them stated.}}</p>
+<h3>8.2 Serviceable market (SAM): bottom-up</h3>
+<p class="cap"><b>Table 3.</b> {{Serviceable addressable market, bottom-up}} <span class="ev e">ESTIMATE</span></p>
+<table>
+  <thead><tr><th>Driver</th><th>Low</th><th>Central</th><th>High</th><th>Basis</th></tr></thead>
+  <tbody>
+    <tr><td>{{…}}</td><td>{{…}}</td><td>{{…}}</td><td>{{…}}</td><td>{{assumption and source}}</td></tr>
+  </tbody>
+</table>
+<h3>8.3 Obtainable share (SOM)</h3>
+<p>{{…}}</p>
+
+<!-- ================================================================ 9 -->
+<h2 class="newpage">9 &nbsp;What a complete solution requires</h2>
+<h3>9.1 A {{five}}-layer framework</h3>
+<div class="fig">
+  <div class="layers">
+    <div class="ly"><div class="n">L1 {{Name}}</div><div class="d">{{…}}</div></div>
+    <div class="ly"><div class="n">L2 {{Name}}</div><div class="d">{{…}}</div></div>
+    <div class="ly"><div class="n">L3 {{Name}}</div><div class="d">{{…}}</div></div>
+    <div class="gov"><b>Cross-cutting governance:</b> {{…}}</div>
+  </div>
+  <p class="cap"><b>Figure 2.</b> {{Proposed reference framework (this paper).}}</p>
+</div>
+<h3>9.2 Functional requirements</h3>
+<p>{{…}}</p>
+<h3>9.3 Non-functional requirements</h3>
+<p>{{…}}</p>
+<h3>9.4 {{The offering that follows}}</h3>
+<p>{{…}}</p>
+
+<!-- ================================================================ 10–12 -->
+<h2 class="newpage">10 &nbsp;{{Target segments and go-to-market}}</h2>
+<p>{{…}}</p>
+
+<h2>11 &nbsp;Risks</h2>
+<p class="cap"><b>Table 4.</b> Principal risks and mitigations</p>
+<table>
+  <thead><tr><th style="width:30%">Risk</th><th style="width:14%">Likelihood</th><th>Mitigation</th></tr></thead>
+  <tbody>
+    <tr><td>{{…}}</td><td>{{…}}</td><td>{{…}}</td></tr>
+  </tbody>
+</table>
+
+<h2 class="newpage">12 &nbsp;Roadmap, validation plan and decision gates</h2>
+<h3>12.1 Phased plan</h3>
+<p>{{…}}</p>
+<h3>12.2 {{Interview questions}}</h3>
+<ol><li>{{…}}</li></ol>
+<h3>12.3 {{Pilot success metrics}}</h3>
+<p>{{…}}</p>
+<div class="box">
+  <h4>Decision rule</h4>
+  <p>{{Invest in the next phase only if (a) … and (b) …. If …, stop, because ….}}</p>
+</div>
+
+<!-- ================================================================ 13–14 -->
+<h2>13 &nbsp;Discussion and open questions</h2>
+<p><b>What the evidence shows.</b> {{…}}</p>
+<p><b>What remains uncertain.</b> {{First, … Second, … Third, …}}</p>
+<p><b>A cautious view.</b> {{The strongest argument against the recommendation, and which evidence would settle it.}}</p>
+<p><b>The author's judgement.</b> {{The strongest argument for proceeding, and the strongest for caution.}}</p>
+
+<h2>14 &nbsp;Conclusions and recommendations</h2>
+<ol>
+  <li><b>{{The problem is …}}</b> {{…}}</li>
+  <li><b>{{…}}</b> {{…}}</li>
+  <li><b>Recommendation:</b> {{…}}</li>
+</ol>
+<p>{{Return to the running example one last time and end on one short sentence that states the business test.}}</p>
+
+<!-- ================================================================ REFERENCES -->
+<h2 class="newpage">References</h2>
+<div class="refs">
+<p class="small">Web sources accessed {{Month Year}}. "Secondary" indicates figures seen only through search or press summaries.</p>
+<h3>{{Source group, e.g. Legislation}}</h3>
+<ol start="1">
+  <li>{{Author or organisation}}. <i>{{Title.}}</i> {{Publisher, date.}} <span class="u">{{full URL}}</span></li>
+</ol>
+<h3>{{Next source group}}</h3>
+<ol start="2">
+  <li>{{…}}</li>
+</ol>
+</div>
+
+<!-- ================================================================ APPENDICES -->
+<h2 class="newpage">Appendix A: Glossary</h2>
+<table class="gloss">
+  <thead><tr><th>Term</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td>{{Term}}</td><td>{{Plain-English meaning}}</td></tr>
+  </tbody>
+</table>
+
+<h2 class="newpage">Appendix B: {{…}}</h2>
+<p>{{…}}</p>
+
+</body>
+</html>

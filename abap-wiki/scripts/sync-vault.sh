@@ -1,0 +1,119 @@
+#!/usr/bin/env bash
+# Sync a public knowledge-vault repo to a local cache and print its path.
+# Public repo => no token, no credentials, no MCP server.
+#
+# Usage: sync-vault.sh <owner/repo>
+#   e.g. sync-vault.sh t-labs-buy/abap-wiki
+#
+# Output (key=value lines):
+#   VAULT_PATH=<absolute path to the local clone>
+#   STATUS=cloned | updated | current | repaired | offline (using cached copy)
+#   LATEST=<short sha> <date> — <subject>
+#   PAGES=<number of vault pages, excluding raw/>
+#
+# Always exits 0 when a usable copy exists, so a network blip never blocks an
+# answer. Exits 1 only when there is no usable copy at all.
+
+set -uo pipefail
+
+REPO="${1:?usage: sync-vault.sh <owner/repo>}"
+NAME="${REPO##*/}"
+DEST="${HOME}/.cache/claude-vaults/${NAME}"
+URL="https://github.com/${REPO}.git"
+
+# Never prompt for credentials: a public clone must not hang waiting for input.
+export GIT_TERMINAL_PROMPT=0
+# Abort a stalled transfer instead of hanging forever behind a proxy/blackhole.
+GIT_OPTS=(-c credential.helper= -c core.askPass=
+          -c http.lowSpeedLimit=1000 -c http.lowSpeedTime=20)
+
+git_q() { git "${GIT_OPTS[@]}" "$@" 2>/dev/null; }
+
+# A cache is usable only if it is a valid git repo AND looks like a vault.
+cache_ok() {
+  [ -d "${DEST}/.git" ] &&
+  git_q -C "${DEST}" rev-parse --git-dir >/dev/null &&
+  [ -f "${DEST}/meta/index.md" ]
+}
+
+do_clone() {
+  rm -rf "${DEST}"
+  mkdir -p "$(dirname "${DEST}")"
+  git_q clone --depth 1 -q "${URL}" "${DEST}"
+}
+
+STATUS=""
+
+if [ -e "${DEST}" ] && ! cache_ok; then
+  # Leftover or corrupted directory — rebuild it from scratch.
+  if do_clone; then
+    STATUS="repaired"
+  else
+    echo "ERROR: local copy at ${DEST} is unusable and re-cloning failed." >&2
+    echo "Check that you are online, then delete ${DEST} and retry." >&2
+    exit 1
+  fi
+elif [ ! -e "${DEST}" ]; then
+  if do_clone; then
+    STATUS="cloned"
+  else
+    echo "ERROR: could not clone ${URL}" >&2
+    echo "Check the repo name and that you are online." >&2
+    exit 1
+  fi
+else
+  # Ask the remote for its HEAD sha only — a ref advertisement, no object
+  # transfer. If it matches what we already have, skip the fetch entirely and
+  # answer from the cache.
+  LOCAL_SHA=$(git_q -C "${DEST}" rev-parse HEAD)
+  REMOTE_SHA=$(git_q -C "${DEST}" ls-remote origin HEAD | awk '{print $1}')
+
+  if [ -z "${REMOTE_SHA}" ]; then
+    # Could not reach the remote at all.
+    STATUS="offline (using cached copy)"
+  elif [ "${REMOTE_SHA}" = "${LOCAL_SHA}" ]; then
+    STATUS="current"
+  elif git_q -C "${DEST}" fetch --depth 1 -q origin HEAD &&
+       git_q -C "${DEST}" reset --hard -q FETCH_HEAD; then
+    STATUS="updated"
+  else
+    # Remote has moved but the transfer failed — the cache is now known-stale.
+    STATUS="offline (using cached copy)"
+  fi
+fi
+
+COMMIT=$(git_q -C "${DEST}" log -1 --format='%h %cd — %s' --date=short)
+# Count only the four content zones (01-… 04-…): excludes raw/, meta/, .git and CI files.
+PAGES=$(find "${DEST}"/0*/ -name '*.md' 2>/dev/null | wc -l | tr -d ' ')
+
+# --- skill self-update check -------------------------------------------------
+# The vault repo carries this skill under .claude/skills/<name>/, and the sync
+# above just fetched it. Compare the published copy with the one actually
+# installed — the directory this script is running from — so a teammate whose
+# install has fallen behind finds out the moment they use the skill. This is the
+# only channel that reaches someone with no checkout of the repo.
+#
+# Warn only. Never overwrite a file under the user's home directory during a
+# query: the point of the check is that a human notices.
+SKILL_DIR=$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")/.." 2>/dev/null && pwd)
+INSTALLED_SKILL="${SKILL_DIR}/SKILL.md"
+PUBLISHED_SKILL="${DEST}/.claude/skills/${NAME}/SKILL.md"
+
+if [ ! -f "${PUBLISHED_SKILL}" ] || [ ! -f "${INSTALLED_SKILL}" ]; then
+  SKILL_STATUS="unknown (nothing to compare)"
+elif cmp -s "${INSTALLED_SKILL}" "${PUBLISHED_SKILL}"; then
+  SKILL_STATUS="current"
+elif git_q -C "${SKILL_DIR}" rev-parse --is-inside-work-tree >/dev/null; then
+  # Installed from a git checkout (typically a symlink into the repo), so this
+  # copy is a development copy — ahead of or diverged from what is published.
+  # Publish it with git; do NOT tell the user to overwrite their own work.
+  SKILL_STATUS="ahead (git checkout — publish with git, do not overwrite)"
+else
+  SKILL_STATUS="stale (update with: cp '${PUBLISHED_SKILL}' '${INSTALLED_SKILL}')"
+fi
+
+echo "VAULT_PATH=${DEST}"
+echo "STATUS=${STATUS}"
+echo "LATEST=${COMMIT:-unknown}"
+echo "PAGES=${PAGES}"
+echo "SKILL_STATUS=${SKILL_STATUS}"

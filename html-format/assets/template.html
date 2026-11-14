@@ -15,10 +15,12 @@
     <!-- One sentence: shown under the link when the page is shared in chat or
          email, and in search results. -->
     <meta name="description" content="DOCUMENT DESCRIPTION" />
+    <!-- "JetBrainsMono Nerd Font" is used when the reader has it installed;
+         everyone else gets the same design, JetBrains Mono, from Google Fonts. -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,600;0,700;1,400;1,700&family=IBM+Plex+Sans+Condensed:wght@600;700&family=Noto+Sans+Elbasan&display=swap"
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,600;0,700;0,800;1,400;1,700&display=swap"
       rel="stylesheet"
     />
     <script>
@@ -49,8 +51,8 @@
         box-sizing: border-box;
       }
       :root {
-        /* Layout. --measure is the prose column — about 68 characters of
-           IBM Plex Mono at the body size, which is the line length long-form
+        /* Layout. --measure is the prose column — a comfortable line of
+           JetBrains Mono at the body size, which is the line length long-form
            reading wants. Widening it is a one-token change; everything else
            below derives from it. It is deliberately NOT in ch: a custom
            property in ch resolves against each element's own font size, so
@@ -323,7 +325,7 @@
         border: 1px solid var(--border);
         border-radius: 999px;
         padding: 0.35rem 0.85rem;
-        font-family: "IBM Plex Mono", monospace;
+        font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
         font-size: 0.78rem;
         font-weight: 600;
         letter-spacing: 0.04em;
@@ -360,11 +362,17 @@
         margin-top: 0.45rem;
       }
 
+      /* 18px is the base size of the house style. The root sets 1rem, so
+         headings, labels and the sidebar all scale from it, and body text
+         matches it exactly. Keep the two in step. */
+      html {
+        font-size: 18px;
+      }
       body {
         background: var(--bg);
         color: var(--ink);
-        font-family: "IBM Plex Mono", monospace;
-        font-size: 17px;
+        font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+        font-size: 18px;
         line-height: 1.65;
         margin: 0;
       }
@@ -380,12 +388,12 @@
       .label,
       nav,
       .phase-tag {
-        font-family: "IBM Plex Mono", monospace;
+        font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
       }
-      /* The page title alone is set in the condensed sans: it reads as a
-         masthead and fits long titles on fewer lines than the mono. */
+      /* The page title shares the JetBrains Mono face; its size and tight
+         tracking are what make it read as a masthead. */
       h1 {
-        font-family: "IBM Plex Sans Condensed", "IBM Plex Mono", sans-serif;
+        font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
         font-size: 2.1rem;
         line-height: 1.15;
         letter-spacing: -0.015em;
@@ -499,7 +507,7 @@
         margin-bottom: 1.75rem;
       }
       .eyebrow {
-        font-family: "IBM Plex Mono", monospace;
+        font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
         text-transform: uppercase;
         letter-spacing: 0.14em;
         font-size: 0.72rem;
@@ -518,7 +526,7 @@
         display: flex;
         flex-wrap: wrap;
         gap: 0.5rem 1.75rem;
-        font-family: "IBM Plex Mono", monospace;
+        font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
         font-size: 0.85rem;
         color: var(--muted);
         border-top: 1px solid var(--border);
@@ -555,7 +563,7 @@
       .doc-search {
         position: relative;
         width: 22rem;
-        font-family: "IBM Plex Mono", monospace;
+        font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
       }
       .doc-search-field {
         display: flex;
@@ -723,10 +731,9 @@
       html:not(.js) nav.sidebar {
         display: none;
       }
-      /* The sidebar is the one place that breaks from IBM Plex Mono: a
-         proportional face here separates navigation from document content at a
-         glance. Noto Sans Elbasan ships regular only, so the 600/700 weights
-         below are synthesised by the browser — intentional, do not "fix". */
+      /* The sidebar uses the same JetBrains Mono face as the document; its
+         card, smaller size and uppercase label set it apart from the
+         content. */
       /* A long document can list more sections than fit the window. The
          sidebar is sticky, so without its own scroll the tabs below the fold
          could never be reached: cap it at the viewport (less the sticky
@@ -747,13 +754,13 @@
         border: 1px solid var(--border);
         border-radius: 12px;
         padding: 0.9rem;
-        font-family: "Noto Sans Elbasan", sans-serif;
+        font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
         font-size: 0.87rem;
       }
-      /* .label matches the shared mono rule directly, so inheriting from
+      /* .label matches the shared font rule directly, so inheriting from
          nav.sidebar is not enough — it needs the family restated here. */
       nav.sidebar .label {
-        font-family: "Noto Sans Elbasan", sans-serif;
+        font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
         text-transform: uppercase;
         letter-spacing: 0.12em;
         font-size: 0.7rem;
@@ -856,7 +863,7 @@
         margin-top: 1.5rem;
       }
       .pager button {
-        font-family: "IBM Plex Mono", monospace;
+        font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
         font-size: 0.85rem;
         font-weight: 600;
         color: var(--accent);
@@ -1201,8 +1208,7 @@
         padding: 0.9rem 1.1rem;
         background: var(--code-bg);
         color: var(--code-ink);
-        font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas,
-          monospace;
+        font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
         font-size: 0.85rem;
         line-height: 1.5;
         /* Command output is column-aligned; wrapping destroys the alignment,
@@ -1260,16 +1266,15 @@
         border-radius: 8px;
         padding: 0.9rem 1.1rem;
         overflow-x: auto;
-        /* Commands read 2px larger than the 17px body text, so they stand out
+        /* Commands read 2px larger than the 18px body text, so they stand out
            from the prose that explains them. */
-        font-size: 19px;
+        font-size: 20px;
         line-height: 1.55;
         margin: 0.75rem 0 1.25rem;
       }
       code,
       pre {
-        font-family:
-          ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+        font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
       }
       p code,
       li code,
@@ -1314,7 +1319,7 @@
         border: 1px solid var(--border);
         border-radius: 6px;
         padding: 0.18rem 0.5rem;
-        font-family: "IBM Plex Mono", monospace;
+        font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
         font-size: 0.68rem;
         font-weight: 600;
         letter-spacing: 0.08em;
@@ -1403,7 +1408,7 @@
         vertical-align: top;
       }
       th {
-        font-family: "IBM Plex Mono", monospace;
+        font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
         font-size: 0.72rem;
         text-transform: uppercase;
         letter-spacing: 0.1em;
@@ -1437,7 +1442,7 @@
         align-items: stretch;
         gap: 0.6rem;
         margin: 1.25rem 0 1.75rem;
-        font-family: "IBM Plex Mono", monospace;
+        font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
         font-size: 0.85rem;
         line-height: 1.45;
       }
@@ -1533,7 +1538,7 @@
         margin: -0.4rem 0 1.3rem;
       }
       .chip {
-        font-family: "IBM Plex Mono", monospace;
+        font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
         font-size: 0.72rem;
         font-weight: 600;
         letter-spacing: 0.05em;
@@ -1551,7 +1556,7 @@
         display: flex;
         align-items: center;
         gap: 0.65rem;
-        font-family: "IBM Plex Mono", monospace;
+        font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
         font-size: 1rem;
         font-weight: 700;
         margin: 2.1rem 0 0.8rem;
@@ -1586,7 +1591,7 @@
       }
       .card .card-title {
         display: block;
-        font-family: "IBM Plex Mono", monospace;
+        font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
         font-size: 0.82rem;
         font-weight: 700;
         text-transform: uppercase;
@@ -1603,7 +1608,7 @@
         margin: 2rem 0 1.5rem;
       }
       .qa .q {
-        font-family: "IBM Plex Mono", monospace;
+        font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
         font-size: 1.05rem;
         font-weight: 700;
         margin: 0 0 0.6rem;
@@ -1642,7 +1647,7 @@
       }
       .choice-box .ct {
         display: block;
-        font-family: "IBM Plex Mono", monospace;
+        font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
         font-size: 0.82rem;
         font-weight: 700;
         text-transform: uppercase;

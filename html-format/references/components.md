@@ -7,7 +7,7 @@ the class names.
 ## Contents
 
 - [Design tokens](#design-tokens) — the colour and layout variables
-- [Typography](#typography) — the two font families, the type scale, the measure
+- [Typography](#typography) — the font stack, the type scale, the measure
 - [Page furniture](#page-furniture) — eyebrow, title, lede, meta-strip, footer
 - [Sidebar and sections](#sidebar-and-sections) — nav, section shells, tags, chips
 - [Callouts](#callouts) — win / why / warn
@@ -102,24 +102,22 @@ horizontal layout.
 
 ## Typography
 
-- **`"IBM Plex Mono", monospace`** (400/600/700 + italics) — the document itself:
-  body copy, headings, callout labels, chips, buttons, table headers. Body is set
-  at 17px / 1.65. IBM Plex Mono tops out at 700, so the handful of `800` rules in
-  the CSS resolve to 700 — that is intentional, do not "fix" them.
-- **`"IBM Plex Sans Condensed", sans-serif`** (600/700) — the page title (`h1`)
-  only. A condensed sans gives the header a masthead feel and keeps long titles
-  to fewer lines; every other heading stays in IBM Plex Mono.
-- **`"Noto Sans Elbasan", sans-serif`** — the sidebar only: its heading label, the
-  tab links, and the circled `.num` counters. A proportional face here separates
-  navigation from content at a glance. It ships **regular weight only**, so the
-  `600`/`700` rules inside `nav.sidebar` are synthesised by the browser. Because
-  `.label` also matches the shared mono rule, `nav.sidebar .label` restates the
-  family explicitly — inheriting from `nav.sidebar` alone would not win.
-- **`ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace`** — code.
-  Kept distinct from the body font so code blocks still read as code.
+- **`"JetBrainsMono Nerd Font", "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace`**
+  — the whole document, code included: body copy, headings, the page title
+  (`h1`), the sidebar, callout labels, chips, buttons, table headers, code
+  blocks and inline code. Body is set at 18px / 1.65. The Nerd Font is a local
+  install (JetBrains Mono patched with extra icon glyphs), so it is listed first
+  for readers who have it; everyone else gets the same design, JetBrains Mono,
+  from the single Google Fonts `<link>` (400/600/700/800 plus italics). The page
+  title is set apart by size and tight tracking, the sidebar by its card,
+  smaller size and uppercase label. Code reads as code because of its tinted
+  block and bordered inline chip, not a different face. Because `.label`
+  matches the shared font rule, `nav.sidebar .label` restates the family
+  explicitly.
 
-Scale: `h1` 2.1rem · `h2` 1.45rem · `h3` 1.08rem · `h4` 0.98rem · body 17px ·
-`.lede` 1.12rem · code blocks 19px and inline code `calc(1em + 2px)`, so
+Scale: root (`1rem`) 18px, the base size of the house style · `h1` 2.1rem · `h2` 1.45rem · `h3` 1.08rem ·
+`h4` 0.98rem · body 18px · `.lede` 1.12rem · code blocks 20px and inline code
+`calc(1em + 2px)`, so
 commands sit 2px above the text around them · small UI 0.85rem · labels/tags
 0.72rem uppercase with wide tracking. `h1`/`h2` use `text-wrap: balance` and
 slight negative letter-spacing.

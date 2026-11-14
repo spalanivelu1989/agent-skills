@@ -1,6 +1,6 @@
 ---
 name: html-format
-description: Produces a standalone, self-contained HTML document in the house design system — teal accent, IBM Plex Mono typography with a proportional sidebar, a full-width layout with margin sidenotes, generated sidebar navigation, a built-in search box, card sections, callouts, per-section reading time, a reading-progress rail, and a light/paper/dark toggle. Use this whenever the deliverable is an HTML page rather than Markdown: guides, walkthroughs, runbooks, proposals, explainers, onboarding docs, reports, FAQs, or specs. Trigger it when someone asks for a document "as HTML", "as a web page", "in the same style/format as index.html", "in our house style", "matching the other pages", or asks to convert an existing Markdown/text document into a styled HTML page. Also use it when adding a new companion page to a documentation set that already uses this system, so the new page matches the rest.
+description: Produces a standalone, self-contained HTML document in the house design system — teal accent, JetBrains Mono typography, a full-width layout with margin sidenotes, generated sidebar navigation, a built-in search box, card sections, callouts, per-section reading time, a reading-progress rail, and a light/paper/dark toggle. Use this whenever the deliverable is an HTML page rather than Markdown: guides, walkthroughs, runbooks, proposals, explainers, onboarding docs, reports, FAQs, or specs. Trigger it when someone asks for a document "as HTML", "as a web page", "in the same style/format as index.html", "in our house style", "matching the other pages", or asks to convert an existing Markdown/text document into a styled HTML page. Also use it when adding a new companion page to a documentation set that already uses this system, so the new page matches the rest.
 ---
 
 # House HTML document format
@@ -270,9 +270,9 @@ open <destination>.html   # macOS
   should switch to that section, outline the match and highlight every
   occurrence. Try a word inside a closed disclosure too: it should unfold.
   `Esc` clears the search and the highlights.
-- The single Google Fonts `<link>` (three families) is the only external
-  dependency, and the font stacks degrade to the system monospace and sans if it
-  fails to load.
+- The single Google Fonts `<link>` (JetBrains Mono) is the only external
+  dependency. Readers with "JetBrainsMono Nerd Font" installed get that first;
+  if the link fails to load, the stack falls back to the system monospace.
 
 Then tell the user the path and, in a sentence, which navigation mode you chose
 and why.

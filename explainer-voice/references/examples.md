@@ -108,3 +108,43 @@ At this size the voice is just plain words, the point first, and specifics. No a
 
 What changed: no recap. It says what is known and what isn't, and ends on a short line that widens
 the frame.
+
+---
+
+## 5. Explaining a new thing: "What is our new flag service, and why did we build it?"
+
+This one uses the second arc (what it is, why it exists, how it works) and the "nothing to look up"
+moves. The model for it is Bloomberg's piece on serving agent skills over MCP, which the user picked
+out as the standard for beginner-friendly technical writing.
+
+**Before**
+
+> ## Overview
+> FlagHub is a centralised feature-flag service with push-based propagation via SSE and a local
+> SDK cache. It replaces per-service YAML flags and the synchronous lookup API.
+
+**After**
+
+> Last week the checkout team switched off a broken discount in four seconds, without a deploy.
+> That was FlagHub's first real test. Simply put, FlagHub is one place that holds every *feature
+> flag* (an on/off switch in the code that decides whether a feature runs) and tells every service
+> the moment one changes.
+>
+> Why build it? Because the two ways we had both forced a trade-off: flags that were fast to read
+> or flags that were current, never both. At first each service kept its flags in its own config
+> file. Reading them was instant. The catch was that changing one meant redeploying, and with 40
+> services at about 15 minutes each, a company-wide switch could take most of a day. So we built a
+> lookup API that every service called on each request. Now flags were always current, but the
+> catch moved: every request paid an extra network call, and when the API was slow, everything was.
+>
+> FlagHub removes the trade-off by keeping both halves. Each service keeps a local copy of its flags
+> and reads from it, so reads stay instant. It also holds open a *server-sent events* (SSE)
+> connection, a one-way line on which FlagHub can push a message the moment something changes. In
+> practice, flipping a flag in the dashboard reaches every running service in a few seconds, and no
+> request ever waits on the network to find out whether a feature is on.
+
+What changed: it opens on a concrete milestone, then defines the thing in one plain sentence. The
+problem is framed as a trade-off, and each earlier fix comes with its catch. The "most of a day" claim
+is backed by a sum (40 × 15 minutes). The one prerequisite (SSE) is explained by what it does, with
+the acronym spelled out. The mechanism ends in an "In practice" sentence. (The service and numbers
+here are illustrative.)

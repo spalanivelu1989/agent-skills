@@ -1,6 +1,6 @@
 # Explainer voice
 
-A Claude Code skill that gives Claude one house writing voice for anything it writes in prose: answers, explanations, docs, READMEs, reports and emails. The style is a long-form science-magazine explainer. It opens on a concrete moment and unfolds the idea by progressive disclosure: the problem, why the obvious fix fails, the insight, the mechanism, then the open question. One running example is carried from start to finish, and every abstraction gets a mental image.
+A Claude Code skill that gives Claude one house writing voice for anything it writes in prose: answers, explanations, docs, READMEs, reports and emails. The style is a long-form science-magazine explainer. It opens on a concrete moment and unfolds the idea by progressive disclosure: the problem, why the obvious fix fails, the insight, the mechanism, then the open question. One running example is carried from start to finish, and every abstraction gets a mental image. The piece must also be self-contained: a beginner should finish it without searching for anything, so prerequisites are explained by what they do, trade-offs are named along with the catch in each earlier fix, and every stretch of mechanism is turned back into what it means in practice.
 
 The voice scales with the reply. A one-line status update just gets plain words with the point first; a long explanation gets the full arc. It never touches code or commit messages, and when another skill fixes the format (a demo script, slides, a podcast), that skill's rules win.
 
@@ -31,4 +31,4 @@ Explain how our retry logic works, in the explainer voice.
 | Path | What it is |
 |---|---|
 | `SKILL.md` | The arc, sentence-level craft, scaling rules and a pre-send checklist |
-| `references/examples.md` | Before-and-after rewrites: a short answer, a long doc, a status reply, a closing paragraph |
+| `references/examples.md` | Before-and-after rewrites: a short answer, a long doc, a status reply, a closing paragraph, and an explainer for a new thing |

@@ -1,0 +1,1139 @@
+    <main>
+      <header class="page-head">
+        <p class="eyebrow">A plain-English guide to a GDPR workbook</p>
+        <h1>The Tarento DPIA Questionnaire, explained</h1>
+        <p class="lede">
+          What the nine worksheets in <code>Tarento_DPIA_Questionnaire.xlsx</code> ask, why each
+          question exists, how the sheets feed one another, and what is still unfinished. Written
+          for someone who has been handed the file without the background.
+        </p>
+        <div class="meta-strip">
+          <span><strong>Source</strong> — Tarento_DPIA_Questionnaire.xlsx (9 sheets, read-only)</span>
+          <span><strong>Audience</strong> — readers new to GDPR and DPIAs</span>
+          <span><strong>Prepared</strong> — 19 October 2026</span>
+        </div>
+      </header>
+
+      <div class="layout">
+        <nav class="sidebar" aria-label="Sections">
+          <div class="sidebar-head">
+            <span class="label">Contents</span>
+            <button
+              class="sidebar-toggle"
+              id="sidebarToggle"
+              type="button"
+              aria-expanded="true"
+              aria-label="Minimize sidebar"
+              title="Minimize sidebar"
+            >
+              «
+            </button>
+          </div>
+        </nav>
+        <div class="content">
+
+          <!-- ============================================================ -->
+          <section class="phase" id="overview" data-nav-num="0" data-nav-label="Overview: what this workbook is">
+            <span class="phase-tag">Start here</span>
+            <h2>What this workbook is, and why it exists</h2>
+
+            <p>
+              Every company that builds software for people leaves a trail of personal data behind it:
+              names in a database, email addresses in a log file, a location ping from a phone. In
+              Europe, that trail is governed by a single law, the General Data Protection Regulation,
+              usually shortened to <strong>GDPR</strong>. Most of what GDPR demands is ongoing and
+              invisible. But one of its obligations takes the form of a document, and this workbook is
+              a template for writing it.
+            </p>
+            <p>
+              The document is called a <strong>DPIA</strong>. The workbook's own title expands it as
+              <em>Data Privacy Impact Assessment</em>; the law itself (Article 35 of GDPR) calls it a
+              <em>Data Protection Impact Assessment</em>. The first paragraph of the Introduction sheet
+              explains the choice of word deliberately: protection is about keeping data secure, while
+              privacy is the wider question of whether you should be holding and using the data at all.
+              A DPIA, in short, is a structured written argument that a project's use of personal data
+              is necessary, proportionate and safe — produced <em>before</em> the system goes live, so
+              that problems are designed out rather than patched later.
+            </p>
+
+            <h3>The single question it tries to answer</h3>
+            <p>
+              The workbook states its purpose in one line that is worth keeping in mind on every sheet:
+              the DPIA "is designed to answer the question <em>SHOULD we do this?</em>" with regard to
+              processing personal data. It then lists four tests the answer must pass. The processing
+              must be <strong>necessary</strong>, <strong>appropriate</strong>,
+              <strong>proportionate</strong> and <strong>justified</strong>. Every later sheet is, in
+              some sense, a way of collecting evidence for one of those four words.
+            </p>
+
+            <h3>A running example we'll use throughout</h3>
+            <p>
+              Abstract rules are hard to picture, so this guide follows one invented project from start
+              to finish. Imagine a team is building an <strong>internal staff directory</strong>: a web
+              app where employees look up a colleague's name, work phone, work email and employee ID.
+              Now imagine a second version of the same app that differs by one detail — it also shows
+              the <em>live GPS location</em> of field technicians so dispatchers can send the nearest
+              one to a job. The two versions are almost identical as software. As we'll see, the
+              workbook treats them very differently, and the reason why is the whole point of a DPIA.
+            </p>
+            <div class="why">
+              <span class="label">Why this example and not another</span>
+              <p>
+                The answers already typed into the workbook (Name, Work Phone, Work Email Address,
+                Username and Employee ID marked "Yes" on sheet 4; every screening answer "No") look like
+                a modest internal, employee-facing system. The staff directory is a hypothetical that
+                matches that pattern. It is an illustration, not a claim about what the real project is.
+              </p>
+            </div>
+
+            <h3>What the workbook states versus what this guide infers</h3>
+            <p>
+              Because you received the file without its backstory, it matters to separate fact from
+              reading-between-the-lines. Throughout this guide, anything presented as the workbook's
+              content comes from its cells, its drop-down lists, its formulas or the pop-up comments
+              attached to its questions (most of the detailed guidance lives in those comments, so they
+              are quoted heavily here). Anything that is an inference is marked as such, usually in a
+              callout labelled <em>Interpretation</em>.
+            </p>
+            <div class="tablewrap">
+              <table>
+                <thead>
+                  <tr><th>Stated in the workbook</th><th>Reasonable interpretation</th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>It is a DPIA template required by GDPR Article 35, with screening questions that
+                      decide whether a full DPIA is needed.</td>
+                    <td>Someone needs to decide whether a particular project needs a DPIA, and you may be
+                      expected to help answer that.</td>
+                  </tr>
+                  <tr>
+                    <td>Every question refers to the organisation as <strong>"Husqvarna Group"</strong>.
+                      The file name says <strong>"Tarento"</strong>.</td>
+                    <td>The template was probably written for (or by) Husqvarna Group and is being
+                      completed for a project Tarento is delivering to, or on behalf of, Husqvarna.
+                      That would make Husqvarna the data owner and Tarento a supplier. The file does not
+                      say this outright.</td>
+                  </tr>
+                  <tr>
+                    <td>Some answers are already filled in; most are not.</td>
+                    <td>The colleague started completing it — at least the screening and the list of
+                      personal data — and stopped, or is waiting for the screening result to decide whether
+                      the rest is needed.</td>
+                  </tr>
+                  <tr>
+                    <td>The file's internal creation date is 5 June 2015; it was last saved on 19 October
+                      2026.</td>
+                    <td>The structure is an old, reused template. The 2015 date predates GDPR (adopted
+                      2016, in force 2018), so the file has been edited over the years rather than written
+                      for this project.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h3>Terms you'll meet on almost every sheet</h3>
+            <p>
+              A handful of words recur so often that it helps to have them in hand before opening any
+              sheet. Each is explained again, in context, the first time it matters.
+            </p>
+            <div class="cards">
+              <div class="card">
+                <span class="card-title">Personal data</span>
+                Any information that identifies a living person, directly (a name) or indirectly (an
+                employee ID, an IP address, a location trace).
+              </div>
+              <div class="card">
+                <span class="card-title">Data subject</span>
+                The person the data is about. In our directory, every employee listed is a data subject.
+              </div>
+              <div class="card">
+                <span class="card-title">Processing</span>
+                Almost anything done to data: collecting, storing, viewing, changing, sharing, combining
+                or deleting it. Simply reading a record counts.
+              </div>
+              <div class="card">
+                <span class="card-title">Controller and processor</span>
+                The <em>controller</em> decides why and how data is used and is legally accountable. A
+                <em>processor</em> handles data on the controller's behalf (a cloud host, a payroll
+                firm, a software vendor).
+              </div>
+              <div class="card">
+                <span class="card-title">DPO</span>
+                Data Protection Officer: the person inside an organisation responsible for advising on and
+                overseeing GDPR compliance. The workbook also mentions "DP champions" and "data
+                protection resource", which appear to mean local privacy contacts.
+              </div>
+              <div class="card">
+                <span class="card-title">Sensitive (special category) data</span>
+                Data GDPR treats as especially risky: ethnicity, religion, politics, union membership,
+                genetics, biometrics, health, sex life or orientation — plus, separately, criminal
+                records.
+              </div>
+            </div>
+
+            <h3>How the nine sheets fit together at a glance</h3>
+            <p>
+              The workbook reads like a funnel. The first sheet explains the rules, the second decides
+              whether the rest is needed, and sheets 2 to 6 build up the case. A final risk register
+              tracks whether the promises made along the way are kept.
+            </p>
+            <div class="flow">
+              <div class="flow-col">
+                <div class="flow-role">Read first</div>
+                <div class="flow-box">
+                  <strong>Introduction</strong>
+                  <span>What a DPIA is, when it's legally required, how to fill this one in.</span>
+                </div>
+              </div>
+              <div class="flow-arrow a1"><span class="lbl">then</span></div>
+              <div class="flow-col">
+                <div class="flow-role">Gate</div>
+                <div class="flow-box">
+                  <strong>1. Screening</strong>
+                  <span>14 yes/no questions, weighted score. 2+ means "do the full DPIA".</span>
+                </div>
+              </div>
+              <div class="flow-arrow a1"><span class="lbl">if score ≥ 2</span></div>
+              <div class="flow-col flow-main">
+                <div class="flow-role">The full assessment</div>
+                <div class="flow-box">
+                  <strong>Sheets 2 – 7</strong>
+                  <ol>
+                    <li>Context: why, whose data, who's involved</li>
+                    <li>Principles: is it lawful and fair</li>
+                    <li>Personal Data: exactly which fields</li>
+                    <li>Data Subject Rights: can people exercise them</li>
+                    <li>Appropriate Security: how it's protected</li>
+                    <li>Next Steps: where it goes (placeholder)</li>
+                  </ol>
+                </div>
+              </div>
+              <div class="flow-arrow a1"><span class="lbl">tracked in</span></div>
+              <div class="flow-col">
+                <div class="flow-role">Ongoing</div>
+                <div class="flow-box">
+                  <strong>Appendix A</strong>
+                  <span>Privacy risk register: control, owner, date, status.</span>
+                </div>
+              </div>
+            </div>
+
+            <h3>How the sheets are built, mechanically</h3>
+            <p>
+              Almost every question sheet shares the same layout. Column A holds a question number,
+              column B the question, and the answer goes in the cells to the right (usually C, sometimes
+              D or E). Many answers are <strong>drop-down lists</strong> rather than free text — most
+              offer <em>Yes / No / Unsure / N/A</em> and start on the placeholder <em>-Select-</em>.
+              Answer cells are also <strong>conditionally formatted</strong>, meaning Excel recolours
+              them automatically depending on what you choose, so a sheet full of "Unsure" stands out.
+              And nearly every question carries a red-triangle <strong>cell comment</strong>: hover over
+              the question and a note appears explaining what it means, with examples. If you open the
+              workbook and see bare questions, those comments are where the guidance is.
+            </p>
+            <p>
+              Some questions are sub-questions, shown without their own number and starting "If so…"
+              or "If not…". The Introduction is explicit that these only need answering when the main
+              question's answer calls for more detail.
+            </p>
+          </section>
+
+          <!-- ============================================================ -->
+          <section class="phase" id="introduction">
+            <span class="phase-tag">Sheet 1 of 9 · "Introduction"</span>
+            <h2>Introduction: the rules of the game</h2>
+            <div class="phase-meta">
+              <span class="chip">Type — <strong>reading only, nothing to fill in</strong></span>
+              <span class="chip">Feeds — <strong>every other sheet</strong></span>
+            </div>
+
+            <p>
+              The first sheet is a numbered set of paragraphs under three headings. It asks nothing of
+              you. Its job is to explain why the exercise exists, when it is mandatory and how to go
+              about it, and it contains several facts that change how you should treat the rest of the
+              file.
+            </p>
+
+            <h3>Part one: privacy, not just protection</h3>
+            <p>
+              Paragraphs 1 to 5 set out the philosophy. Paragraph 2 ties privacy to the
+              <strong>ECHR</strong>, the European Convention on Human Rights, whose Article 8 protects
+              "a private and family life". The practical consequence is stated plainly: any intrusion
+              into someone's privacy has to be "fully documented and justified". A DPIA is therefore not
+              only a security checklist; it is a record that the processing obeys GDPR's
+              <em>principles</em> (which sheet 3 covers) and has a lawful basis.
+            </p>
+            <p>
+              Paragraph 3 gives the most useful summary in the whole workbook: a list of the five ways
+              privacy is typically intruded upon. Collecting <em>too much</em> information. Using it in
+              ways it <em>wasn't intended for</em>. <em>Sharing</em> it with third parties. Not keeping it
+              <em>secure</em>. Keeping it <em>longer than needed</em>. If you remember only one thing
+              from this sheet, remember those five, because almost every later question is a probe for
+              one of them. Paragraph 5 adds that the DPIA should be used to find "the least privacy
+              intrusive method" of achieving the goal — a theme that returns on sheet 2.
+            </p>
+
+            <h3>Part two: when the law requires a DPIA</h3>
+            <p>
+              Paragraph 6 states the legal basis. Article 35 of GDPR requires a DPIA where processing is
+              likely to present a <strong>high risk</strong> to the people whose data it is. The sheet
+              also cites "A25", meaning Article 25, <em>data protection by design and by default</em>:
+              the duty to build privacy into a system from the start rather than bolt it on. It warns
+              that supervisory authorities — the national privacy regulators in each EU country — can
+              penalise organisations that don't follow the process.
+            </p>
+            <p>
+              Paragraph 7 is a time-saver that's easy to miss. A DPIA is not needed for every system:
+              one assessment can cover "a set of similar processing operations which present similar
+              high risks". If an existing DPIA already covers a project, you don't write a new one; you
+              update the existing one to include the new project and record that you did so. Sheet 1's
+              questions 5 and 6 put this rule into practice.
+            </p>
+
+            <h3>Part three: how to complete it</h3>
+            <p>
+              Paragraphs 8 to 14 are practical guidance. The DPIA should "not be seen as a form filling
+              exercise" but as a prompt for discussion in the project team. Paragraph 8 names
+              the completed document as evidence that "the Husqvarna Group is compliant with GDPR" —
+              the first of many references to Husqvarna. Paragraph 9 estimates <strong>2–4 hours</strong>
+              to complete and claims the template covers the full requirements of the European Data
+              Protection Board (the EU body that issues GDPR guidance). Paragraph 10 sets out the
+              screening logic: if screening shows low risk, the full DPIA isn't needed, <em>but the file
+              must still be saved</em> to meet GDPR's record-keeping duty, and compliance with the law is
+              still required regardless.
+            </p>
+            <p>
+              The next paragraph says that where screening indicates a DPIA, "tabs 1 – 7 should be
+              completed". The paragraph after that is unfinished: "The completed DPIA should be submitted
+              to ? For consideration", with a comment reading "Security-DPO-DP forum? To be clarified."
+              The last paragraph introduces Appendix A as a tool for managing privacy risk during
+              development and roll-out.
+            </p>
+            <div class="warn">
+              <span class="label">An open question written into the file</span>
+              <p>
+                Nobody has yet decided who reviews a completed DPIA. The submission recipient is
+                literally a question mark. Before investing effort in completing it, find out who the
+                document goes to — the comment suggests a joint Security / DPO / data-protection forum,
+                but that is a proposal, not a decision.
+              </p>
+            </div>
+            <div class="why">
+              <span class="label">Small inconsistencies you might notice</span>
+              <p>
+                The paragraph numbers run 1–10, then jump to 13, repeat 13, then 14 (there are no 11 or
+                12). Paragraph 9 mentions the "EU Data Protection Board"; the body's correct name is the
+                European Data Protection Board. Neither affects meaning, but both hint the template was
+                edited from an earlier version.
+              </p>
+            </div>
+          </section>
+
+          <!-- ============================================================ -->
+          <section class="phase" id="screening">
+            <span class="phase-tag">Sheet 2 of 9 · "1. Screening Questions"</span>
+            <h2>Screening Questions: do we need a DPIA at all?</h2>
+            <div class="phase-meta">
+              <span class="chip">Type — <strong>project details + 14 scored yes/no questions</strong></span>
+              <span class="chip">Decides — <strong>whether sheets 2–7 are needed</strong></span>
+            </div>
+
+            <p>
+              This is the gatekeeper. Its subtitle says the answers "will be used to determine if a Data
+              Privacy Impact Assessment (DPIA) is required". It has three blocks: who and what the
+              project is, whether an existing DPIA already covers it, and a scored list of risk
+              questions.
+            </p>
+
+            <h3>Block one: identifying the project (questions 1–5)</h3>
+            <p>
+              Questions 1 to 4 are housekeeping — <em>Project Title</em>, <em>Project/Product
+              Owner</em>, <em>Person completing this questionnaire</em> and <em>Date completed</em>. All
+              four are currently <strong>blank</strong>. Question 5 asks what type of development this
+              is; its comment explains it wants to know whether it's a new system, an existing one, new
+              functionality added to an existing one, or a service that shares personal data. This
+              matters because the next question only applies to existing systems.
+            </p>
+
+            <h3>Block two: is it already covered? (question 6)</h3>
+            <p>
+              Question 6 applies paragraph 7 of the Introduction. If this is an existing system, is there
+              already a DPIA covering similar processing and risks? It has a <em>Yes / No / Unsure</em>
+              drop-down and a follow-up asking which DPIA. A note under it spells out the consequence: if
+              the answer is Yes, no new DPIA is required, but the file should be saved as a record and the
+              existing DPIA updated to include this project "to ensure this processing does not impact on
+              current risk mitigations". Both are currently blank.
+            </p>
+
+            <h3>Block three: the 14 scored screening questions (7–20)</h3>
+            <p>
+              Here is the heart of the sheet. Each question names a known trigger for high privacy risk,
+              and each is answered <em>Yes</em>, <em>No</em> or <em>N/A</em> from a drop-down in column
+              D, with a free-text column E for qualifications. The list closely follows the
+              high-risk criteria that European regulators publish for deciding when a DPIA is needed.
+            </p>
+            <p>
+              What makes the sheet clever is invisible: column G is <strong>hidden</strong>, and it
+              holds a weight of 1 or 2 for each question. Cell D26 runs the formula
+              <code>=SUMIF(D12:D25,"Yes",G12:G25)</code>, which adds up the weights of every question
+              answered Yes. Note B27 then states the rule: a total of 1 or less "can be seen to be low
+              risk" and may not need a DPIA; 2 or more means "the DPIA should be carried out". The
+              score cell turns colour depending on which side of that line it lands.
+            </p>
+            <div class="tablewrap">
+              <table>
+                <thead>
+                  <tr><th>#</th><th>Question (paraphrased)</th><th>Weight</th><th>What it means, from the cell comment</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>7</td><td>Sensitive or highly personal data?</td><td>2</td><td>Ethnicity, religion, union membership, genetics, biometrics, health, sex life/orientation, criminal convictions. Also data that lets these be <em>inferred</em> — the comment's example is that marital status can reveal sexual orientation in some countries.</td></tr>
+                  <tr><td>8</td><td>Would a compromise cause significant harm?</td><td>2</td><td>Even non-sensitive data can cause physical harm or identity theft. "Perceived harm" — how the person would feel — counts too.</td></tr>
+                  <tr><td>9</td><td>New system, privacy risks never considered?</td><td>1</td><td>A brand-new system with no prior privacy thinking.</td></tr>
+                  <tr><td>10</td><td>Collecting more data, or compelling people to give it?</td><td>1</td><td>Making data mandatory, or extending collection beyond what is already held.</td></tr>
+                  <tr><td>11</td><td>New data-sharing outside Husqvarna Group?</td><td>1</td><td>New recipients, or extending an existing sharing agreement.</td></tr>
+                  <tr><td>12</td><td>Change of purpose?</td><td>1</td><td>Using data for something different from, or more intrusive than, the reason it was collected.</td></tr>
+                  <tr><td>13</td><td>Systematic monitoring?</td><td>2</td><td>Watching, tracking or controlling people: network monitoring of staff, phone-system monitoring, CCTV, in-vehicle tracking.</td></tr>
+                  <tr><td>14</td><td>Evaluating or scoring people?</td><td>1</td><td>Profiling or predicting behaviour on performance, finances, health, preferences, movement or location. A credit check counts.</td></tr>
+                  <tr><td>15</td><td>Automated decisions with legal or significant effects?</td><td>1</td><td>A computer deciding something important about a person with no human involved. Must not be discriminatory.</td></tr>
+                  <tr><td>16</td><td>Large scale?</td><td>2</td><td>Not defined in law. Consider number of people, volume and range of data, duration, and geographic spread.</td></tr>
+                  <tr><td>17</td><td>Matching or combining datasets / Big Data?</td><td>1</td><td>Merging datasets to mine new information, or combining them outside their original purpose.</td></tr>
+                  <tr><td>18</td><td>Privacy-intrusive technology?</td><td>2</td><td>Biometrics ("if compromised, are permanently compromised") and Internet-of-Things devices in homes and daily life.</td></tr>
+                  <tr><td>19</td><td>Could it block someone from a right, service or contract?</td><td>1</td><td>Processing that allows, changes or refuses access to a service or contract.</td></tr>
+                  <tr><td>20</td><td>Transfer or availability outside the EU?</td><td>2</td><td>Includes merely <em>accessing</em> EU-stored data from abroad: under EU court rulings that still counts as an international transfer.</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p>
+              The weights encode a judgement. Six triggers (7, 8, 13, 16, 18, 20) are weighted 2, so any
+              one of them on its own pushes the project over the line. The other eight are weighted 1, so
+              it takes two of them together. In plain terms: "we're using biometrics" is enough by
+              itself; "it's a new system" is not, but "a new system that also shares data with a new
+              partner" is.
+            </p>
+            <p>
+              Return to our staff directory. In its plain version, all fourteen answers are plausibly No
+              and the score is 0: low risk, no full DPIA, but keep the file as evidence. Now add live GPS
+              tracking of technicians. Question 13 (systematic monitoring, weight 2) becomes Yes, and
+              question 14 (evaluation by "movement or geographical location", weight 1) arguably does
+              too. The score jumps to 3. One extra feature, and the project moves from "file the
+              screening and carry on" to "complete sheets 2 to 7".
+            </p>
+
+            <h3>What is currently filled in</h3>
+            <p>
+              All fourteen screening answers are set to <strong>No</strong>, so the score in D26 is
+              <strong>0</strong>. By the sheet's own rule, the project as described is low risk and a full
+              DPIA is not required. However, the project title, owner, completer, date, question 5 and
+              question 6 are all empty, so there is no record of <em>which</em> project scored zero.
+            </p>
+            <div class="warn">
+              <span class="label">Limits of the scoring</span>
+              <p>
+                The screening drop-down offers only Yes, No and N/A. There is no "Unsure", and the
+                formula only counts "Yes", so an honest "we don't know yet" can only be recorded as No
+                or N/A — both of which score zero. A cell header (H11) reads "Will hide this column when
+                agreed" and the weights column carries the note "scoring guide. Will hide column when
+                agreed", suggesting the weights themselves were still being agreed.
+              </p>
+            </div>
+            <div class="why">
+              <span class="label">Interpretation</span>
+              <p>
+                A zero score with no project details reads like a draft: either the colleague ran a
+                quick first pass, or these "No" answers are the template's defaults. Treat the result
+                as provisional until the identifying fields are filled and someone who knows the
+                project has confirmed each answer.
+              </p>
+            </div>
+          </section>
+
+          <!-- ============================================================ -->
+          <section class="phase" id="context">
+            <span class="phase-tag">Sheet 3 of 9 · "2. Context"</span>
+            <h2>Context: what the project is for, and whose data it touches</h2>
+            <div class="phase-meta">
+              <span class="chip">Type — <strong>mostly free text, some drop-downs</strong></span>
+              <span class="chip">Feeds — <strong>sheet 3 (lawful basis per purpose)</strong></span>
+            </div>
+
+            <p>
+              The subtitle asks you to "enter project objectives, description, purposes of processing,
+              business benefits and justification". This sheet is where the project tells its story, and
+              where the <em>necessary, appropriate, proportionate, justified</em> tests from the
+              Introduction first get evidence. Everything on it is currently <strong>blank</strong>.
+            </p>
+
+            <h3>Why the project exists (questions 1–2)</h3>
+            <p>
+              Question 1 asks for objectives, business justification and benefits — to the business, to
+              the data subjects and to anyone else. Its comment contains an important balancing rule:
+              where the business benefits but the person doesn't, the business "must clearly show the need
+              and benefit outweighs any privacy intrusion". The example given is staff network monitoring:
+              intrusive for employees, but justified by the legal duty to prevent breaches and fraud — and
+              even then the intrusion must be "minimised as far as possible".
+            </p>
+            <p>
+              Question 2 asks for each <strong>purpose of processing</strong> — each separate reason the
+              data is used — as a numbered list. The comment's example is "1. Provision of Services,
+              2. Customer service surveys, 3. Marketing communications". The numbering matters because
+              sheet 3 asks for a legal justification for <em>each</em> numbered purpose. For our staff
+              directory, the list might be "1. Letting employees contact colleagues" and, in the GPS
+              version, "2. Dispatching the nearest technician".
+            </p>
+
+            <h3>Whose data, and what could go wrong (questions 3–5)</h3>
+            <p>
+              Question 3 asks who the data subjects are — employees, customers, and so on — with a
+              sub-question on whether they will be <strong>consulted</strong>. The drop-down offers Yes,
+              No, Unsure, N/A and "Representative consulted" (for example, a works council or staff
+              representative speaking for employees). The comment links consultation to GDPR's
+              requirement to be "open, fair and transparent".
+            </p>
+            <p>
+              Question 4 asks what harm could come to people if the data were compromised, including
+              "perceived harm". Question 5 asks for the <em>categories</em> of data — contact,
+              financial, employment, health — as a broad summary. Sheet 4 later asks for the specific
+              fields.
+            </p>
+
+            <h3>Who else is involved (questions 6–8)</h3>
+            <p>
+              Question 6 lists other stakeholders, internal and external, and asks whether they'll be
+              consulted on decisions about personal data. Question 7 asks: <strong>will Husqvarna Group
+              be the owner of the data?</strong> The comment defines owner as the organisation that
+              "determines the purpose of processing and has legal accountability" — in GDPR language, the
+              controller. If not Husqvarna, the follow-up asks who.
+            </p>
+            <p>
+              Question 8 asks whether Husqvarna will "engage another organisation to process personal
+              data" — that is, use a processor. Its comment gives GDPR's broad definition of processing
+              (collecting, recording, organising, storing, altering, retrieving, consulting, using,
+              disclosing, combining, restricting, erasing, destroying) and says that if anyone, inside or
+              outside the Group, handles the data on Husqvarna's behalf, the answer is Yes. Follow-ups ask
+              what they'll do (cloud hosting, payroll, training), whether Husqvarna's
+              <strong>data-sharing legal agreements</strong> will be signed <em>before</em> any data is
+              shared, whether the processor uses <strong>sub-contractors</strong> (sub-processors, in GDPR
+              terms) — particularly outside Europe — and how the processor will prove those
+              sub-contractors comply.
+            </p>
+            <div class="why">
+              <span class="label">Interpretation: where Tarento probably fits</span>
+              <p>
+                If Tarento is building or running a system for Husqvarna, question 8 is likely where
+                Tarento itself appears — as the "other organisation" processing data on Husqvarna's
+                behalf. That would make the questions about contracts and sub-contractors directly about
+                Tarento's own arrangements. Notably, sheet 6 already has "No extranal companies"
+                (sic) typed into a related answer, which would contradict this reading. That tension is
+                worth resolving with your colleague.
+              </p>
+            </div>
+
+            <h3>Is there a gentler way? (question 9)</h3>
+            <p>
+              The last question asks whether there are "less privacy intrusive ways to achieve this
+              result". Its comment uses a memorable example: if CCTV exists to deter burglars and gather
+              evidence of break-ins, why record staff during office hours? Follow-ups ask what the gentler
+              method is and, if you're not using it, why. For the GPS directory, the honest version of
+              this answer might be: share location only while a technician is on shift and has accepted
+              a job, not all day.
+            </p>
+            <div class="why">
+              <span class="label">A small technical glitch</span>
+              <p>
+                Several drop-downs on this sheet have a leading space in their options (" Yes",
+                " No", " Unsure"), while the colour rules test for "Yes" without the space. In practice
+                the answer cells may not recolour as intended on this sheet. It does not affect the
+                answers themselves.
+              </p>
+            </div>
+          </section>
+
+          <!-- ============================================================ -->
+          <section class="phase" id="principles">
+            <span class="phase-tag">Sheet 4 of 9 · "3. Principles"</span>
+            <h2>Principles: proving the processing is lawful and fair</h2>
+            <div class="phase-meta">
+              <span class="chip">Type — <strong>22 numbered questions in 7 themed blocks</strong></span>
+              <span class="chip">Depends on — <strong>purposes listed on sheet 2</strong></span>
+            </div>
+
+            <p>
+              GDPR's Article 5 sets out a short list of principles that all processing must obey. This
+              sheet, subtitled "demonstrate how the project will be compliant with GDPR principles and
+              lawful requirements", walks through them one block at a time. It is the longest and most
+              legal sheet in the workbook, and everything on it is <strong>unanswered</strong> (drop-downs
+              still show <em>-Select-</em>).
+            </p>
+
+            <h3>Lawfulness (questions 1–3)</h3>
+            <p>
+              GDPR says you may only process personal data if you have a <strong>lawful basis</strong>:
+              one of a short list of legal reasons. Question 1 asks for the basis for <em>each</em>
+              purpose numbered on sheet 2. The comment narrows the options for Husqvarna to four:
+              <em>consent</em> (the person said yes), <em>contractual</em> (needed to fulfil a contract
+              with them), <em>legal requirement</em> (a law requires it) and <em>legitimate
+              interests</em> (the organisation has a genuine need that, on balance, outweighs the
+              intrusion). Its worked example: "1. Provision of services – contractual. 2. Customer service
+              surveys – legitimate interests. 3. Marketing – consent." It stresses that only one basis
+              should be stated per purpose, and that consent is often not the best one.
+            </p>
+            <p>
+              Question 2 follows the consent path. GDPR consent must be specific, informed, freely given
+              and a clear indication of the person's wishes, and sub-questions ask how it will be
+              collected, recorded (who, when, in what context, to what), how often it will be reviewed
+              ("consent cannot be considered indefinite") and how people can withdraw it. The withdrawal
+              question introduces a recurring idea: Husqvarna is building a <strong>group-wide
+              mechanism</strong> for people's rights, and any one system must plug into it rather than
+              act alone, because the person's relationship is with the Group, not with one app.
+            </p>
+            <p>
+              Question 3 follows the legitimate-interests path. Its comment observes that this basis
+              "is likely to require a DPIA to support the processing" — legitimate interests is, in
+              effect, the organisation saying "trust us, it's worth it", and the DPIA is where it shows
+              its working. Sub-questions ask how much the processing intrudes and whether the business
+              objective outweighs the person's rights, with the reminder that justified intrusion is
+              still "not carte blanche". Our staff directory would probably rest on legitimate interests
+              (employees need to reach each other); the GPS feature would need a much heavier
+              justification here.
+            </p>
+
+            <h3>Transparency (questions 4–6)</h3>
+            <p>
+              Can the project give people a GDPR-compliant <strong>privacy notice</strong> — the plain
+              statement telling them what is collected, why, how long it's kept, where it's stored and who
+              it's shared with? Question 5 asks whether the processing will be as "open, fair and
+              transparent" as possible, and what steps beyond the notice will show it (the comment
+              mentions proactively notifying people after a breach). Question 6 covers data obtained from
+              someone other than the person themselves, where GDPR still requires the person to be told.
+            </p>
+
+            <h3>Purpose limitation (questions 7–9)</h3>
+            <p>
+              <strong>Purpose limitation</strong> is the rule that data collected for one reason
+              shouldn't quietly be used for another. Question 7 asks whether data will be repurposed,
+              and if so whether the new purpose is "closely related" to the original (if it is, consent
+              may not be needed). Question 8 asks how the system will prevent repurposing in practice,
+              and question 9 how it will avoid vague, "generic" purposes, which the comment says make
+              consent invalid and fail the transparency test.
+            </p>
+
+            <h3>Data minimisation (questions 10–11)</h3>
+            <p>
+              <strong>Data minimisation</strong> means collecting only what you need. The comment gives a
+              crisp test: "If you can remove fields of information and continue to process for the
+              purpose you need to, then you have collected excessive data." Sub-questions ask how
+              over-collection will be prevented and, when found, erased — and warn against "just in
+              case" retention. This block is the reasoning behind the field-by-field list on sheet 4.
+            </p>
+
+            <h3>Accuracy (questions 12–13)</h3>
+            <p>
+              How will data be kept correct and complete, and will corrections flow to every Husqvarna
+              system holding the same data? If data comes from elsewhere — bought, for example — how is it
+              validated, including whether the seller had valid consent to sell it? Question 13 asks
+              whether people can correct their own data.
+            </p>
+
+            <h3>Data retention (questions 14–15)</h3>
+            <p>
+              GDPR calls this <em>storage limitation</em>: keep data only as long as needed. Question 14
+              asks whether a clear retention policy exists, whether staff using the system will be told
+              about it, and how compliance will be shown. Question 15 asks what happens at the end of the
+              period — erased, or <strong>anonymised</strong> (stripped of anything that could identify a
+              person, at which point it's no longer personal data).
+            </p>
+
+            <h3>Confidentiality and integrity (questions 16–22)</h3>
+            <p>
+              The last block mixes security with data sharing and international transfers. Question 16
+              asks about strict, role-based access. Question 17 asks a subtle one: how long can the data
+              be <em>unavailable</em> before the people it's about are harmed? The comment is careful to
+              say this is about impact on the person, not on the business, and may justify a faster
+              restore time than the business would otherwise choose.
+            </p>
+            <p>
+              Questions 18 to 20 cover sharing: how Husqvarna's data-sharing agreements will be built in,
+              what <em>categories</em> of recipients exist (generic labels such as "law enforcement" are
+              acceptable in a privacy notice), and how sharing will be tracked so the Group can answer the
+              question "who did you send my data to?". Questions 21 and 22 cover transfers within the EU
+              and outside it, each asking whether the data stays inside the Group. The final
+              sub-question asks <em>where</em> data goes; for countries with an EU <strong>adequacy
+              decision</strong> (the European Commission's formal finding that a country's privacy law
+              is as protective as Europe's) you can write "Adequacy agreement". For others, the comment
+              says to refer to your data protection contact. Row 47 links to the European Commission's
+              list of adequacy countries.
+            </p>
+            <div class="why">
+              <span class="label">Wording to read carefully</span>
+              <p>
+                Question 21 asks whether data will be transferred or made available "<em>from</em> other
+                EU Member States". The comment ("accessible from someone located in another Member
+                State… stored in a location in another Member State") suggests it means
+                <em>to</em> or <em>in</em> other EU states. Also, GDPR's seventh principle,
+                <strong>accountability</strong>, has no block of its own; the workbook as a whole is
+                arguably the evidence for it.
+              </p>
+            </div>
+          </section>
+
+          <!-- ============================================================ -->
+          <section class="phase" id="personal-data">
+            <span class="phase-tag">Sheet 5 of 9 · "4. Personal Data"</span>
+            <h2>Personal Data: exactly which fields, why, and for how long</h2>
+            <div class="phase-meta">
+              <span class="chip">Type — <strong>source questions + field-by-field inventory</strong></span>
+              <span class="chip">Partly filled — <strong>yes</strong></span>
+            </div>
+
+            <p>
+              Sheet 3 asks the principle; this sheet asks for the evidence. Its subtitle says it should
+              "identify the personal data which is necessary to be collected for the processing and its
+              corresponding retention period". It's the most concrete sheet, and the one your colleague
+              has started.
+            </p>
+
+            <h3>Where the data comes from and how much (questions 1–5)</h3>
+            <p>
+              Question 1 asks who the data is collected from — the person, or another source, and if so
+              which (a data seller, social media, public sources). Question 2 asks how it's collected:
+              in person or by phone, email, web form, paper or removable media. Question 3 asks how it's
+              stored: paper, digital file, audio, video, image, database. Question 4 asks for the
+              estimated number of people whose data will be processed. Question 5 asks whether growing
+              volumes could make the data more sensitive over time — the problem of
+              <strong>aggregation</strong>, where enough harmless facts combined let you infer something
+              sensitive. The comment makes a cost argument: it's cheaper to design security in than to
+              retrofit it. All five are <strong>blank</strong>.
+            </p>
+
+            <h3>The sensitive data inventory (questions 7–15)</h3>
+            <p>
+              Next comes a checklist of the nine kinds of sensitive data GDPR singles out: racial or
+              ethnic origin, political opinions, religious or philosophical beliefs, trade-union
+              membership, genetic data, biometric data used to identify someone, health data, sex life or
+              sexual orientation, and criminal history. For each, you answer Yes or No. If Yes, you pick a
+              <em>GDPR justification</em> from a drop-down, write a detailed justification, and give a
+              retention period if it differs from the business's standard policy.
+            </p>
+            <p>
+              The justification drop-down is worth decoding, because it isn't the same list as the
+              lawful bases on sheet 3. Sensitive data needs an <em>additional</em> condition under GDPR
+              Article 9 on top of a lawful basis, and the options map onto those conditions:
+            </p>
+            <div class="tablewrap">
+              <table>
+                <thead><tr><th>Drop-down option</th><th>What it stands for in plain English</th></tr></thead>
+                <tbody>
+                  <tr><td>Explicit Consent</td><td>The person has expressly agreed to this specific use of their sensitive data.</td></tr>
+                  <tr><td>Employment law</td><td>Needed to meet obligations under employment or social-security law (e.g. sick-pay records).</td></tr>
+                  <tr><td>Public data</td><td>The person has themselves made the information public.</td></tr>
+                  <tr><td>Legal claims</td><td>Needed to bring or defend a legal claim.</td></tr>
+                  <tr><td>Public interest</td><td>Substantial public interest, as defined by law.</td></tr>
+                  <tr><td>Medical</td><td>Needed for health care, occupational medicine or assessing fitness to work.</td></tr>
+                  <tr><td>Archiving</td><td>Archiving, scientific or historical research, or statistics, with safeguards.</td></tr>
+                  <tr><td>Other</td><td>Something else — explain in the justification column.</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p>
+              Criminal history has a shorter list (Employment law or Other), reflecting that GDPR handles
+              criminal data separately and more restrictively (Article 10). In the workbook, all nine
+              sensitive categories are currently answered <strong>No</strong> — consistent with screening
+              question 7 also being No.
+            </p>
+
+            <h3>The ordinary personal data inventory (questions 16–41)</h3>
+            <p>
+              Finally, a list of 25 common data fields plus an "Other" row, each answered Yes or No with
+              columns for justification and retention. This is data minimisation made physical: every Yes
+              should have a reason next to it. The table below shows the current answers.
+            </p>
+            <div class="tablewrap">
+              <table>
+                <thead><tr><th>Answered Yes (5)</th><th>Answered No (20)</th></tr></thead>
+                <tbody>
+                  <tr>
+                    <td>Name · Work Phone · Work Email Address · Username · Employee ID</td>
+                    <td>Home Phone · Home Address · Personal email · Date of Birth · Photo · Work Address ·
+                      Password · Password Challenge Answers · SSN / National ID / Taxpayer ID · Driver's
+                      Licence Number · Other government ID · Income (non-employees) · Sensitive employment
+                      data (e.g. salary) · IP Address · User Experience (tracking or replay) · Precise
+                      Geographic Location · Preferences/Profiling Data · Credit/debit card · Financial
+                      account · Encryption Keys</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p>
+              Two things stand out. First, the justification and retention columns next to the five Yes
+              answers are <strong>empty</strong>, so the minimisation argument hasn't been written yet.
+              Second, the pattern is exactly what our plain staff directory would need. Switch on the GPS
+              feature and "Precise Geographic Location" flips to Yes, demanding a justification — the
+              same single detail that flipped the screening score.
+            </p>
+            <div class="why">
+              <span class="label">Things to check</span>
+              <p>
+                "Username" is Yes but "Password" is No. That's coherent if users sign in through a
+                company single-sign-on service (so the app never stores passwords), but worth confirming.
+                "IP Address" is No; most web applications log IP addresses by default, so this may be an
+                oversight. The question numbering also skips 6 (it goes 5, then 7).
+              </p>
+            </div>
+          </section>
+
+          <!-- ============================================================ -->
+          <section class="phase" id="rights">
+            <span class="phase-tag">Sheet 6 of 9 · "5. Data Subject Rights"</span>
+            <h2>Data Subject Rights: can people control their own data?</h2>
+            <div class="phase-meta">
+              <span class="chip">Type — <strong>23 questions across 9 rights</strong></span>
+              <span class="chip">Links to — <strong>Husqvarna group-wide rights process</strong></span>
+            </div>
+
+            <p>
+              GDPR gives people a set of enforceable rights over their data. The sheet opens with
+              "Privacy is about allowing data subjects control over their personal data" and then tests,
+              right by right, whether the system will let them exercise that control. All answers are
+              <strong>blank</strong>. One theme repeats on nearly every question: a request is made to
+              <em>Husqvarna Group</em>, not to one system, so each system must trigger and cooperate with
+              the Group's central process.
+            </p>
+
+            <h3>General provisions (questions 1–3)</h3>
+            <p>
+              How will people exercise their rights in this system? Can staff easily
+              <strong>search</strong> for everything held about one person? The comment notes a genuine
+              tension here: <strong>pseudonymisation</strong> (splitting data so the identifying part is
+              stored separately) and <strong>encryption</strong> protect data well but can make it slower
+              to find and hand over. Question 3 asks about <strong>redaction</strong> — blacking out other
+              people's details, or confidential company information, from a document before releasing it
+              to the requester.
+            </p>
+
+            <h3>The individual rights</h3>
+            <div class="tablewrap">
+              <table>
+                <thead><tr><th>Right</th><th>Qs</th><th>What it means</th><th>What the sheet asks</th></tr></thead>
+                <tbody>
+                  <tr><td>Access (Subject Access Request, "SAR")</td><td>4–6</td><td>A person can ask for a copy of all their data.</td><td>How the system feeds the Group SAR process; how it meets the one-month deadline (and notifies any extension within a month); how refusals are decided and notified.</td></tr>
+                  <tr><td>Correction or completion</td><td>7–8</td><td>Wrong or incomplete data must be fixed.</td><td>How corrections are received and spread to all Group systems quickly; and how to accept proof that links pseudonymous data to someone (the comment's example: proving you own the "MinnieMouse" forum account via security questions).</td></tr>
+                  <tr><td>Erasure ("right to be forgotten")</td><td>9–12</td><td>Data can be deleted when there's no longer a need for it. Not absolute.</td><td>How it plugs into the Group process; how refusals are communicated; whether processing can be <em>restricted</em> instead; how backups are handled so erased data isn't restored after an incident.</td></tr>
+                  <tr><td>Restriction of processing</td><td>13–15</td><td>Data is kept but frozen — e.g. a "restricted" flag that hides it from normal use.</td><td>What restriction means for this system, how it's applied Group-wide, and how to make sure it isn't lifted without the person's consent.</td></tr>
+                  <tr><td>Data portability</td><td>16–18</td><td>People can take data they provided to another provider in a machine-readable format.</td><td>Can data be exported in open formats; which formats (PDF, Word, Excel are offered as examples); and how it's transmitted securely.</td></tr>
+                  <tr><td>Objection</td><td>19</td><td>People can object to processing, e.g. that based on legitimate interests.</td><td>How the system handles objections, and what happens to the data — anonymise or erase.</td></tr>
+                  <tr><td>Automated decision-making</td><td>20–21</td><td>People can ask for a human to make a significant decision instead of a computer.</td><td>Is there any automated decision-making, and how is an objection handled?</td></tr>
+                  <tr><td>Notification</td><td>22–23</td><td>Anyone the data was shared with must be told when a person exercises a right; the person can ask who received their data.</td><td>How recipients are notified, and whether the system can list all recipients on request.</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p>
+              For our staff directory, the hard question is probably erasure from backups (question 12):
+              when an employee leaves and asks to be removed, the live record is easy to delete, but last
+              month's database backup still has them. The comment admits this is "almost impossible" for
+              archived databases and asks instead for a mechanism to stop erased records coming back after
+              a restore.
+            </p>
+            <div class="why">
+              <span class="label">Interpretation: the dependency on the Group</span>
+              <p>
+                Many questions here assume a Husqvarna group-wide rights mechanism that "is being
+                developed and will be in place". Many answers will therefore read "we will route requests
+                to the Group process". Whether that process exists yet, and what interface it expects, is
+                information you'd need from Husqvarna, not from the project team.
+              </p>
+            </div>
+          </section>
+
+          <!-- ============================================================ -->
+          <section class="phase" id="security">
+            <span class="phase-tag">Sheet 7 of 9 · "6. Appropriate Security"</span>
+            <h2>Appropriate Security: how the data will be protected</h2>
+            <div class="phase-meta">
+              <span class="chip">Type — <strong>7 questions, mixed drop-down and text</strong></span>
+              <span class="chip">Partly filled — <strong>yes</strong></span>
+            </div>
+
+            <p>
+              This sheet targets GDPR Article 32, which requires "appropriate technical and
+              organisational measures" to secure personal data. Its subtitle says it aims to show that
+              confidentiality, integrity and security of processing are met. It's shorter than the
+              others, and it's the one place where the comments read most like a security brief.
+            </p>
+
+            <h3>Two named techniques (questions 1–2)</h3>
+            <p>
+              Question 1 asks whether <strong>pseudonymisation</strong> would help. The comment gives the
+              clearest explanation in the workbook: split the data into a small set of identifying
+              details and a larger set that can't identify anyone, then concentrate the strongest
+              protection on the small set. An attacker who reaches only the non-identifying part causes
+              "no impact on the data subject so it would not be a reportable breach". Picture it as
+              keeping the coat-check tickets in a safe while the coats hang in the open: the coats
+              alone don't tell you whose they are.
+            </p>
+            <p>
+              Question 2 asks about <strong>encryption</strong>, which the comment says EU regulators
+              consider "one of the most effective ways to protect information"; the project should be
+              able to justify not using it. Each has a follow-up asking for the justification if the
+              answer is no.
+            </p>
+
+            <h3>Governance and testing (questions 3–5)</h3>
+            <p>
+              How will the project decide what level of security is appropriate? (The comment points to the
+              Husqvarna Group Information Security Standard and the minimum levels in its data-sharing
+              contracts.) Will there be a regular plan to test the measures, and how often? If external
+              companies process the data, how will the project ensure they meet any security requirements
+              beyond the contract baseline?
+            </p>
+
+            <h3>Personal devices and assets (questions 6–7)</h3>
+            <p>
+              Question 6 asks whether staff can use personal devices or personal email
+              (<strong>BYOD</strong>, "bring your own device"), and how copying data to them will be
+              prevented — the comment mentions data loss prevention (DLP) tools. Question 7 asks you to
+              outline the software, hardware and network assets the processing relies on; it has three
+              labelled rows but no clear answer cells.
+            </p>
+
+            <h3>What is currently filled in</h3>
+            <div class="tablewrap">
+              <table>
+                <thead><tr><th>Question</th><th>Current answer</th><th>Comment</th></tr></thead>
+                <tbody>
+                  <tr><td>1. Pseudonymisation effective?</td><td>N/A</td><td>No justification given in the follow-up.</td></tr>
+                  <tr><td>2. Encryption effective?</td><td>N/A</td><td>No justification given. The sheet's own guidance says not using encryption should be justified.</td></tr>
+                  <tr><td>3. How will appropriate security be determined?</td><td>N/A</td><td>This is a "how" question; N/A is an odd answer to it.</td></tr>
+                  <tr><td>5. External processors' extra security</td><td>"No extranal companies"</td><td>Typo for "external". States that no outside company processes the data.</td></tr>
+                  <tr><td>4, 6, 7</td><td>Blank</td><td>—</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="warn">
+              <span class="label">Worth questioning before anyone signs off</span>
+              <p>
+                Marking encryption "N/A" for a system that stores names, work contact details and
+                employee IDs would be hard to defend to a regulator; it is almost always applicable
+                (for example, encryption in transit over HTTPS and at rest in the database). And "No
+                external companies" may sit uneasily with Tarento's name on the file, and with any cloud
+                hosting provider the system uses. Both answers deserve a second look.
+              </p>
+            </div>
+          </section>
+
+          <!-- ============================================================ -->
+          <section class="phase" id="next-steps">
+            <span class="phase-tag">Sheet 8 of 9 · "7. Next Steps"</span>
+            <h2>Next Steps: a placeholder still waiting for a decision</h2>
+            <div class="phase-meta">
+              <span class="chip">Type — <strong>placeholder note only</strong></span>
+            </div>
+
+            <p>
+              The sheet's title promises next steps, but it contains a single sentence: "This template will
+              be updated when the implementation plan has been agreed so it is clear where DPIAs should be
+              stored for those who complete them and where the DP champions can easily access them." The
+              rows around it are formatted and merged as if ready for content, but they are empty.
+            </p>
+            <p>
+              In other words, the process <em>after</em> the DPIA — where it's filed, who approves it, who
+              the "DP champions" (local data-protection contacts) are — had not been settled when the
+              template was written. This lines up with the unresolved "submitted to ?" line on the
+              Introduction sheet. The two gaps are really one gap.
+            </p>
+            <div class="why">
+              <span class="label">Interpretation: what this sheet would normally hold</span>
+              <p>
+                In most DPIA templates, the final stage records the outcome: which risks remain, what
+                actions were agreed, the DPO's advice, who approved the residual risk and when, and
+                whether the regulator must be consulted (GDPR Article 36 requires this when a high risk
+                can't be reduced). None of that is in this workbook. If the DPIA is going to a reviewer,
+                expect them to ask for it.
+              </p>
+            </div>
+          </section>
+
+          <!-- ============================================================ -->
+          <section class="phase" id="appendix-a">
+            <span class="phase-tag">Sheet 9 of 9 · "Appendix A Privacy Risk"</span>
+            <h2>Appendix A: the privacy risk register</h2>
+            <div class="phase-meta">
+              <span class="chip">Type — <strong>risk table with formula-driven status</strong></span>
+              <span class="chip">Used — <strong>during build and roll-out, not just once</strong></span>
+            </div>
+
+            <p>
+              The other sheets ask questions once. This one is meant to be kept up to date. Its subtitle
+              says it lets the project "manage the privacy risks and update as required to measure the
+              privacy risk mitigation". It comes pre-loaded with 13 generic risks, and leaves 13 blank
+              rows (18–30) for risks specific to your system.
+            </p>
+
+            <h3>How the table works</h3>
+            <p>
+              Each row has six columns: the <strong>privacy risk</strong>, the <strong>controls</strong>
+              (also called "privacy treatment": what you'll do to reduce it), a <strong>risk treatment
+              owner</strong>, a <strong>target date</strong>, an <strong>Implemented?</strong> drop-down
+              (Yes / No / Partial / N/A) and a <strong>Risk</strong> status that fills itself in. The
+              status comes from a formula, <code>=LOOKUP(E5,$M$101:$N$105)</code>, which looks up your
+              Implemented answer in a small hidden-away table at the bottom of the sheet (rows 101–105):
+            </p>
+            <div class="tablewrap">
+              <table>
+                <thead><tr><th>Implemented?</th><th>Risk status shown</th></tr></thead>
+                <tbody>
+                  <tr><td>Yes</td><td>Risk mitigated</td></tr>
+                  <tr><td>Partial</td><td>Some risk</td></tr>
+                  <tr><td>No</td><td>High risk, seek advice of DPO (cell turns red)</td></tr>
+                  <tr><td>N/A or - Select -</td><td>—</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h3>The pre-loaded risks</h3>
+            <p>
+              Read down the list and you'll recognise each earlier sheet. The register is, in effect, the
+              DPIA turned into a to-do list.
+            </p>
+            <div class="tablewrap">
+              <table>
+                <thead><tr><th>Risk</th><th>Suggested controls</th><th>Echoes sheet</th><th>Current status</th></tr></thead>
+                <tbody>
+                  <tr><td>Processing unlawfully</td><td>Documented lawful basis; consent correctly obtained</td><td>3 (Lawfulness)</td><td>Yes → Risk mitigated</td></tr>
+                  <tr><td>Unfair or non-transparent processing</td><td>Compliant privacy notice; processing in line with purpose and principles</td><td>3 (Transparency)</td><td>- Select -</td></tr>
+                  <tr><td>Generic purposes or repurposing</td><td>Documented purpose of processing</td><td>2, 3</td><td>- Select -</td></tr>
+                  <tr><td>Irrelevant or excessive collection</td><td>Data analysis against purpose; web forms limited to required fields; exercise to remove fields</td><td>3, 4</td><td>- Select -</td></tr>
+                  <tr><td>Failure to correct inaccurate data</td><td>Process to correct or complete data</td><td>3, 5</td><td>- Select -</td></tr>
+                  <tr><td>Keeping data too long</td><td>Enforce retention policy and deletion</td><td>3, 4</td><td>- Select -</td></tr>
+                  <tr><td>Confidentiality not enforced</td><td>Classification and handling procedures; need-to-know; role-based access; regular access audits</td><td>3, 6</td><td>- Select -</td></tr>
+                  <tr><td>Unauthorised changes</td><td>Role-based write/edit/delete; regular security training</td><td>6</td><td>- Select -</td></tr>
+                  <tr><td>Sharing with third parties</td><td>Map sharing via data mapping; contracts and NDAs; recipient categories in privacy notice</td><td>2, 3</td><td>N/A</td></tr>
+                  <tr><td>Transfers or access outside the EU</td><td>Identify countries; if high risk, comply with "A49" (Article 49) rules via the DPO</td><td>1, 3</td><td>- Select -</td></tr>
+                  <tr><td>Excessive monitoring or surveillance</td><td>CCTV codes of practice; staff notified in AUPs/SOPs; regular privacy review by internal audit ("IA")</td><td>1, 2</td><td>- Select -</td></tr>
+                  <tr><td>Failure to support GDPR and ECHR rights</td><td>Privacy framework built into governance</td><td>5</td><td>- Select -</td></tr>
+                  <tr><td>Use of biometric data</td><td>High levels of mitigation to protect credentials</td><td>1, 4</td><td>- Select -</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p>
+              A few abbreviations in the controls column: an <strong>NDA</strong> is a non-disclosure
+              agreement; <strong>AUPs/SOPs</strong> are acceptable-use policies and standard operating
+              procedures (the rules staff are given); "A49" is GDPR Article 49, which allows
+              international transfers in specific exceptional situations when no other safeguard applies.
+              None of the rows has an owner or a target date yet.
+            </p>
+            <p>
+              In our GPS directory, "Excessive monitoring or surveillance" would be the row that matters.
+              Its controls might be "location shared only during accepted jobs" and "technicians told in
+              the acceptable-use policy", owned by a named product owner with a date, and moved from No
+              (red) to Partial to Yes as each is built.
+            </p>
+            <div class="warn">
+              <span class="label">One status already set without evidence</span>
+              <p>
+                The first risk, "Processing personal data unlawfully", is marked <strong>Yes</strong>, so
+                it shows "Risk mitigated". But sheet 3, where the lawful basis would be documented, is
+                still blank. The status is ahead of the evidence and should be checked.
+              </p>
+            </div>
+          </section>
+
+          <!-- ============================================================ -->
+          <section class="phase" id="big-picture">
+            <span class="phase-tag">Putting it together</span>
+            <h2>The bigger picture: how to read and use the whole workbook</h2>
+
+            <h3>One argument, told in stages</h3>
+            <p>
+              Taken together, the nine sheets build a single argument. The Introduction sets the bar:
+              processing must be necessary, appropriate, proportionate and justified. Screening decides
+              whether the full argument is needed. Context says <em>why</em> the data is used and
+              <em>whose</em> it is. Principles proves it's lawful and fair, purpose by purpose. Personal
+              Data lists every field and its reason, which is how minimisation is demonstrated. Data
+              Subject Rights shows people keep control. Appropriate Security shows the data is protected.
+              Next Steps was meant to say where the finished argument goes. And Appendix A turns the
+              promises into a tracked list of controls with owners and dates.
+            </p>
+            <div class="tablewrap">
+              <table>
+                <thead><tr><th>Connection</th><th>How the sheets depend on each other</th></tr></thead>
+                <tbody>
+                  <tr><td>Introduction → Screening</td><td>Paragraph 7 (one DPIA can cover similar systems) becomes screening questions 5–6; paragraph 10 (low risk means no full DPIA) becomes the score rule.</td></tr>
+                  <tr><td>Screening → sheets 2–7</td><td>A score of 2 or more means sheets 2–7 must be completed. Below 2, save the screening as a record.</td></tr>
+                  <tr><td>Context Q2 → Principles Q1</td><td>Each numbered purpose on sheet 2 needs its own lawful basis on sheet 3.</td></tr>
+                  <tr><td>Screening Q7 ↔ Personal Data Q7–15</td><td>A No to "sensitive data" in screening should match all-No in the sensitive inventory (it currently does).</td></tr>
+                  <tr><td>Principles (minimisation, retention) → Personal Data</td><td>The principle is stated on sheet 3; the field-by-field justification and retention go on sheet 4.</td></tr>
+                  <tr><td>Context Q8 ↔ Security Q5</td><td>Whether an outside processor is used should be answered consistently in both places.</td></tr>
+                  <tr><td>Sheets 2–6 → Appendix A</td><td>Each pre-loaded risk mirrors a block from an earlier sheet; its controls are what those sheets promised.</td></tr>
+                  <tr><td>Introduction "submitted to ?" ↔ Next Steps</td><td>Both are placeholders for the same undecided review and storage process.</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h3>How you might use it, step by step</h3>
+            <ol class="steps">
+              <li><strong>Confirm the project</strong> — fill in screening questions 1–5 so the file says which system it's about, and who answered.</li>
+              <li><strong>Check for an existing DPIA</strong> — if one covers similar processing, record it in question 6 and update that DPIA instead.</li>
+              <li><strong>Re-run the screening honestly</strong> — have someone who knows the system confirm each of the 14 answers. Read every cell comment; they define the terms.</li>
+              <li><strong>If the score stays 0–1</strong> — save the file as the compliance record. The Introduction is explicit that this still matters.</li>
+              <li><strong>If the score is 2 or more</strong> — complete sheets 2 to 6 in order, since each leans on the one before; then set owners, dates and status in Appendix A.</li>
+              <li><strong>Find out where it goes</strong> — ask who reviews it, since the workbook doesn't say.</li>
+            </ol>
+
+            <h3>Observations, ambiguities and gaps</h3>
+            <div class="qa">
+              <p class="q">Is this a Tarento document or a Husqvarna one?</p>
+              <p>The file name says Tarento; every question says Husqvarna Group. The most likely reading is that Husqvarna's template is being completed for a project Tarento delivers, but confirm it, because it determines who the controller and processor are and how screening question 11 and context question 8 should be answered.</p>
+            </div>
+            <div class="qa">
+              <p class="q">Is the "low risk" result real?</p>
+              <p>On the numbers, yes: all fourteen screening answers are No and the score is 0. But the project isn't named, the screening drop-down can't express "Unsure", and no comments justify the answers. Treat it as a draft until confirmed.</p>
+            </div>
+            <div class="qa">
+              <p class="q">Are the pre-filled answers internally consistent?</p>
+              <p>Mostly. Sensitive data is No in both screening and sheet 4. But encryption is "N/A", "No external companies" may conflict with a supplier's name on the file, Appendix A marks lawfulness "Risk mitigated" with no lawful basis recorded, and "IP Address: No" is unusual for a web system.</p>
+            </div>
+            <div class="qa">
+              <p class="q">What does the workbook not have that a DPIA reviewer might expect?</p>
+              <p>A description of data flows (where data travels between systems), a likelihood-and-severity score for each risk rather than a simple implemented/not-implemented status, a record of the DPO's advice, a sign-off of residual risk, and the decision on whether the supervisory authority must be consulted. None of these is present; the Next Steps sheet is where some of them would naturally sit.</p>
+            </div>
+            <div class="qa">
+              <p class="q">Is anything in the template out of date?</p>
+              <p>Possibly. The file was first created in 2015 and refers to Husqvarna's rights mechanism as "being developed". The adequacy link and transfer rules in sheet 3 reflect EU law at the time of writing; transfer rules have changed since GDPR came in, so check current guidance with the DPO before relying on that block.</p>
+            </div>
+            <div class="why">
+              <span class="label">Related file in the same folder</span>
+              <p>
+                The folder also contains <code>GDPR_NameAttr_DataElements_Tables_List.xlsx</code>. It was
+                not part of this analysis, but its name suggests a technical inventory of where personal
+                data fields live in a system, which is the kind of evidence sheet 4 (Personal Data) asks for.
+              </p>
+            </div>
+
+            <h3>Back to the staff directory</h3>
+            <p>
+              The plain staff directory and the GPS version share almost every line of code, and that's
+              precisely why a workbook like this exists. Software is judged by what it does; a DPIA judges
+              what it does <em>to people</em>. In the first version, the workbook asks a few questions,
+              adds up to zero and asks you to save the file. In the second, a single field — where a
+              person is standing, right now — trips two screening questions, flips a line on the data
+              inventory, opens a long argument about legitimate interests and lands a red row in the risk
+              register. The workbook, half filled in, currently describes the first version.
+              Whether the real project is the first version is the question it was built to make
+              someone ask.
+            </p>
+          </section>
+
+          <footer>
+            <p>
+              <strong>Source:</strong> <code>Tarento_DPIA_Questionnaire.xlsx</code>, read without
+              modification on 19 October 2026. All nine sheets were read, including cell comments,
+              drop-down lists, formulas, conditional formatting and hidden columns.
+            </p>
+            <p>
+              This guide explains the template; it is not legal advice. Where it interprets rather than
+              reports, it says so. Confirm GDPR questions with your DPO or data-protection contact.
+            </p>
+          </footer>
+        </div>
+      </div>
+    </main>
