@@ -115,6 +115,18 @@ Put shared navigation (sign-in, opening a record) in plain functions in `scenes.
 - `check.py` prints each acronym's phonemes. A word-like reading such as `sˈæp` means a rule is needed.
 - **Unknown words are dropped silently.** Kokoro skips words outside its lexicon: company names, product names, compounds like "watchlist". `check.py` lists every one. Give a name a phonetic spelling (`[Solvay](/sˈɑlvA/)`; misaki IPA uses `A` = "ay", `I` = "eye", `O` = "oh") and split a compound into words.
 - **Rule order:** rules apply in order, and never inside a `[word](/…/)` span an earlier rule produced. Put a possessive (`Solvay's`) before the base word.
+- **Right phonemes can still sound wrong.** misaki and Whisper only catch wrong or dropped words.
+  Delivery problems pass both, and only the user's ears find them. `check.py` lists the likely
+  ones under **Listen for these**:
+  - **A cold start.** `voice.py` speaks each cue part separately, so every part starts from cold,
+    and Kokoro often rushes an unstressed opening word ("When", "That", "Your"). Stress it with
+    markup, e.g. `["\\bWhen you are", "[When](/wˈɛn/) you are"]`, or move the cue onto a stressed word.
+  - **The reduced vowel `ᵻ`.** "challenges" is `ʧˈælənʤᵻz`, which can come out mumbled.
+    `[challenges](/ʧˈæləndʒəz/)` sounds clear.
+  - **A compound.** "newfound" ran together until it was spelled `[newfound](/nˈu fˈWnd/)`.
+- **Context changes delivery.** The same sentence sounds different when it is rendered alone and
+  when it is rendered inside a longer passage. Test a fix in context, or splice the approved take
+  into the track (SKILL.md › 5b), and don't assume that a sample the user approved will survive a re-render.
 - **Do it before the first recording.** Run the misaki check on every brand, product and person name in the voice-overs as soon as `scenes.json` is written. The voice key covers pronunciation for every scene, so a rule added after recording forces a full re-record. Verified examples: `[Infor](/ˈɪnfɔɹ/)`, `[Infor's](/ˈɪnfɔɹz/)`, `[Agentic](/Aʤˈɛntɪk/)`, and `Inline` → `In-line`.
 
 ## Caption bar

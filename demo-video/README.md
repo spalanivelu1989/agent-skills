@@ -23,6 +23,12 @@ Record this script as a demo video: docs/quickstart-demo-script.md — app at ht
 Turn these meeting notes into a 6-minute demo video of the tool
 ```
 
+It can also add a voice-over to an animation or page on your own site, with the page timed to the narration and no MP4 (`references/web-narration.md`):
+
+```text
+Add a voice-over to the gear animation on my site explaining the philosophy
+```
+
 Claude sets up a video folder, explores the app, writes the scenes, records and builds the video, then checks the result. The video is read-only by default: Claude asks before any step that writes data, such as an upload or a run. Pass credentials as environment variables; they never go in a file.
 
 ## Commands

@@ -1,6 +1,6 @@
 ---
 name: demo-video
-description: Produce a narrated, captioned demo or walkthrough video (MP4) of any running web app, or of a slide deck rendered to images — screen recordings driven by Playwright, a natural open-source voice-over (Kokoro, local), captions, title and closing cards, with every screen action timed to the words that describe it. Starts from a finished script (e.g. a script.md with on-screen actions and narration), a brief, or meeting transcripts. Use whenever someone asks for a demo video, product or feature walkthrough, screen recording with voice-over, a video of an app's results, "record this script", or "turn this meeting / brief into a demo video" — even if they only say "record the app" or "make a video of the tool". Not for writing or refining a script on its own; that is a separate script-writing task.
+description: Produce a narrated, captioned demo or walkthrough video (MP4) of any running web app, or of a slide deck rendered to images — screen recordings driven by Playwright, a natural open-source voice-over (Kokoro, local), captions, title and closing cards, with every screen action timed to the words that describe it. Also voices an animation or page on the user's own site, with the page timed to the narration. Starts from a finished script (e.g. a script.md with on-screen actions and narration), a brief, or meeting transcripts. Use whenever someone asks for a demo video, product or feature walkthrough, screen recording with voice-over, a video of an app's results, "record this script", or "turn this meeting / brief into a demo video" — even if they only say "record the app" or "make a video of the tool". Not for writing or refining a script on its own; that is a separate script-writing task.
 ---
 
 # Demo video
@@ -33,6 +33,11 @@ keep its wording and order, and map it to scenes.
   scene can rebuild its state before `mark()` (e.g. by reopening a saved record).
 - Intro and closing lines become `"card"` scenes.
 - Check every label the script names against the live app or the code; tell the user what differs.
+- **If the user wrote the narration themselves, offer a language check before any rendering.** List
+  each fix and why (grammar, an idiom that doesn't fit, a missing hyphen), then give a refined
+  version that keeps their meaning, order and key words. Let them choose between it and their
+  original. Never correct their wording silently, and don't render until they have chosen. A
+  rewrite after the voice is tuned throws away the pronunciation work.
 
 ### 0c. No app: a slide deck or document
 When the screen is a deck (or any set of images), follow `references/slides.md`:
@@ -44,6 +49,13 @@ When the screen is a deck (or any set of images), follow `references/slides.md`:
   is found in its voice-over before recording;
 - a closing `"card"` scene is a good place for the sources behind the figures.
 
+### 0d. A voice-over for a page or animation, not an app recording
+When the "screen" is one animation or page the user owns (a lightbox, an explainer, a hero
+animation), **ask first where the voice-over should live**: played on the page itself, an MP4, or
+both. Don't assume MP4. For narration played on the page, follow `references/web-narration.md`:
+one audio track, timings from Whisper word timestamps, and the page driven from the audio's own
+clock.
+
 ### 1. Set up
 ```bash
 python3 ~/.claude/skills/demo-video/engine/init.py <project>/docs/demo-video   # or wherever the user wants it
@@ -51,8 +63,13 @@ python3 <dir>/tools/setup_tts.py    # once per machine; skip if ~/.cache/demo-vi
 ```
 Requirements:
 - Python Playwright with Chromium in the user's normal Python (`python3 -c "import playwright"`);
-- `ffmpeg`;
+- `ffmpeg` (for `voice.py` and `build.py`; not needed for on-page narration, see below);
 - `uv` for the voice (it fetches the Python 3.12 that Kokoro needs).
+
+`setup_tts.py` downloads about **1.5 GB** into `~/.cache/demo-video-tts`: PyTorch, the Kokoro
+model and Whisper. Give that figure when asking to install it; don't estimate lower. If ffmpeg is
+missing, transcription still works (`tts_inspect.py` loads WAVs itself), and on macOS
+`afconvert -f m4af -d aac -b 64000 in.wav out.m4a` encodes web audio without it.
 
 On Windows, run the same commands with `py` or `python` in place of `python3`, and set
 credentials in PowerShell with `$env:DEMO_USERNAME='…'; $env:DEMO_PASSWORD='…'`. The voice
@@ -143,12 +160,36 @@ Then fix and re-run:
 - leaks → add `mask` patterns.
 
 You cannot hear the audio. The transcript diff and phonemes are your ears, so say so to the user and ask them to listen once.
+Before they listen, point out anything in `check.py`'s **Listen for these** list.
+
+### 5b. When the user says a word sounds wrong
+**Believe them, even when the transcript is clean.** Whisper reports the word it recognises, not how
+clearly it was said. In one session it transcribed "When", "That", "Your newfound" and
+"challenges" perfectly, while the user heard each of them rushed or mumbled.
+1. **Check the phonemes** (`tts_inspect.py`, see `references/scene-authoring.md` › Pronunciation).
+   If they are wrong, add a rule. If they are right, the problem is delivery, and the usual causes are:
+   - **a cold start**: the first word of a separately spoken part is rushed. Stress it, e.g.
+     `[When](/wˈɛn/)` or `[That](/ðˈæt/)`;
+   - **the reduced vowel `ᵻ`** at the end of words like "challenges": respell it with `ə`, e.g.
+     `[challenges](/ʧˈæləndʒəz/)`;
+   - **a run-together compound**: split the stress, e.g. `[newfound](/nˈu fˈWnd/)`;
+   - **overall pace**: speed 0.9 is clearer than 1.0 for reflective narration.
+2. **Let the user choose by ear.** Render two or three short samples of just the affected sentence,
+   with one change per sample. Hand over `! afplay <full absolute path>` commands (macOS) and ask
+   which sounds right. Don't apply a fix the user hasn't heard.
+3. **Splice the approved take in; don't re-voice everything.** Kokoro voices a sentence
+   differently depending on what surrounds it. A fix the user approved in a sample came out
+   *worse* when the whole narration was re-rendered with it. Cut the full track in a pause between
+   sentences, at a point where the level is near silence (RMS under about 0.1% of peak). Insert the
+   exact approved sample, match the loudness, then re-measure every timing with Whisper.
+4. **Keep the approved takes.** Store each approved WAV and its exact text and markup in the project,
+   not only in a scratch folder, so a later change doesn't lose earlier fixes.
 
 ### 6. Deliver
 Tell the user:
 - the MP4 path and length;
 - what was verified, and how;
-- the voice used, with an offer of alternatives. Render 20-second samples in 4–5 Kokoro voices (`af_heart`, `af_bella`, `am_michael`, `bf_emma`, `bm_george`) if they want to choose;
+- the voice used, with an offer of alternatives. Render 20-second samples in 4–5 Kokoro voices (`af_heart`, `af_bella`, `am_michael`, `bf_emma`, `bm_george`) if they want to choose, and give a `! afplay <full absolute path>` command for each so they can play them from the prompt;
 - anything not in the video, such as tabs to show live;
 - anything they must act on, e.g. "the live app still shows the model name".
 
@@ -192,5 +233,6 @@ Voice options:
 - `references/scene-authoring.md`: cues, helpers, pronunciation, masking.
 - `references/troubleshooting.md`: known failures and fixes.
 - `references/slides.md`: videos of a slide deck or images, with no app (rendering, scene helpers, cursor, captions).
+- `references/web-narration.md`: a voice-over played on the user's own page, with the page animation timed to it (no MP4).
 - `examples/solvay-fitgap/`: a complete real example, a 10-scene, 6:20 video of a fit-gap analysis tool.
 - `examples/fitgap-quickstart/`: a 2:28 how-to built from the user's own script: a sign-in scene (username hidden), one long scene that uploads a file, runs, opens the log, stops and loads a past run (a write flow, approved), a pause before a step, and a field hidden with CSS.

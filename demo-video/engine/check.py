@@ -88,6 +88,38 @@ def run_tts(job):
     return json.loads(r.stdout)
 
 
+# Unstressed words that Kokoro tends to rush or swallow when they open a separately spoken part.
+WEAK_OPENERS = {"a", "an", "and", "as", "but", "for", "if", "in", "it", "its", "of", "on", "or", "our", "so",
+                "that", "the", "this", "to", "we", "when", "with", "you", "your"}
+
+
+def listen_for(lines, scenes, ph):
+    """Not errors: things the phonemes and transcript cannot catch, for the user to listen to.
+    Whisper passes all of these, because it hears the right word even when it sounds mumbled."""
+    reduced = sorted(w for w, p in ph.items() if "ᵻ" in p)
+    openers = []
+    for s in scenes:
+        for _, text in voice.parts(s):
+            text = voice.spoken(text).lstrip()
+            m = re.match(r"([A-Za-z']+)", text)
+            if m and not text.startswith("[") and m.group(1).lower() in WEAK_OPENERS:
+                openers.append(f"{s['id']}: “{text[:40]}…”")
+    if not (reduced or openers):
+        return
+    lines.append("\n**Listen for these** (not counted as issues; the transcript passes them even when they "
+                 "sound wrong):\n")
+    if openers:
+        lines.append("- Parts that open on an unstressed word. Each part is spoken from cold, and Kokoro often "
+                     "rushes its first word. Fix: stress it, e.g. `[\"\\\\bThat positivity\", "
+                     "\"[That](/ðˈæt/) positivity\"]`, or move the cue to a stressed word:")
+        lines += [f"  - {o}" for o in openers]
+    if reduced:
+        lines.append("- Words with the reduced vowel `ᵻ` (often plural -es endings), which can come out "
+                     "mumbled. Fix: spell it with `ə` or `ɪ`, e.g. `[challenges](/ʧˈæləndʒəz/)`:")
+        lines += [f"  - {w}: `{ph[w]}`" for w in reduced]
+    lines.append("")
+
+
 def check_narration(lines, asr):
     lines.append("## 1. Narration\n")
     if not voice.VOICE:
@@ -135,6 +167,7 @@ def check_narration(lines, asr):
         vocab = sorted({w for w in re.findall(r"[A-Za-z][A-Za-z'’-]*", plain)})
         ph = run_tts({"phonemes": vocab, "lang": voice.VOICE[:1]})
         unknown = [w for w in vocab if "❓" in ph.get(w, "")]
+        listen_for(lines, scenes, ph)
         if unknown:
             issues += len(unknown)
             lines.append("\n**Words Kokoro cannot pronounce** — they are dropped or garbled. Add a phonetic rule to "
