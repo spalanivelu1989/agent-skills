@@ -1,0 +1,76 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  html, body { margin: 0; padding: 0; background: #e8e5de; }
+  svg { display: block; }
+  .h { font-family: 'Marker Felt', 'Chalkboard SE', sans-serif; fill: #1d4fa6; font-size: 34px; letter-spacing: 1px; }
+  .t { font-family: 'Noteworthy', 'Chalkboard SE', sans-serif; fill: #1b1b1b; font-size: 22px; font-weight: bold; }
+  .s { font-family: 'Noteworthy', 'Chalkboard SE', sans-serif; fill: #1b1b1b; font-size: 17px; }
+  .r { font-family: 'Noteworthy', 'Chalkboard SE', sans-serif; fill: #c8323c; font-size: 20px; font-weight: bold; }
+  .b { font-family: 'Noteworthy', 'Chalkboard SE', sans-serif; fill: #1d4fa6; font-size: 18px; font-weight: bold; }
+  .box { fill: none; stroke: #1b1b1b; stroke-width: 2.6; }
+  .ink { fill: none; stroke: #1b1b1b; stroke-width: 2.4; stroke-linecap: round; }
+  .blue { fill: none; stroke: #1d4fa6; stroke-width: 2.4; stroke-linecap: round; }
+  .red { fill: none; stroke: #c8323c; stroke-width: 2.4; stroke-linecap: round; }
+  .node { fill: #fbfbf9; stroke: #1b1b1b; stroke-width: 2.6; }
+</style>
+</head>
+<body>
+<svg width="1376" height="768" viewBox="0 0 1376 768" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#eeebe4"/>
+      <stop offset="1" stop-color="#dcd8cf"/>
+    </linearGradient>
+    <radialGradient id="sheen" cx="0.35" cy="0.25" r="0.9">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#f1f1ee"/>
+    </radialGradient>
+    <marker id="ak" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M1 1 L9 5 L1 9" fill="none" stroke="#1b1b1b" stroke-width="1.6" stroke-linecap="round"/>
+    </marker>
+    <marker id="ab" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M1 1 L9 5 L1 9" fill="none" stroke="#1d4fa6" stroke-width="1.6" stroke-linecap="round"/>
+    </marker>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M1 1 L9 5 L1 9" fill="none" stroke="#c8323c" stroke-width="1.6" stroke-linecap="round"/>
+    </marker>
+  </defs>
+
+  <!-- Room -->
+  <rect width="1376" height="768" fill="url(#wall)"/>
+  <rect x="0" y="690" width="1376" height="78" fill="#cfc9bd"/>
+  <!-- Stand -->
+  <rect x="44" y="300" width="12" height="468" rx="4" fill="#9aa0a6"/>
+  <rect x="1320" y="300" width="12" height="468" rx="4" fill="#9aa0a6"/>
+  <!-- Board and tray (no props on the tray) -->
+  <rect x="58" y="34" width="1260" height="632" rx="8" fill="#b8bcc1"/>
+  <rect x="68" y="44" width="1240" height="612" rx="4" fill="url(#sheen)"/>
+  <rect x="58" y="664" width="1260" height="14" rx="4" fill="#a7abb0"/>
+
+  <!-- Dividers (three panels) -->
+  <path d="M482 70 C484 250 480 420 483 630" class="ink"/>
+  <path d="M902 70 C900 260 904 430 901 630" class="ink"/>
+
+  <!-- ============ PANEL 1 (x 96-460) ============ -->
+  <text x="96" y="112" class="h">1. FIRST IDEA</text>
+  <path d="M96 126 C200 129 330 124 446 127" class="blue"/>
+  <!-- drawing: y 150-580 -->
+  <text x="104" y="620" class="b">takeaway</text>
+
+  <!-- ============ PANEL 2 (x 516-880) ============ -->
+  <text x="516" y="112" class="h">2. SECOND IDEA</text>
+  <path d="M516 126 C620 129 750 124 866 127" class="blue"/>
+  <!-- drawing: y 150-580 -->
+  <text x="516" y="620" class="b">takeaway</text>
+
+  <!-- ============ PANEL 3 (x 924-1290) ============ -->
+  <text x="924" y="112" class="h">3. THIRD IDEA</text>
+  <path d="M924 126 C1040 129 1170 124 1290 127" class="blue"/>
+  <!-- drawing: y 150-580 -->
+  <text x="932" y="620" class="b">takeaway</text>
+</svg>
+</body>
+</html>

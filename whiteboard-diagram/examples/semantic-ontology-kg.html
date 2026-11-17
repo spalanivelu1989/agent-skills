@@ -1,0 +1,201 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  html, body { margin: 0; padding: 0; background: #e8e5de; }
+  svg { display: block; }
+  .h { font-family: 'Marker Felt', 'Chalkboard SE', sans-serif; fill: #1d4fa6; font-size: 34px; letter-spacing: 1px; }
+  .t { font-family: 'Noteworthy', 'Chalkboard SE', sans-serif; fill: #1b1b1b; font-size: 22px; font-weight: bold; }
+  .s { font-family: 'Noteworthy', 'Chalkboard SE', sans-serif; fill: #1b1b1b; font-size: 17px; }
+  .r { font-family: 'Noteworthy', 'Chalkboard SE', sans-serif; fill: #c8323c; font-size: 20px; font-weight: bold; }
+  .b { font-family: 'Noteworthy', 'Chalkboard SE', sans-serif; fill: #1d4fa6; font-size: 18px; font-weight: bold; }
+  .box { fill: none; stroke: #1b1b1b; stroke-width: 2.6; }
+  .ink { fill: none; stroke: #1b1b1b; stroke-width: 2.4; stroke-linecap: round; }
+  .blue { fill: none; stroke: #1d4fa6; stroke-width: 2.4; stroke-linecap: round; }
+  .red { fill: none; stroke: #c8323c; stroke-width: 2.4; stroke-linecap: round; }
+  .node { fill: #fbfbf9; stroke: #1b1b1b; stroke-width: 2.6; }
+</style>
+</head>
+<body>
+<svg width="1376" height="768" viewBox="0 0 1376 768" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#eeebe4"/>
+      <stop offset="1" stop-color="#dcd8cf"/>
+    </linearGradient>
+    <radialGradient id="sheen" cx="0.35" cy="0.25" r="0.9">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#f1f1ee"/>
+    </radialGradient>
+    <marker id="ak" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M1 1 L9 5 L1 9" fill="none" stroke="#1b1b1b" stroke-width="1.6" stroke-linecap="round"/>
+    </marker>
+    <marker id="ab" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M1 1 L9 5 L1 9" fill="none" stroke="#1d4fa6" stroke-width="1.6" stroke-linecap="round"/>
+    </marker>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M1 1 L9 5 L1 9" fill="none" stroke="#c8323c" stroke-width="1.6" stroke-linecap="round"/>
+    </marker>
+  </defs>
+
+  <!-- Room -->
+  <rect width="1376" height="768" fill="url(#wall)"/>
+  <rect x="0" y="690" width="1376" height="78" fill="#cfc9bd"/>
+  <!-- Stand -->
+  <rect x="44" y="300" width="12" height="468" rx="4" fill="#9aa0a6"/>
+  <rect x="1320" y="300" width="12" height="468" rx="4" fill="#9aa0a6"/>
+  <!-- Board -->
+  <rect x="58" y="34" width="1260" height="632" rx="8" fill="#b8bcc1"/>
+  <rect x="68" y="44" width="1240" height="612" rx="4" fill="url(#sheen)"/>
+  <rect x="58" y="664" width="1260" height="14" rx="4" fill="#a7abb0"/>
+
+  <!-- Dividers -->
+  <path d="M482 70 C484 250 480 420 483 630" class="ink"/>
+  <path d="M902 70 C900 260 904 430 901 630" class="ink"/>
+
+  <!-- ============ 1. SEMANTIC MODEL ============ -->
+  <text x="96" y="112" class="h">1. SEMANTIC MODEL</text>
+  <path d="M96 126 C200 129 330 124 446 127" class="blue"/>
+  <text x="100" y="160" class="s" font-size="16">Tables, joined on columns</text>
+
+  <rect x="100" y="194" width="110" height="74" rx="4" class="box"/>
+  <text x="155.0" y="216" class="t" text-anchor="middle" font-size="18">customers</text>
+  <path d="M100 224 L210 224" class="ink"/>
+  <text x="155.0" y="240" class="b" text-anchor="middle" font-size="14">id</text>
+  <path d="M100 246 L210 246" class="ink" stroke-width="1.2"/>
+  <text x="155.0" y="262" class="s" text-anchor="middle" font-size="14">region</text>
+  <rect x="330" y="172" width="130" height="162" rx="4" class="box"/>
+  <text x="395.0" y="194" class="t" text-anchor="middle" font-size="18">orders</text>
+  <path d="M330 202 L460 202" class="ink"/>
+  <text x="395.0" y="218" class="s" text-anchor="middle" font-size="14">id</text>
+  <path d="M330 224 L460 224" class="ink" stroke-width="1.2"/>
+  <text x="395.0" y="240" class="b" text-anchor="middle" font-size="14">customer_id</text>
+  <path d="M330 246 L460 246" class="ink" stroke-width="1.2"/>
+  <text x="395.0" y="262" class="b" text-anchor="middle" font-size="14">product_id</text>
+  <path d="M330 268 L460 268" class="ink" stroke-width="1.2"/>
+  <text x="395.0" y="284" class="s" text-anchor="middle" font-size="14">amount</text>
+  <path d="M330 290 L460 290" class="ink" stroke-width="1.2"/>
+  <text x="395.0" y="306" class="s" text-anchor="middle" font-size="14">status</text>
+  <path d="M330 312 L460 312" class="ink" stroke-width="1.2"/>
+  <text x="395.0" y="328" class="s" text-anchor="middle" font-size="14">is_test</text>
+  <rect x="100" y="318" width="110" height="74" rx="4" class="box"/>
+  <text x="155.0" y="340" class="t" text-anchor="middle" font-size="18">products</text>
+  <path d="M100 348 L210 348" class="ink"/>
+  <text x="155.0" y="364" class="b" text-anchor="middle" font-size="14">id</text>
+  <path d="M100 370 L210 370" class="ink" stroke-width="1.2"/>
+  <text x="155.0" y="386" class="s" text-anchor="middle" font-size="14">name</text>
+
+  <!-- joins: customers.id -> orders.customer_id (level), products.id -> orders.product_id (curve) -->
+  <path d="M210 235 L330 235" class="blue"/>
+  <path d="M218 228 L218 242" class="blue"/>
+  <path d="M318 235 L330 228" class="blue"/>
+  <path d="M318 235 L330 242" class="blue"/>
+
+  <path d="M210 359 C275 359 265 257 330 257" class="blue"/>
+  <path d="M218 352 L218 366" class="blue"/>
+  <path d="M318 257 L330 250" class="blue"/>
+  <path d="M318 257 L330 264" class="blue"/>
+
+  <!-- measure -->
+  <path d="M395 338 C396 370 394 395 395 424" class="ink" marker-end="url(#ak)"/>
+  <text x="404" y="388" class="s" font-size="15">uses</text>
+  <text x="100" y="418" class="s" font-size="16">Measure</text>
+  <rect x="100" y="428" width="360" height="96" rx="10" class="box"/>
+  <text x="118" y="462" class="t" font-size="21">Net Revenue = SUM(amount)</text>
+  <text x="118" y="490" class="r" font-size="17">leave out cancelled</text>
+  <text x="118" y="512" class="r" font-size="17">and test rows</text>
+
+  <!-- Result -->
+  <path d="M104 566 C150 563 190 565 230 566" class="ink" marker-end="url(#ak)"/>
+  <text x="244" y="573" class="t" font-size="21">one trusted number</text>
+  <text x="104" y="620" class="b">the math</text>
+
+  <!-- ============ 2. ONTOLOGY ============ -->
+  <text x="516" y="112" class="h">2. ONTOLOGY</text>
+  <path d="M516 126 C600 129 680 124 740 127" class="blue"/>
+
+  <!-- Customer -places-> Order -->
+  <text x="582" y="172" class="s" text-anchor="middle">Class</text>
+  <rect x="516" y="182" width="134" height="48" rx="4" class="box"/>
+  <text x="583" y="214" class="t" text-anchor="middle">Customer</text>
+
+  <text x="804" y="172" class="s" text-anchor="middle">Class</text>
+  <rect x="746" y="182" width="118" height="48" rx="4" class="box"/>
+  <text x="805" y="214" class="t" text-anchor="middle">Order</text>
+
+  <path d="M654 206 C680 202 710 204 740 206" class="ink" marker-end="url(#ak)"/>
+  <text x="697" y="194" class="s" text-anchor="middle">places</text>
+
+  <!-- Order -lists-> Product -->
+  <rect x="746" y="302" width="118" height="48" rx="4" class="box"/>
+  <text x="805" y="334" class="t" text-anchor="middle">Product</text>
+  <path d="M805 234 C803 255 806 270 805 296" class="ink" marker-end="url(#ak)"/>
+  <text x="816" y="270" class="s">lists</text>
+
+  <!-- Taxonomy -->
+  <rect x="560" y="398" width="120" height="48" rx="4" class="box"/>
+  <text x="620" y="430" class="t" text-anchor="middle">Clothing</text>
+  <path d="M684 410 C705 390 720 372 742 346" class="ink" marker-end="url(#ak)"/>
+  <text x="716" y="400" class="s">is-a</text>
+
+  <rect x="560" y="520" width="120" height="48" rx="4" class="box"/>
+  <text x="620" y="552" class="t" text-anchor="middle">T-shirt</text>
+  <path d="M620 516 C622 495 618 470 620 452" class="ink" marker-end="url(#ak)"/>
+  <text x="630" y="490" class="s">is-a</text>
+
+  <!-- Definitions and rules in red -->
+  <text x="516" y="268" class="r" font-size="18">"Active" = paid order</text>
+  <text x="516" y="292" class="r" font-size="18">in last 12 months</text>
+  <path d="M560 300 C556 320 556 340 562 360" class="red"/>
+  <text x="520" y="384" class="r" font-size="16">definition</text>
+
+  <text x="712" y="470" class="r" font-size="18">Rule: every</text>
+  <text x="712" y="494" class="r" font-size="18">Order needs</text>
+  <text x="712" y="518" class="r" font-size="18">a Customer</text>
+
+  <text x="516" y="620" class="b">the meaning</text>
+
+  <!-- ============ 3. KNOWLEDGE GRAPH ============ -->
+  <text x="924" y="112" class="h">3. KNOWLEDGE GRAPH</text>
+  <path d="M924 126 C1040 129 1170 124 1290 127" class="blue"/>
+
+  <!-- Edges first so nodes sit on top -->
+  <path d="M1016 214 C1050 208 1080 210 1106 214" class="blue" marker-end="url(#ab)"/>
+  <text x="1060" y="198" class="b" text-anchor="middle">placed</text>
+  <path d="M1176 246 C1192 270 1200 290 1210 312" class="blue" marker-end="url(#ab)"/>
+  <text x="1210" y="266" class="b">lists</text>
+
+  <path d="M1016 474 C1040 470 1060 472 1082 474" class="blue" marker-end="url(#ab)"/>
+  <text x="1048" y="458" class="b" text-anchor="middle">placed</text>
+  <path d="M1146 440 C1162 420 1176 404 1196 390" class="blue" marker-end="url(#ab)"/>
+  <text x="1142" y="410" class="b">lists</text>
+  <path d="M1156 500 C1172 520 1184 534 1200 548" class="blue" marker-end="url(#ab)"/>
+  <text x="1142" y="548" class="b">lists</text>
+
+  <!-- Nodes -->
+  <circle cx="974" cy="214" r="40" class="node"/>
+  <text x="974" y="222" class="t" text-anchor="middle">C215</text>
+  <circle cx="1146" cy="214" r="40" class="node"/>
+  <text x="1146" y="222" class="t" text-anchor="middle">O733</text>
+  <circle cx="1236" cy="354" r="46" class="node"/>
+  <text x="1236" y="350" class="t" text-anchor="middle" font-size="20">P31</text>
+  <text x="1236" y="374" class="s" text-anchor="middle" font-size="15">T-shirt</text>
+
+  <circle cx="974" cy="474" r="40" class="node"/>
+  <text x="974" y="482" class="t" text-anchor="middle">C102</text>
+  <circle cx="1120" cy="474" r="40" class="node"/>
+  <text x="1120" y="482" class="t" text-anchor="middle">O501</text>
+  <circle cx="1238" cy="580" r="42" class="node"/>
+  <text x="1238" y="576" class="t" text-anchor="middle" font-size="20">P20</text>
+  <text x="1238" y="598" class="s" text-anchor="middle" font-size="15">Hoodie</text>
+
+  <!-- Red notes -->
+  <text x="932" y="320" class="r" font-size="18">real customers,</text>
+  <text x="932" y="344" class="r" font-size="18">orders &amp; products</text>
+  <path d="M970 356 C966 380 968 400 972 424" class="red" marker-end="url(#ar)"/>
+
+  <text x="932" y="620" class="b">the facts</text>
+</svg>
+</body>
+</html>
